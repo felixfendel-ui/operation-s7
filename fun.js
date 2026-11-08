@@ -77,6 +77,7 @@ function radioStatus(msg) {
 /* ---------- Aufgenommene Funksprüche (audio/<hash>.m4a, erzeugt mit tools/voices.py) ----------
    Laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Vorlesestimme nur als Rückfall. */
 let AUDIO_INDEX = null;
+const AUDIO_V = '2'; // bei neuer Aufnahme erhöhen, damit Handys keine alten Dateien aus dem Cache spielen
 fetch('audio/index.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : [])).then(j => { AUDIO_INDEX = new Set(j); }).catch(() => {});
 function fnvHash(s) { // FNV-1a über UTF-16-Codeeinheiten – identisch zu tools/voices.py
   let h = 0x811c9dc5;
@@ -105,7 +106,7 @@ function playFile(src, btn, onFail) {
 }
 function playRadio(text, btn) {
   const h = fnvHash(String(text || ''));
-  if (AUDIO_INDEX && AUDIO_INDEX.has(h)) return playFile('audio/' + h + '.m4a', btn, () => speakRadio(text, btn));
+  if (AUDIO_INDEX && AUDIO_INDEX.has(h)) return playFile('audio/' + h + '.m4a?v=' + AUDIO_V, btn, () => speakRadio(text, btn));
   speakRadio(text, btn);
 }
 function speakRadio(text, btn) {
@@ -145,7 +146,7 @@ const MORSE = { A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '
 const morseVisual = word => String(word).toUpperCase().split('').filter(c => MORSE[c]).map(c => MORSE[c].replace(/\./g, '·').replace(/-/g, '–')).join('  /  ');
 function playMorse(word, btn) {
   const w = String(word).toUpperCase();
-  if (!btn || !btn.dataset.webaudio) return playFile('audio/morse-' + w + '.m4a', btn, () => { if (btn) btn.dataset.webaudio = '1'; playMorse(word, btn); });
+  if (!btn || !btn.dataset.webaudio) return playFile('audio/morse-' + w + '.m4a?v=' + AUDIO_V, btn, () => { if (btn) btn.dataset.webaudio = '1'; playMorse(word, btn); });
   initAudio();
   const u = 0.13; let t = 0.05;
   for (const ch of String(word).toUpperCase()) {

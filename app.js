@@ -520,7 +520,7 @@ function renderRadioList() {
     ${items.join('')}</div></div>`;
   bindRadio(texts);
   const mb = $('#admMorse'); if (mb) mb.onclick = () => playMorse(stations().find(s => s.morse).morse, mb);
-  $('#admBeep').onclick = e => playFile('audio/test.m4a', e.currentTarget, () => { initAudio(); tone(880, 0, 0.4, 'sine', 0.2); tone(1320, 0.45, 0.4, 'sine', 0.2); });
+  $('#admBeep').onclick = e => playFile('audio/test.m4a?v=' + AUDIO_V, e.currentTarget, () => { initAudio(); tone(880, 0, 0.4, 'sine', 0.2); tone(1320, 0.45, 0.4, 'sine', 0.2); });
   $('#admSay').onclick = e => playRadio('Hier spricht der Silberfuchs. Wenn du mich hörst, funktioniert der Funk.', e.currentTarget);
   setTimeout(() => { const d = $('#admDiag'); if (d) d.innerHTML = radioDiagnose(); }, 1200);
 }

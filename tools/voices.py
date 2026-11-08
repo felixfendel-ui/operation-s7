@@ -3,7 +3,10 @@
 # Aufruf im Ordner schnitzeljagd:  python3 tools/voices.py   (danach committen)
 import json, os, re, struct, subprocess, tempfile, wave, random, math
 
-VOICE = 'Reed'
+VOICE = 'Reed (Deutsch (Deutschland))'  # genau diese Schreibweise – „Reed“ allein ist die ENGLISCHE Stimme
+_voices = subprocess.run(['say', '-v', '?'], capture_output=True, text=True).stdout
+if not any(l.startswith(VOICE) and 'de_DE' in l for l in _voices.splitlines()):
+    raise SystemExit('Deutsche Stimme nicht gefunden: ' + VOICE)
 RATE = 22050
 OUT = 'audio'
 
