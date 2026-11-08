@@ -74,7 +74,42 @@ function radioStatus(msg) {
   const el = radioBtn && radioBtn.nextElementSibling && radioBtn.nextElementSibling.classList.contains('radiostat') ? radioBtn.nextElementSibling : null;
   if (el) el.textContent = msg; else alert(msg);
 }
+/* ---------- Aufgenommene Funksprüche (audio/<hash>.m4a, erzeugt mit tools/voices.py) ----------
+   Laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Vorlesestimme nur als Rückfall. */
+let AUDIO_INDEX = null;
+fetch('audio/index.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : [])).then(j => { AUDIO_INDEX = new Set(j); }).catch(() => {});
+function fnvHash(s) { // FNV-1a über UTF-16-Codeeinheiten – identisch zu tools/voices.py
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0');
+}
+const player = new Audio();
+player.preload = 'none';
+let playerBtn = null;
+function stopPlayer() {
+  try { player.pause(); } catch (e) {}
+  if (playerBtn) { playerBtn.classList.remove('on'); playerBtn.textContent = playerBtn.dataset.label || '📻 Funkspruch anhören'; }
+  playerBtn = null;
+}
+function playFile(src, btn, onFail) {
+  const same = btn && btn === playerBtn;
+  stopPlayer(); if (radioOn) stopRadio();
+  if (same) return;
+  playerBtn = btn || null;
+  if (btn) { if (!btn.dataset.label) btn.dataset.label = btn.textContent; btn.classList.add('on'); btn.textContent = '⏹ Stoppen'; }
+  player.src = src;
+  player.onended = () => stopPlayer();
+  player.onerror = () => { stopPlayer(); if (onFail) onFail(); };
+  const pr = player.play(); // direkt im Tippen starten (iPhone)
+  if (pr && pr.catch) pr.catch(err => { if (err && err.name === 'AbortError') return; stopPlayer(); if (onFail) onFail(); });
+}
 function playRadio(text, btn) {
+  const h = fnvHash(String(text || ''));
+  if (AUDIO_INDEX && AUDIO_INDEX.has(h)) return playFile('audio/' + h + '.m4a', btn, () => speakRadio(text, btn));
+  speakRadio(text, btn);
+}
+function speakRadio(text, btn) {
+  if (playerBtn) stopPlayer();
   if (!('speechSynthesis' in window)) { alert('Dieser Browser kann leider nicht vorlesen.'); return; }
   if (radioOn) { const same = btn === radioBtn; stopRadio(); if (same) return; }
   radioBtn = btn; radioOn = true; radioStarted = false;
@@ -109,6 +144,8 @@ const MORSE = { A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '
   N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..' };
 const morseVisual = word => String(word).toUpperCase().split('').filter(c => MORSE[c]).map(c => MORSE[c].replace(/\./g, '·').replace(/-/g, '–')).join('  /  ');
 function playMorse(word, btn) {
+  const w = String(word).toUpperCase();
+  if (!btn || !btn.dataset.webaudio) return playFile('audio/morse-' + w + '.m4a', btn, () => { if (btn) btn.dataset.webaudio = '1'; playMorse(word, btn); });
   initAudio();
   const u = 0.13; let t = 0.05;
   for (const ch of String(word).toUpperCase()) {

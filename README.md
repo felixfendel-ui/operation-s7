@@ -38,7 +38,7 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
   - 📡 Spezialauftrag: +30, je zur Hälfte für beide Trupps
 
   Der Spielstand (🟥 A : B 🟦) steht auf der Rollenkarte und unterwegs. Beim Finale gibt es eine **Rangliste** mit „Bester Trupp“ und **MVP-Agent**.
-- **📻 Funksprüche zum Anhören:** Geschichte, Rätsel (die eigene Hälfte), Aufträge, Lösungen und Finale lassen sich per Knopf vorlesen – mit Funkrauschen und Agentenstimme (Vorlese-Funktion des Handys, funktioniert offline). Auf dem iPhone muss der Stummschalter aus sein.
+- **📻 Funksprüche zum Anhören:** Alle Funksprüche sind als Audiodateien (`audio/`, Stimme „Reed“ mit Funkrauschen) aufgenommen und laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Nur wenn eine Aufnahme fehlt, liest die Handy-Stimme vor. **Nach jeder Textänderung neu aufnehmen:** `node tools/seal.mjs && python3 tools/voices.py`
 - **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
 
 ## Zusagen in der App
