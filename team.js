@@ -79,7 +79,7 @@ function broadcast() {
   bcastTimer = setTimeout(() => {
     TEAM.v++; saveTeam();
     teamPublish({ k: 'state', v: TEAM.v, t: Date.now(), i: P.idx, s: P.status, st: P.startedAt, fin: P.finishedAt, n: P.name || 'Jasper',
-      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members }, 'state');
+      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, ...exStateFields() }, 'state');
   }, 250);
 }
 function teamAfterSave() {
@@ -99,6 +99,7 @@ function handleTeamMsg(m) {
   else if (isMember() && a.k === 'state') applyState(a);
 }
 function hostApply(a) {
+  if (exHostApply(a)) return;
   const st = cur(), sid = st.id || P.idx, who = a.n ? ` (${a.n})` : '';
   switch (a.k) {
     case 'join': {
@@ -133,7 +134,7 @@ function hostApply(a) {
 }
 function applyState(s) {
   if (s.v < (TEAM.v || 0)) return;
-  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join()]);
+  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {})]);
   const before = key();
   const wasStatus = P.status, wasIdx = P.idx, wasFin = P.finishedAt;
   TEAM.v = s.v; TEAM.members = s.m || []; TEAM.hostName = s.n; TEAM.started = !!s.st; saveTeam();
@@ -141,6 +142,7 @@ function applyState(s) {
   P.name = inTeam ? TEAM.name : ''; P.idx = s.i; P.status = s.s; P.startedAt = s.st; P.finishedAt = s.fin;
   P.hints = Object.fromEntries((s.h || []).map(k => [k, true]));
   P.frags = Object.fromEntries((s.fi || []).map(i => [i, '★']));
+  exApplyState(s);
   lsSet(KEY_P, P);
   if (inTeam && P.startedAt && joinTimer) { clearInterval(joinTimer); joinTimer = null; }
   if (before === key()) return;

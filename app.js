@@ -68,7 +68,7 @@ const here = () => sim || pos;
 const fragStations = () => D.stations.map((s, i) => ({ s, i })).filter(o => o.s.fragment);
 function save() { lsSet(KEY_P, P); teamAfterSave(); }
 function newProgress() {
-  return { name: '', idx: 0, status: 'travel', frags: {}, tries: {}, hints: {}, forced: 0, startedAt: null, finishedAt: null };
+  return { name: '', idx: 0, status: 'travel', frags: {}, tries: {}, hints: {}, forced: 0, startedAt: null, finishedAt: null, pts: 0, depots: {}, tasks: {}, legStart: {} };
 }
 
 /* ---------- Sound & Haptik ---------- */
@@ -116,7 +116,7 @@ function startGeo() {
     if (e.code === 1) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
 }
-function onPos() { checkUnlock(); updateLive(); updateAdminGps(); liveSnapshot(false); }
+function onPos() { exOnPos(); checkUnlock(); updateLive(); updateAdminGps(); liveSnapshot(false); }
 function checkUnlock() {
   if (!P.name || P.finishedAt || P.status !== 'travel') return;
   const p = here(), st = cur();
@@ -237,7 +237,9 @@ function renderTravel() {
   <div id="forcebox"></div>
   ${nav ? '' : '<button class="btn sec small" id="navOv">🧭 Navigator ausgefallen? Pfeil hier anzeigen</button>'}
   ${compassOn ? '' : '<button class="btn sec small" id="compassBtn">🧭 Kompass aktivieren</button><p class="center small" id="compassMsg"></p>'}
+  ${exTravelHtml()}
   <div class="card"><div class="label center">Code-Fragmente</div>${fragsHtml()}</div>`;
+  exBindTravel();
   const cb = $('#compassBtn'); if (cb) cb.onclick = () => enableCompass().then(render);
   const no = $('#navOv'); if (no) no.onclick = () => { navOverride = P.idx; render(); };
   lastRot = 0;
@@ -279,6 +281,7 @@ function updateLive() {
       if (confirm('Seid ihr wirklich am Ziel? GPS ist im Isartal manchmal ungenau. Station jetzt freischalten?')) requestUnlock(true);
     };
   } else if (!near && fb.dataset.on) { fb.dataset.on = ''; fb.innerHTML = ''; }
+  exUpdateLive();
 }
 
 function renderRiddle() {
@@ -367,6 +370,7 @@ function renderVictory() {
     <p>⏱ Einsatzzeit: <b>${fmtTime(P.finishedAt - P.startedAt)}</b><br>
     💡 Tipps genutzt: <b>${hints}</b><br>
     ❌ Fehlversuche: <b>${tries}</b><br>
+    ${exVictoryHtml()}
     🎖 Rang: <b>${esc(RANKS[RANKS.length - 1])}</b></p>
     <button class="btn sec small" id="againBtn">🎉 Konfetti!</button>
   </div>`;
@@ -399,7 +403,7 @@ function renderAdmin() {
     const d = p ? fmtDist(dist(p, s)) : '–';
     return `<div class="st-item ${i === P.idx ? 'cur' : ''}">
       <div><b>${i + 1}. ${esc(s.title)}</b>${s.free ? '<span class="tag">Start ohne GPS</span>' : ''}${s.final ? '<span class="tag">Finale</span>' : ''}${i === P.idx ? '<span class="tag">aktuell</span>' : ''}</div>
-      <div class="meta">${Number(s.lat).toFixed(5)}, ${Number(s.lon).toFixed(5)} · r=${esc(s.radius)} m · Abstand ${d} · Lösung: ${esc((s.answers || [])[0] || '')}${s.fragment ? ' · Fragment ' + esc(s.fragment) : ''}</div>
+      <div class="meta">${Number(s.lat).toFixed(5)}, ${Number(s.lon).toFixed(5)} · r=${esc(s.radius)} m · Abstand ${d} · Lösung: ${esc((s.answers || [])[0] || '')}${s.fragment ? ' · Fragment ' + esc(s.fragment) : ''}${(s.depots || []).length ? ' · 📦 ' + s.depots.length : ''}${s.task ? ' · 📡' : ''}</div>
       <div class="iconbtns">
         <button data-act="edit" data-i="${i}">✏️ Bearbeiten</button>
         <button data-act="here" data-i="${i}">📍 Hier setzen</button>
@@ -610,7 +614,9 @@ async function init() {
   }
   P = Object.assign(newProgress(), lsGet(KEY_P) || {});
   if (P.idx >= D.stations.length) P.idx = D.stations.length - 1;
+  exInit();
   teamInit();
+  setInterval(exTaskCheck, 15000);
   if (isMember()) P.name = memberReady() ? TEAM.name : '';
   render();
   if (P.name && !P.finishedAt) { startGeo(); keepAwake(); }

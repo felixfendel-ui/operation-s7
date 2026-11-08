@@ -89,6 +89,7 @@ function liveSnapshot(force) {
   const p = here();
   const s = { n: P.name, i: P.idx, s: P.status, f: Object.keys(P.frags).length, st: P.startedAt, fin: P.finishedAt, t: now };
   if (teamOn()) s.tm = teamNames();
+  s.pts = P.pts || 0; s.dp = Object.keys(P.depots || {});
   if (p) Object.assign(s, { lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5), acc: Math.round(p.acc || 0), sim: !!sim });
   enqueue({ topic: tp('pos'), message: JSON.stringify(s), priority: 1 });
 }
@@ -309,6 +310,7 @@ function renderPapaStatus() {
     ? `<p class="feedback bad">⚠️ Seit ${Math.round((Date.now() - s.t) / 60000)} Min. keine Meldung – Handy gesperrt, App zu oder kein Netz.</p>` : '';
   el.innerHTML = `<div class="label">Agent · Station ${Math.min(i + 1, n)} von ${n}</div><h2>${esc(s.n)}</h2><p>${label}</p>
     ${s.tm ? `<p class="small">👥 Team (${s.tm.length}): ${esc(s.tm.join(', '))}</p>` : ''}
+    ${s.pts != null ? `<p class="small">🎖 ${s.pts} Agentenpunkte · 📦 ${(s.dp || []).length}/${allDepots().length} Depots</p>` : ''}
     <p class="small">Letzte Meldung ${ago(s.t)} (${hhmm(s.t)})${s.acc != null ? ' · GPS ±' + s.acc + ' m' : ''}${d} · Fragmente ${s.f}/${D.stations.filter(x => x.fragment).length}${s.sim ? ' · 🧪 simuliert' : ''}</p>
     <div class="pbar"><div style="width:${(s.fin ? n : i + (s.s === 'solved' ? 1 : 0)) / n * 100}%"></div></div>${stale}${off}`;
   P.startedAt = s.st; P.finishedAt = s.fin; tick();
@@ -364,6 +366,8 @@ function initMap() {
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
   mk.st = D.stations.map((s, i) => L.circleMarker([s.lat, s.lon], { radius: 9, weight: 2 }).bindTooltip(`${i + 1}. ${esc(s.title)}`));
   mk.st.slice().reverse().forEach(m => m.addTo(map)); // frühere Stationen liegen oben (Start = Ziel zu Hause)
+  mk.dep = allDepots().map(d => L.circleMarker([d.lat, d.lon], { radius: 5, weight: 1, color: '#c084fc', fillColor: '#c084fc', fillOpacity: 0.8 })
+    .bindTooltip(`${esc(d.icon)} ${esc(d.name)}`).addTo(map));
   mk.track = L.polyline([], { color: '#ff8a3d', weight: 4, opacity: 0.8 }).addTo(map);
   mk.acc = L.circle([0, 0], { radius: 1, color: '#39ff88', weight: 1, fillOpacity: 0.1 });
   mk.kid = L.circleMarker([0, 0], { radius: 10, color: '#ffffff', weight: 3, fillColor: '#39ff88', fillOpacity: 1 });
@@ -378,6 +382,8 @@ function updateMap(center) {
     const c = s && (s.fin || k < i || (k === i && s.s === 'solved')) ? '#39ff88' : k === i ? '#ffc53d' : '#7a8a84';
     m.setStyle({ color: c, fillColor: c, fillOpacity: 0.55 });
   });
+  const got = new Set((s && s.dp) || []);
+  allDepots().forEach((d, k) => mk.dep[k].setStyle({ fillOpacity: got.has(d.id) ? 0.15 : 0.8 }));
   mk.track.setLatLngs(PS.track.slice().sort((a, b) => a[2] - b[2]).map(p => [p[0], p[1]]));
   if (s && s.lat != null) {
     mk.kid.setLatLng([s.lat, s.lon]).addTo(map).bindTooltip(esc(s.n));

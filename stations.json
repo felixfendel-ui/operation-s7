@@ -46,7 +46,24 @@
       "solved": "**Biber ist der Maulwurf!** Er ist geflohen – Richtung Süden.\n\nNimm die **S7 Richtung Wolfratshausen** und fahre bis zur **Endstation Wolfratshausen** (3 Stationen, ca. 10 Minuten).\n\n🚆 Die S7 fährt hier etwa alle 20 Minuten – schaut in die MVV-App.",
       "teamQ": "Wer ist der Maulwurf?",
       "clueA": "🦊 Fuchs: „Der Maulwurf ist Biber.“\n🦫 Biber: „Ich bin nicht der Maulwurf.“",
-      "clueB": "🦡 Dachs: „Fuchs lügt.“\n\nUnd ganz sicher: **Genau einer** der drei sagt die Wahrheit."
+      "clueB": "🦡 Dachs: „Fuchs lügt.“\n\nUnd ganz sicher: **Genau einer** der drei sagt die Wahrheit.",
+      "depots": [
+        {
+          "id": "funk",
+          "icon": "📻",
+          "name": "Funkgerät",
+          "text": "Abhörsicher und wasserdicht. Damit hört ihr sogar den Maulwurf flüstern.",
+          "lat": 47.990531,
+          "lon": 11.450814,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "fuss",
+        "text": "🤫 **MAULWURF-ALARM!** Er hört mit. Ab jetzt **60 Sekunden absolute Funkstille** – keiner sagt ein Wort. Wer redet, verrät das Team!",
+        "pts": 30,
+        "secs": 60
+      }
     },
     {
       "id": "bf-wolfratshausen",
@@ -66,7 +83,13 @@
       "solved": "**LOISACH** – der Fluss, der durch Wolfratshausen fließt!\n\nDas nächste Fragment liegt in der Altstadt am **Marienplatz**, ganz nah an der Loisach. Lauf hin (ca. 10 Minuten).",
       "teamQ": "Entschlüsselt das geheime Wort.",
       "clueA": "Die Geheimbotschaft lautet:\n\n**O P L T D D K**",
-      "clueB": "Der Schlüssel: Der Silberfuchs hat die Buchstaben im Alphabet nach vorne geschoben – **abwechselnd um 3 und um 1 Stelle**. Zum Entschlüsseln also: 1. Buchstabe 3 zurück, 2. Buchstabe 1 zurück, 3. Buchstabe 3 zurück …"
+      "clueB": "Der Schlüssel: Der Silberfuchs hat die Buchstaben im Alphabet nach vorne geschoben – **abwechselnd um 3 und um 1 Stelle**. Zum Entschlüsseln also: 1. Buchstabe 3 zurück, 2. Buchstabe 1 zurück, 3. Buchstabe 3 zurück …",
+      "task": {
+        "mode": "bahn",
+        "text": "👀 **Beobachtungstest:** Schaut euch 30 Sekunden lang genau im Wagen um. Dann machen alle die Augen zu – und der Codeknacker stellt 3 Fragen: Welche Farbe haben die Sitze? Wie viele Leute sitzen gegenüber? Was steht auf dem nächsten Schild?",
+        "pts": 30,
+        "secs": 30
+      }
     },
     {
       "id": "wor-marienplatz",
@@ -88,7 +111,23 @@
       "solved": "**Rot – Gelb – Grün – Blau!** Zieleinlauf rekonstruiert.\n\nJetzt zurück zum **Bahnhof Wolfratshausen** und mit der **S7 Richtung München** zwei Stationen bis **Ebenhausen-Schäftlarn**. 🚆",
       "teamQ": "Vier Flöße – **Rot, Gelb, Grün, Blau** – fuhren um die Wette. In welcher Reihenfolge kamen sie ins Ziel? (Alle vier Farben der Reihe nach)",
       "clueA": "Zielfoto, Teil 1:\n• Rot kommt **direkt vor** Gelb ins Ziel.\n• Grün ist **nicht Erster**.",
-      "clueB": "Zielfoto, Teil 2:\n• Blau kommt **irgendwann nach** Gelb an.\n• Grün ist **nicht Letzter**."
+      "clueB": "Zielfoto, Teil 2:\n• Blau kommt **irgendwann nach** Gelb an.\n• Grün ist **nicht Letzter**.",
+      "depots": [
+        {
+          "id": "lupe",
+          "icon": "🔍",
+          "name": "Lupe",
+          "text": "Zehnfache Vergrößerung – kein Fingerabdruck bleibt euch verborgen.",
+          "lat": 47.915228,
+          "lon": 11.423598,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "fuss",
+        "text": "🔢 **Zahlenjagd:** Findet unterwegs eine **Hausnummer oder ein Schild mit einer 7** – der Linie S7 zu Ehren. Wer sie zuerst entdeckt, darf das nächste Rätsel vorlesen.",
+        "pts": 30
+      }
     },
     {
       "id": "bf-ebenhausen",
@@ -108,7 +147,12 @@
       "solved": "**65!** (Erst 33, dann 65.) Der Maulwurf wird in die Irre geschickt.\n\nGeh jetzt zu Fuß hinunter ins Isartal zum **Kloster Schäftlarn** (ca. 1 km, 20 Minuten, steil bergab – Vorsicht!). Dort leben schon seit über 1250 Jahren Mönche.",
       "teamQ": "Welche Zahl sucht ihr?",
       "clueA": "Die Zahlenreihe des Maulwurfs:\n\n**2 – 3 – 5 – 9 – 17 – …**",
-      "clueB": "Der Trick: Gesucht ist **nicht** die nächste Zahl der Reihe, sondern die **übernächste**!"
+      "clueB": "Der Trick: Gesucht ist **nicht** die nächste Zahl der Reihe, sondern die **übernächste**!",
+      "task": {
+        "mode": "bahn",
+        "text": "✍️ **Tarnnamen:** Jeder spricht seinen Vornamen **rückwärts** aus (Max → Xam). Bis zum Aussteigen dürft ihr euch nur noch mit diesen Tarnnamen ansprechen!",
+        "pts": 30
+      }
     },
     {
       "id": "kloster-schaeftlarn",
@@ -130,7 +174,32 @@
       "solved": "**12 – genau wie du!** 🎂 Der Abt nickt zufrieden.\n\n📡 **EILMELDUNG VOM SILBERFUCHS:** „Gute Arbeit, Agenten. Ihr habt die Hälfte geschafft – aber der Maulwurf beobachtet die Wege hinauf zur S-Bahn. Zu gefährlich zu Fuß! Ich schicke euch ein **Extraktionsfahrzeug**.“\n\n🚐 Wartet vor dem Kloster auf den Fahrer der Einheit ISAR – Codename **Graufalke**. Steigt **nur** ein, wenn das Erkennungssignal stimmt:\n\nGraufalke sagt: **„Die Isar fließt nach Norden.“**\nIhr antwortet: **„Und der Fuchs kennt jeden Weg.“**\n\n🥨 Im Fahrzeug wartet die **Agenten-Verpflegung**. Tankt Energie – die zweite Hälfte der Mission wird härter!\n\nGraufalke bringt euch zum **S-Bahnhof Hohenschäftlarn**. Tippt erst auf „Weiter“, wenn ihr aussteigt.",
       "teamQ": "Wie alt ist der Klosterschüler heute?",
       "clueA": "Der Abt sagt: „Ich bin heute **dreimal so alt** wie mein jüngster Klosterschüler.“",
-      "clueB": "Der Abt sagt auch: „In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.“"
+      "clueB": "Der Abt sagt auch: „In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.“",
+      "depots": [
+        {
+          "id": "nacht",
+          "icon": "🔦",
+          "name": "Nachtsichtgerät",
+          "text": "Für Einsätze nach Sonnenuntergang. Im November sehr nützlich!",
+          "lat": 47.979603,
+          "lon": 11.457902,
+          "pts": 50
+        },
+        {
+          "id": "dietrich",
+          "icon": "🗝️",
+          "name": "Dietrich",
+          "text": "Öffnet fast jedes Schloss. Fast.",
+          "lat": 47.979399,
+          "lon": 11.463106,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "fuss",
+        "text": "🐾 **Spurensicherung:** Sammelt auf dem Weg ins Isartal **3 verschiedene Beweisstücke** aus der Natur – zum Beispiel ein Blatt, einen Zapfen und einen besonderen Stein. Graufalke prüft sie später.",
+        "pts": 30
+      }
     },
     {
       "id": "blick-burg-gruenwald",
@@ -153,7 +222,23 @@
       "solved": "**3 Wägungen!** 10 Münzen sind eine zu viel für 2 Wägungen (die schaffen nur 9). Also: 3 gegen 3 wiegen – dann bleiben höchstens 4 übrig, dann höchstens 2, dann 1. Genial.\n\nFolgt jetzt dem Weg am Isar-Hochufer nach Norden zur Kirche **Heilig Geist in Pullach** (ca. 1,5 km, 20–25 Minuten).",
       "teamQ": "Alle Münzen aus **beiden** Truhen sehen gleich aus – genau **eine** ist schwerer (die echte!). Ihr habt eine **Balkenwaage** ohne Gewichte. Wie oft müsst ihr **mindestens** wiegen, um die echte Münze **ganz sicher** zu finden?",
       "clueA": "In der **linken Truhe** liegen **5 Münzen**.",
-      "clueB": "In der **rechten Truhe** liegen **5 Münzen**."
+      "clueB": "In der **rechten Truhe** liegen **5 Münzen**.",
+      "depots": [
+        {
+          "id": "tarn",
+          "icon": "🧥",
+          "name": "Tarnumhang",
+          "text": "Wer ihn trägt, sieht aus wie ein ganz normaler Spaziergänger.",
+          "lat": 48.044575,
+          "lon": 11.511858,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "bahn",
+        "text": "📸 **Agentenfoto:** Macht ein **Gruppenfoto in Agentenpose** – ernster Blick, zwei Finger am Ohr wie beim Funken. Wer lacht, muss es nochmal machen!",
+        "pts": 30
+      }
     },
     {
       "id": "pullach-heilig-geist",
@@ -173,7 +258,32 @@
       "solved": "**4518** – der Safe springt auf! Darin liegt ein Fragment und ein Zettel: „Treffpunkt **S-Bahnhof Pullach**.“\n\nGeh hin (ca. 5 Minuten).",
       "teamQ": "Wie lautet der 4-stellige Code? (Alle Ziffern sind verschieden.)",
       "clueA": "• Die **letzte** Ziffer ist doppelt so groß wie die **erste**.\n• Die **zweite** Ziffer ist die Summe aus der **ersten** und der **dritten**.",
-      "clueB": "• Die **dritte** Ziffer ist 1.\n• Alle Ziffern zusammengezählt ergeben **18**."
+      "clueB": "• Die **dritte** Ziffer ist 1.\n• Alle Ziffern zusammengezählt ergeben **18**.",
+      "depots": [
+        {
+          "id": "kamera",
+          "icon": "📷",
+          "name": "Knopfkamera",
+          "text": "Sieht aus wie ein Knopf, macht gestochen scharfe Fotos.",
+          "lat": 48.048254,
+          "lon": 11.517317,
+          "pts": 50
+        },
+        {
+          "id": "tinte",
+          "icon": "🖋️",
+          "name": "Geheimtinte",
+          "text": "Unsichtbar – bis man das Papier über eine Kerze hält.",
+          "lat": 48.052266,
+          "lon": 11.520355,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "fuss",
+        "text": "🗣️ **Codesprache:** Bis zur nächsten Station sind die Wörter **„ja“** und **„nein“** verboten. Versucht, die anderen mit Fragen hereinzulegen!",
+        "pts": 30
+      }
     },
     {
       "id": "bf-pullach",
@@ -220,7 +330,23 @@
       "solved": "",
       "teamQ": "Entschlüsselt die Fragmente der Reihe nach. Wie lautet das Codewort? (Die Fragmente hat nur Einsatzleiter Jasper!)",
       "clueA": "**GEHEIMTABELLE – Teil 1** (Fragment = echter Buchstabe)\n\nB = T · C = O · D = L · F = E\nH = U · K = G · M = A",
-      "clueB": "**GEHEIMTABELLE – Teil 2** (Fragment = echter Buchstabe)\n\nP = D · Q = I · V = C · W = S\nX = N · Y = H · Z = R"
+      "clueB": "**GEHEIMTABELLE – Teil 2** (Fragment = echter Buchstabe)\n\nP = D · Q = I · V = C · W = S\nX = N · Y = H · Z = R",
+      "depots": [
+        {
+          "id": "brille",
+          "icon": "🕶️",
+          "name": "Spionagebrille",
+          "text": "Mit eingebautem Rückspiegel. Niemand kann euch unbemerkt folgen.",
+          "lat": 47.989726,
+          "lon": 11.454252,
+          "pts": 50
+        }
+      ],
+      "task": {
+        "mode": "bahn",
+        "text": "🕵️ **Undercover:** Bis zum Aussteigen darf niemand das Wort **„Maulwurf“** sagen – aber versucht, die anderen dazu zu bringen, es zu sagen!",
+        "pts": 30
+      }
     }
   ]
 }

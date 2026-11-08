@@ -167,3 +167,17 @@ details.parents summary{color:var(--fg)}
 details.parents p{font-size:15px}
 a{color:var(--accent)}
 @media (max-width:360px){.invgrid{grid-template-columns:1fr}}
+
+/* Unterwegs: Depots & Spezialaufträge */
+#exmodal{z-index:14;display:flex;align-items:center}
+#exmodal[hidden]{display:none}
+#exmodal .wrap{width:100%}
+.exmodal{border-color:var(--accent2)}
+.depot-icon{font-size:72px;line-height:1.1;margin:8px 0}
+.ptsbig{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--accent2);margin:8px 0}
+.tasktimer{font-family:var(--mono);font-size:56px;font-weight:800;color:var(--accent);margin:6px 0}
+.excard{padding:12px 16px}
+.exrow{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:15px}
+.scanner{margin-top:8px;padding:8px 12px;border-radius:10px;background:#0b1813;border:1px solid var(--line);font-size:14px;color:var(--muted)}
+.scanner.on{border-color:#c084fc;color:var(--fg);animation:pulse 1.4s infinite}
+.inv{margin-top:8px;font-size:24px;letter-spacing:4px}

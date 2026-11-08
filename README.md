@@ -50,6 +50,14 @@ Ein Team, zwei Trupps (🟥 A und 🟦 B), gemeinsamer Spielstand in Echtzeit.
 
 **Wichtig:** Jaspers Handy ist die Zentrale. Die App hält den Bildschirm automatisch wach; trotzdem sollte die App auf Jaspers Handy offen bleiben (Powerbank!). Ist sie kurz zu, holt sie verpasste Aktionen beim Öffnen nach. Die Handys der anderen Kinder verschicken **keine** Standorte – nur Spielaktionen und den Vornamen. Der grüne/rote Punkt oben rechts zeigt die Verbindung.
 
+## Unterwegs: Geheimdepots & Spezialaufträge
+
+- **📦 Geheimdepots:** Auf den Fußwegen liegen 8 virtuelle Agenten-Gegenstände (Funkgerät, Lupe, Nachtsichtgerät, Dietrich, Tarnumhang, Knopfkamera, Geheimtinte, Spionagebrille) – entlang der echten Fußwege berechnet. Der **Depot-Scanner** zeigt ab 400 m „Depot-Signal“ mit heiß/kalt, aber keine Richtung – die Kinder müssen suchen. Wer bis auf ca. 35 m herankommt, knackt das Depot: +50 Agentenpunkte, Gegenstand ins Agentengepäck. Depots gelten nur auf dem Weg zur jeweiligen Station.
+- **📡 Spezialaufträge:** Auf halber Strecke zu einer Station (oder spätestens nach 6 Minuten) kommt ein Funkspruch mit einer Mini-Aufgabe: Maulwurf-Alarm mit 60 Sekunden Funkstille, Beobachtungstest in der S-Bahn, Zahlenjagd, Tarnnamen rückwärts, Spurensicherung im Wald, Agentenfoto, Ja-Nein-Verbot, Undercover-Wort. „Erledigt“ = +30 Punkte.
+- Punkte, Depots und Aufträge erscheinen im Missionsbericht beim Finale und in der Papa-Zentrale (Depots als lila Punkte auf der Karte).
+- Im Team-Modus kann jedes Handy Depots knacken; den Auftrag löst Jaspers Handy aus, alle sehen ihn.
+- Anpassen in `stations.json`: `depots` (Liste mit `id, icon, name, text, lat, lon, pts`) und `task` (`text, pts, secs`) je Station.
+
 ## Einladung vorab per Link
 
 Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhrzeit, Ende, Treffpunkt, Telefonnummer für Zusagen, „Antwort bis“, Ausrüstung und Eltern-Infos eintragen → „Speichern & Link erzeugen“ → „🔗 Einladung teilen“ (z. B. in die WhatsApp-Gruppe).
