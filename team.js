@@ -18,7 +18,43 @@ const isMember = () => TEAM.role === 'member' && !!TEAM.topic;
 const myId = () => (isMember() ? TEAM.id : 'host');
 const myMember = () => (TEAM.members || []).find(m => m.id === myId());
 const teamOn = () => !!TEAM.topic && (TEAM.members || []).length >= 2;
-const teamNames = () => (teamOn() ? TEAM.members.map(m => m.name) : undefined);
+const teamNames = () => (teamOn() ? TEAM.members.map(m => m.name + (m.alias ? ` (${m.alias})` : '')) : undefined);
+
+/* ---------- Decknamen ---------- */
+const KEY_ALIAS = 'sj7_alias';
+const ALIAS_A = ['Schatten', 'Nacht', 'Sturm', 'Eis', 'Donner', 'Nebel', 'Blitz', 'Stahl', 'Feuer', 'Frost', 'Kupfer', 'Granit', 'Rauch', 'Wolken', 'Mond', 'Tarn', 'Turbo', 'Phantom'];
+const ALIAS_B = ['falke', 'wolf', 'luchs', 'adler', 'otter', 'rabe', 'hai', 'puma', 'kobra', 'panther', 'bär', 'eule', 'viper', 'tiger', 'marder', 'skorpion', 'condor', 'jaguar'];
+function makeAlias(avoid = []) {
+  const r = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+  for (let k = 0; k < 40; k++) {
+    const n = ALIAS_A[r(ALIAS_A.length)] + ALIAS_B[r(ALIAS_B.length)];
+    if (!avoid.includes(n)) return n;
+  }
+  return 'Agent' + (100 + r(900));
+}
+const takenAliases = () => (TEAM.members || []).map(m => m.alias).filter(Boolean);
+function myAlias() {
+  if (isMember()) return TEAM.alias || '';
+  let a = tRead(KEY_ALIAS);
+  if (!a) { a = makeAlias(takenAliases()); lsSet(KEY_ALIAS, a); }
+  return a;
+}
+function rerollMyAlias() {
+  const n = makeAlias(takenAliases().concat(myAlias()));
+  if (isMember()) { TEAM.alias = n; saveTeam(); if (TEAM.name) sendJoin(true); }
+  else { lsSet(KEY_ALIAS, n); const h = (TEAM.members || []).find(m => m.id === 'host'); if (h) { h.alias = n; saveTeam(); broadcast(); } }
+  return n;
+}
+const memberLabel = m => `${esc(m.name)}${m.alias ? ` <span class="alias">„${esc(m.alias)}“</span>` : ''}`;
+function aliasBoxHtml(label) {
+  return `<div class="aliasbox"><span class="label">${label || 'Dein Deckname'}</span>
+    <div class="aliasname">Agent <b id="aliasName">${esc(myAlias())}</b></div>
+    <button type="button" class="btn sec small" id="aliasRoll">🎲 Anderen Decknamen würfeln</button></div>`;
+}
+function bindAliasBox() {
+  const b = $('#aliasRoll');
+  if (b) b.onclick = () => { const n = rerollMyAlias(); const el = $('#aliasName'); if (el) { el.textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } };
+}
 const joinLink = () => location.origin + location.pathname + '#team=' + encodeURIComponent(TEAM.topic);
 const TRUPP = { A: '🟥 Trupp A', B: '🟦 Trupp B' };
 
@@ -93,6 +129,7 @@ function teamAfterSave() {
   if (!isHost()) return;
   const h = TEAM.members.find(m => m.id === 'host');
   if (h && P.name && h.name !== P.name) h.name = P.name;
+  if (h && h.alias !== myAlias()) h.alias = myAlias();
   broadcast();
 }
 
@@ -115,11 +152,11 @@ function hostApply(a) {
         if (!a.manual) return; // automatische Wiederholungen eines entfernten Handys ignorieren
         TEAM.kicked = TEAM.kicked.filter(x => x !== a.id); // bewusst „Erneut beitreten“ gedrückt
       }
-      const ex = TEAM.members.find(x => x.id === a.id);
-      if (ex) ex.name = String(a.n).slice(0, 24);
+      const ex = TEAM.members.find(x => x.id === a.id), al = a.al ? String(a.al).slice(0, 24) : '';
+      if (ex) { ex.name = String(a.n).slice(0, 24); ex.alias = al; }
       else {
         const cnt = t => TEAM.members.filter(x => x.trupp === t).length;
-        TEAM.members.push({ id: a.id, name: String(a.n).slice(0, 24), trupp: cnt('A') <= cnt('B') ? 'A' : 'B' });
+        TEAM.members.push({ id: a.id, name: String(a.n).slice(0, 24), alias: al, trupp: cnt('A') <= cnt('B') ? 'A' : 'B' });
         liveEvent('join', `${a.n} ist dem Team beigetreten`, `Team: ${TEAM.members.map(x => x.name).join(', ')}`, 2);
       }
       saveTeam(); broadcast(); teamPanelRefresh(); return;
@@ -147,7 +184,7 @@ function applyState(s) {
   // Daten aus dem Netz absichern (jeder mit dem Kanalnamen könnte etwas senden)
   s.v = Number(s.v) || 0; s.i = Math.max(0, Math.min(Number(s.i) || 0, D.stations.length - 1));
   s.s = ['travel', 'arrived', 'solved'].includes(s.s) ? s.s : 'travel'; s.pts = Number(s.pts) || 0;
-  s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
+  s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
   if (s.v < (TEAM.v || 0)) return;
   const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {})]);
   const before = key();
@@ -211,7 +248,7 @@ function teamRoleHtml() {
   const nm = x => (x ? esc(x.name) : '–');
   return `<div class="card rolecard trupp-${me.trupp}">
     <div class="label">${TRUPP[me.trupp]} · Station ${P.idx + 1}</div>
-    <div class="role">Deine Rolle: <b>${mine.join(' + ')}</b></div>
+    <div class="role">Agent <b>${esc(me.alias || me.name)}</b> · ${mine.join(' + ')}</div>
     <div class="small">🧭 Navigator A: ${nm(r.nav.A)} · 🧭 Navigator B: ${nm(r.nav.B)} · 🔐 Codeknacker: ${nm(r.code)}</div>
   </div>`;
 }
@@ -303,9 +340,10 @@ function renderLobbyInner() {
     <button class="btn" id="joinBtn">🤝 Team beitreten</button>
     <p class="small">Die App fragt nach deinem Standort (für dein Radar – er wird nicht verschickt) und auf dem iPhone nach dem Kompass. Bitte erlauben.</p>
   </div>` : `<div class="card"><div class="label">Team</div>
-    ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${esc(x.name)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : '<p class="small">Warte auf Antwort der Zentrale. Jaspers App muss geöffnet sein.</p>'}
+    ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${memberLabel(x)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : '<p class="small">Warte auf Antwort der Zentrale. Jaspers App muss geöffnet sein.</p>'}
     <p class="small" style="margin-top:12px">${joined ? (P.startedAt ? 'Los geht’s …' : '⏳ Warte, bis Einsatzleiter Jasper die Mission startet.') : ''}</p>
-  </div>`}`;
+  </div><div class="card">${aliasBoxHtml()}</div>`}`;
+  bindAliasBox();
   const jb = $('#joinBtn');
   if (jb) {
     const go = () => {
@@ -331,7 +369,8 @@ function scheduleJoin() { // Anmeldung wiederholen, bis die Zentrale sie bestät
 }
 function sendJoin(manual) {
   if (!isMember() || !TEAM.name || TEAM.kickedMe) return;
-  teamPublish(Object.assign({ k: 'join', id: TEAM.id, n: TEAM.name }, manual ? { manual: true } : {}));
+  if (!TEAM.alias) { TEAM.alias = makeAlias(takenAliases()); saveTeam(); }
+  teamPublish(Object.assign({ k: 'join', id: TEAM.id, n: TEAM.name, al: TEAM.alias }, manual ? { manual: true } : {}));
 }
 
 /* ---------- Team-Panel (Jasper): QR-Code, Mitglieder, Trupps ---------- */
@@ -362,7 +401,7 @@ function renderTeamPanel() {
     <div class="card"><div class="label">Mitglieder (${TEAM.members.length}) – antippen wechselt den Trupp</div>
       ${TEAM.members.map((x, i) => `<div class="memb trupp-${x.trupp}">
         <button class="trupp-btn" data-tt="${i}">${x.trupp === 'A' ? '🟥 A' : '🟦 B'}</button>
-        <span>${esc(x.name)}${x.id === 'host' ? ' ⭐ Einsatzleiter' : ''}</span>
+        <span>${memberLabel(x)}${x.id === 'host' ? ' ⭐ Einsatzleiter' : ''}</span>
         ${x.id !== 'host' ? `<button class="rm" data-rm="${i}" aria-label="Entfernen">✕</button>` : ''}</div>`).join('')}
       ${TEAM.members.length < 2 ? '<p class="small">Noch niemand beigetreten. Die anderen scannen den QR-Code mit der Handy-Kamera.</p>' : ''}
       ${r ? `<p class="small">Station ${P.idx + 1}: 🧭 A ${esc((r.nav.A || {}).name || '–')} · 🧭 B ${esc((r.nav.B || {}).name || '–')} · 🔐 ${esc(r.code.name)}</p>` : ''}
@@ -401,12 +440,12 @@ function teamAdminAct(act) {
   switch (act) {
     case 'teamNewQuiet':
       TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
-        members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', trupp: 'A' }], seen: [] };
+        members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', alias: myAlias(), trupp: 'A' }], seen: [] };
       saveTeam(); streamStart(); teamUi();
       return;
     case 'teamNew':
       TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
-        members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', trupp: 'A' }], seen: [] };
+        members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', alias: myAlias(), trupp: 'A' }], seen: [] };
       saveTeam(); streamStart(); broadcast(); teamUi(); closeAdmin(); return openTeamPanel();
     case 'teamPanel': closeAdmin(); return openTeamPanel();
     case 'teamOff':

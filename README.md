@@ -1,30 +1,51 @@
 # Operation S7 – Der Isar-Code
 
 GPS-Schnitzeljagd als mobile Web-App (reines HTML/CSS/JS, keine Abhängigkeiten, offline-fähig).
-Route: Hohenschäftlarn → Wolfratshausen → Ebenhausen → Kloster Schäftlarn → Höllriegelskreuth → Pullach → zurück. Dauer ca. 4 h.
+Route: Hohenschäftlarn → Wolfratshausen → Ebenhausen → Kloster Schäftlarn → Höllriegelskreuth → Pullach → zurück. Dauer ca. 5 h.
 
-## Route (10 Stationen, Codewort ISARAGENT)
+## Route (10 Stationen)
 
-Die Fragmente sind **verschlüsselt** (Geheimalphabet, kein Caesar-Verschieben), damit man das Codewort nicht vorzeitig erraten kann. Erst am Finale zeigt die App die Geheimtabelle mit Täusch-Einträgen; damit wird aus `QWMZMKFXB` das Wort ISARAGENT.
+| # | Station | Anreise |
+|---|---------|---------|
+| 1 | Hauptquartier (zu Hause) – Briefing | – |
+| 2 | S-Bahnhof Hohenschäftlarn | zu Fuß ~20 min |
+| 3 | Bahnhof Wolfratshausen | S7 → Wolfratshausen, 3 Stationen |
+| 4 | Marienplatz Wolfratshausen | zu Fuß ~12 min |
+| 5 | S-Bahnhof Ebenhausen-Schäftlarn | S7 → München, 2 Stationen |
+| 6 | Kloster Schäftlarn | zu Fuß ~20 min bergab |
+| 7 | Aussichtspunkt Burg Grünwald | 🚐 Abholung am Kloster (Papa = „Graufalke“, Verpflegung) zum Bf Hohenschäftlarn, S7 → Höllriegelskreuth |
+| 8 | Kirche Heilig Geist, Pullach | zu Fuß am Isar-Hochufer ~25 min |
+| 9 | S-Bahnhof Pullach | zu Fuß ~8 min |
+| 10 | Hauptquartier – Tresor | S7 → Wolfratshausen bis Hohenschäftlarn, zu Fuß |
 
-| # | Station | Anreise | Lösung | Fragment (Klartext) |
-|---|---------|---------|--------|----------|
-| 1 | Hauptquartier (zu Hause) – Briefing | – | 7 | Q (I) |
-| 2 | S-Bahnhof Hohenschäftlarn | zu Fuß ~12 min | Biber | W (S) |
-| 3 | Bahnhof Wolfratshausen | S7 → Wolfratshausen, 3 Stationen | Loisach | M (A) |
-| 4 | Marienplatz Wolfratshausen | zu Fuß ~10 min | Rot, Gelb, Grün, Blau | Z (R) |
-| 5 | S-Bahnhof Ebenhausen-Schäftlarn | S7 → München, 2 Stationen | 65 | M (A) |
-| 6 | Kloster Schäftlarn | zu Fuß ~20 min bergab | 12 | K (G) |
-| 7 | Aussichtspunkt Burg Grünwald | 🚐 Abholung am Kloster (Papa = „Graufalke“, Verpflegung) zum Bf Hohenschäftlarn, S7 → Höllriegelskreuth | 3 | F (E) |
-| 8 | Kirche Heilig Geist, Pullach | zu Fuß am Isar-Hochufer ~25 min | 4518 | X (N) |
-| 9 | S-Bahnhof Pullach | zu Fuß ~5 min | 30 | B (T) |
-| 10 | Hauptquartier – Tresor | S7 → Wolfratshausen bis Hohenschäftlarn, zu Fuß | ISARAGENT | – |
+Lösungen, Codewort und Tresor-Code stehen absichtlich **nicht** hier, sondern nur lokal in `PRIVAT.md` (das Repository ist öffentlich). Am Ende zeigt die App den Tresor-Code für das Zahlenschloss an der Geschenk-Kiste (änderbar im Admin-Modus unter „Spiel-Einstellungen“).
 
-Am Ende zeigt die App den **Tresor-Code** (`lockCode` in `stations.json`). Passend dazu ein Zahlenschloss an die Geschenk-Kiste hängen – Code vorher im Admin-Modus unter „Spiel-Einstellungen“ oder direkt in `stations.json` anpassen.
+## Einladungs-Studio für Jasper
+
+Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
+
+- Jasper sieht die **Einsatzleiter-Zentrale**: eigener Deckname (würfelbar), Einladung gestalten (inkl. persönlichem Funkspruch an seine Agenten), Einladung teilen, Liste der eingetragenen Agenten, Countdown.
+- **Keine Rätsel:** Die Mission ist auf seinem Handy bis zum Einsatztag versiegelt; der Admin-Modus (Stationen, Lösungen, Papa-Link) braucht die PIN.
+- Sein Handy wird dabei automatisch die **Zentrale** für den Team-Modus.
+- **Wichtig:** Auf Jaspers Handy einmal den Admin-Modus öffnen und unter „Spiel-Einstellungen“ eine **eigene PIN** setzen – die Standard-PIN steht in diesem öffentlichen Repository. Die PIN wird nur auf dem Gerät gespeichert. Dort auch die Live-Verbindung zu Papa einrichten.
+
+## Decknamen
+
+Jeder Agent bekommt automatisch einen Decknamen (z. B. „Sturmbär“, „Mondskorpion“, „Nebelmarder“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der WhatsApp-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).
+
+## Rätseldaten
+
+Die Stationen werden als `stations.dat` veröffentlicht (verschleiert, nicht im Klartext lesbar). Die bearbeitbare Quelle `stations.json` liegt nur lokal (`.gitignore`). Nach Änderungen:
+
+```bash
+node tools/seal.mjs
+```
+
+Hinweis: Ältere Versionen im Git-Verlauf enthalten `stations.json` noch im Klartext.
 
 ## Admin-Modus
 
-5× schnell auf das S7-Logo tippen (oder `?admin` an die URL hängen), PIN `1212` (änderbar).
+5× schnell auf das S7-Logo tippen (oder `?admin` an die URL hängen), Standard-PIN siehe `PRIVAT.md` (auf jedem Gerät änderbar).
 
 - **Aktuelle Position als neue Station** – erfasst die GPS-Position, danach Texte/Lösung im Editor ergänzen
 - **📍 Hier setzen** – Koordinaten einer bestehenden Station mit der aktuellen Position überschreiben
@@ -90,8 +111,8 @@ Jaspers App meldet jedes Ereignis (Station erreicht, falsche Antwort, Tipp genut
   "id": "bf-pullach", "title": "S-Bahnhof Pullach", "targetName": "S-Bahnhof Pullach",
   "lat": 48.05896, "lon": 11.52184, "radius": 60,
   "mission": "Text während der Anreise", "story": "Text bei Ankunft",
-  "riddle": "Rätsel", "answers": ["30", "dreissig"], "hint": "Tipp",
-  "fragment": "T", "solved": "Text nach dem Lösen (inkl. Weg zur nächsten Station)",
+  "riddle": "Rätsel", "answers": ["Lösung", "Variante"], "hint": "Tipp",
+  "fragment": "X", "solved": "Text nach dem Lösen (inkl. Weg zur nächsten Station)",
   "free": false, "final": false
 }
 ```

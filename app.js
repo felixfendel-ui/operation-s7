@@ -25,7 +25,7 @@ function esc(s) {
 }
 function rich(t) {
   return esc(t || '')
-    .replace(/\{name\}/g, esc((P && P.name) || 'Agent'))
+    .replace(/\{name\}/g, esc((P && P.name && myAlias()) || (P && P.name) || 'Agent'))
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/\n/g, '<br>');
 }
@@ -166,7 +166,7 @@ function renderHeader() {
   $('#pbar').style.width = (P.name ? done / total * 100 : 0) + '%';
   const n = Object.keys(P.frags).length;
   const me = teamOn() && myMember();
-  $('#rank').textContent = P.name ? ((me ? (me.trupp === 'A' ? 'TRUPP A' : 'TRUPP B') : 'RANG: ' + RANKS[Math.min(n, RANKS.length - 1)].toUpperCase()) + ' · ' + P.name.toUpperCase()) : '';
+  $('#rank').textContent = P.name ? ((me ? (me.trupp === 'A' ? 'TRUPP A' : 'TRUPP B') : 'RANG: ' + RANKS[Math.min(n, RANKS.length - 1)].toUpperCase()) + ' · AGENT ' + (myAlias() || P.name).toUpperCase()) : '';
   tick();
 }
 function tick() {
@@ -193,6 +193,7 @@ function render() {
 }
 
 function renderIntro() {
+  if (studioOn() && !isPartyDay(TEAM.inviteDraft || INV_DEFAULT)) return renderStudio(); // Jaspers Handy: bis zum Einsatztag versiegelt
   app.innerHTML = `
   <div class="card pop">
     <div class="stamp">TOP SECRET</div>
@@ -202,6 +203,7 @@ function renderIntro() {
   <div class="card">
     <label class="label" for="nameIn">Dein Agentenname</label>
     <input id="nameIn" maxlength="24" autocomplete="off" placeholder="z. B. Jasper" value="${esc(D.agentName || '')}" style="margin-top:8px">
+    ${aliasBoxHtml()}
     <button class="btn" id="startBtn">🔓 Mission starten</button>
     <p class="small">Die App fragt nach deinem Standort (für das Radar) und auf dem iPhone nach dem Kompass. Bitte jeweils erlauben.</p>
     ${isHost() ? `<p class="small">👥 Team-Modus: ${TEAM.members.length - 1} Mitspieler beigetreten. QR-Code über den Team-Knopf unten links.</p>` : ''}
@@ -216,6 +218,7 @@ function renderIntro() {
   };
   $('#startBtn').onclick = go;
   $('#nameIn').onkeydown = e => { if (e.key === 'Enter') go(); };
+  bindAliasBox();
 }
 
 function renderTravel() {
@@ -381,6 +384,7 @@ function renderVictory() {
 function openAdmin() { adminView = 'main'; $('#admin').hidden = false; document.body.style.overflow = 'hidden'; renderAdmin(); }
 function closeAdmin() { $('#admin').hidden = true; document.body.style.overflow = ''; render(); }
 function saveData() { lsSet(KEY_D, D); }
+const adminPin = () => String(lsGet('sj7_pin') || D.adminPin || '1212');
 function isOverridden() { return !!lsGet(KEY_D); }
 
 function renderAdmin() {
@@ -480,7 +484,7 @@ function renderSettings() {
     <div class="card">
       <div class="field"><label for="s_title">Titel</label><input id="s_title" value="${esc(D.title)}"></div>
       <div class="field"><label for="s_lock">Code für das Tresor-Schloss (Siegerbildschirm)</label><input id="s_lock" value="${esc(D.lockCode)}"></div>
-      <div class="field"><label for="s_pin">Admin-PIN</label><input id="s_pin" value="${esc(D.adminPin)}"></div>
+      <div class="field"><label for="s_pin">Admin-PIN (nur auf diesem Gerät – auf Jaspers Handy unbedingt ändern!)</label><input id="s_pin" inputmode="numeric" value="${esc(adminPin())}"></div>
       <div class="field"><label for="s_intro">Intro-Geschichte</label><textarea id="s_intro" style="min-height:180px">${esc(D.intro)}</textarea></div>
       <div class="field"><label for="s_finale">Finale-Text</label><textarea id="s_finale" style="min-height:140px">${esc(D.finale)}</textarea></div>
       <button class="btn" data-act="settingsSave">💾 Speichern</button>
@@ -496,13 +500,14 @@ function exportJson() { return JSON.stringify(D, null, 2); }
 function admMsg(t) { const e = $('#admfb'); if (e) e.textContent = t; }
 
 function adminAct(act, i) {
+  if (!adminAuthed && act !== 'pin' && act !== 'close' && act !== 'back' && !(studioOn() && act.startsWith('teamInvite'))) return;
   const list = stations();
   const p = here();
   switch (act) {
     case 'close': return closeAdmin();
-    case 'back': adminView = 'main'; return renderAdmin();
+    case 'back': if (!adminAuthed) return closeAdmin(); adminView = 'main'; return renderAdmin();
     case 'pin':
-      if (String($('#pin').value) === String(D.adminPin || '1212')) { adminAuthed = true; renderAdmin(); }
+      if (String($('#pin').value) === String(adminPin())) { adminAuthed = true; renderAdmin(); }
       else $('#pinfb').textContent = 'Falsche PIN';
       return;
     case 'new': {
@@ -576,7 +581,9 @@ function adminAct(act, i) {
       } catch (e) { $('#impfb').textContent = 'Fehler: ' + e.message; return; }
     case 'settings': adminView = 'settings'; return renderSettings();
     case 'settingsSave':
-      D.title = $('#s_title').value; D.lockCode = $('#s_lock').value; D.adminPin = $('#s_pin').value.trim() || '1212';
+      lsSet('sj7_pin', $('#s_pin').value.trim() || adminPin()); // PIN getrennt speichern, damit Stations-Updates weiter ankommen
+      if (D.title === $('#s_title').value && D.lockCode === $('#s_lock').value && D.intro === $('#s_intro').value && D.finale === $('#s_finale').value) { adminView = 'main'; return renderAdmin(); }
+      D.title = $('#s_title').value; D.lockCode = $('#s_lock').value;
       D.intro = $('#s_intro').value; D.finale = $('#s_finale').value;
       saveData(); adminView = 'main'; return renderAdmin();
     case 'discard':
@@ -599,11 +606,26 @@ $('#logo').addEventListener('click', () => {
 });
 
 /* ---------- Start ---------- */
+/* Stationen laden: veröffentlicht als stations.dat (verschleiert, damit Rätsel nicht im Klartext lesbar sind),
+   lokal beim Entwickeln notfalls stations.json. */
+const SEAL_KEY = 'S7·Isar·Silberfuchs·Einheit';
+async function loadStations() {
+  try {
+    const r = await fetch('stations.dat', { cache: 'no-cache' });
+    if (r.ok) {
+      const raw = atob((await r.text()).trim()), key = new TextEncoder().encode(SEAL_KEY), bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i) ^ key[i % key.length];
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+  } catch (e) {}
+  try { const r = await fetch('stations.json', { cache: 'no-cache' }); if (r.ok) return await r.json(); } catch (e) {}
+  return null;
+}
 async function init() {
-  try { const r = await fetch('stations.json', { cache: 'no-cache' }); BASE = await r.json(); } catch (e) { BASE = null; }
+  BASE = await loadStations();
   D = lsGet(KEY_D) || (BASE && JSON.parse(JSON.stringify(BASE)));
   if (!D || !Array.isArray(D.stations) || !D.stations.length) {
-    app.innerHTML = '<div class="card"><h2>Fehler</h2><p>stations.json konnte nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.</p></div>';
+    app.innerHTML = '<div class="card"><h2>Fehler</h2><p>Die Missionsdaten konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.</p></div>';
     return;
   }
   document.title = D.title.split('–')[0].trim() || 'Operation S7';
@@ -615,6 +637,7 @@ async function init() {
   P = Object.assign(newProgress(), lsGet(KEY_P) || {});
   if (P.idx >= D.stations.length) P.idx = D.stations.length - 1;
   exInit();
+  studioFromHash();
   teamInit();
   setInterval(exTaskCheck, 15000);
   if (isMember()) P.name = memberReady() ? TEAM.name : '';

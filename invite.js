@@ -59,6 +59,7 @@ function inviteCardHtml(inv, who) {
     <h1>Operation S7</h1>
     <p>Du wurdest von <b>Agent ${host}</b> für eine Spezialmission der <b>Einheit ISAR</b> ausgewählt. Anlass: ${host}s <b>12. Geburtstag</b>! 🎂</p>
     <p>Ein legendärer Agent hat entlang der S-Bahn-Linie S7 ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
+    ${inv.msg ? `<div class="msgbox"><span class="label">Funkspruch von Agent ${esc(inv.al || inv.host || 'Jasper')}</span><p>${esc(inv.msg).replace(/\n/g, '<br>')}</p></div>` : ''}
     <div class="invgrid">
       <div><span class="label">Einsatzbeginn</span><b>${fmtPartyDate(inv)}${inv.t ? ', ' + esc(inv.t) + ' Uhr' : ''}</b></div>
       ${inv.ort ? `<div><span class="label">Treffpunkt</span><b>${esc(inv.ort)}</b></div>` : ''}
@@ -71,7 +72,7 @@ function inviteCardHtml(inv, who) {
 }
 function rsvpHtml(inv, name) {
   if (!inv.tel) return `<p class="small">Sag ${esc(inv.host || 'Jasper')} Bescheid, ob du dabei bist!</p>`;
-  const n = waNumber(inv.tel), who = name ? `Agent ${name}` : 'Ich';
+  const n = waNumber(inv.tel), who = name ? `Agent ${TEAM.alias ? TEAM.alias + ' (' + name + ')' : name}` : 'Ich';
   const yes = `${who} meldet sich zum Dienst – ich komme zur Operation S7! 🕵️`;
   const no = `${who} hier – ich kann leider nicht zur Operation S7 kommen. 😕`;
   return `<div class="row"><a class="btn" href="https://wa.me/${n}?text=${encodeURIComponent(yes)}" target="_blank" rel="noopener">✅ Ich bin dabei</a>
@@ -97,15 +98,17 @@ function renderInviteLobby() {
       <input id="joinName" maxlength="24" autocomplete="off" placeholder="Dein Vorname" style="margin-top:8px">
       <button class="btn" id="joinBtn">🕵️ Agentennamen sichern</button></div>`;
   } else if (!party) {
-    status = `<div class="card center"><p>✅ Du bist als <b>Agent ${esc(TEAM.name)}</b> registriert.</p>
+    status = `<div class="card center"><p>✅ ${esc(TEAM.name)}, du bist registriert.</p>
+      ${aliasBoxHtml()}
       <p class="small">🔒 Die Mission ist noch versiegelt. Öffne diesen Link am Einsatztag wieder – dann geht es los.</p></div>`;
   } else {
     status = `<div class="card"><div class="label">Heute ist Einsatztag!</div>
       <p>${joined ? `Du bist dabei: <b>${TRUPP[me.trupp]}</b>` : '📡 Melde dich bei der Zentrale an … (Jaspers App muss geöffnet sein)'}</p>
-      ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${esc(x.name)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
+      ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${memberLabel(x)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
+      ${TEAM.name ? aliasBoxHtml() : ''}
       <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p></div>`;
   }
-  app.innerHTML = inviteCardHtml(inv, TEAM.name) + status
+  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status
     + `<div class="card"><div class="label">Bist du dabei?</div>${rsvpHtml(inv, TEAM.name)}</div>` + parentsHtml(inv);
   const jb = $('#joinBtn');
   if (jb) {
@@ -113,13 +116,14 @@ function renderInviteLobby() {
       const n = $('#joinName').value.trim();
       if (!n) { $('#joinName').classList.add('shake'); setTimeout(() => $('#joinName').classList.remove('shake'), 400); return; }
       initAudio();
-      TEAM.name = n; saveTeam(); sendJoin();
+      TEAM.name = n; if (!TEAM.alias) TEAM.alias = makeAlias(takenAliases()); saveTeam(); sendJoin();
       if (isPartyDay(inv)) { startGeo(); enableCompass(); }
       render();
     };
     jb.onclick = go;
     $('#joinName').onkeydown = e => { if (e.key === 'Enter') go(); };
   }
+  bindAliasBox();
   clearInterval(invTimer);
   invTimer = setInterval(() => {
     const el = $('#cdown');
@@ -134,7 +138,7 @@ function renderInviteLobby() {
 /* ---------- Einladung erstellen (Admin auf Jaspers Handy oder am Mac) ---------- */
 function renderInviteEditor() {
   const inv = Object.assign({}, INV_DEFAULT, TEAM.inviteDraft || {});
-  if (!TEAM.inviteDraft && P.name) inv.host = P.name;
+  if (!TEAM.inviteDraft) inv.host = P.name || D.agentName || 'Jasper';
   const f = (k, label, type = 'text', ph = '') => `<div class="field"><label for="i_${k}">${label}</label>${type === 'ta'
     ? `<textarea id="i_${k}">${esc(inv[k])}</textarea>` : `<input id="i_${k}" type="${type}" value="${esc(inv[k])}" placeholder="${esc(ph)}">`}</div>`;
   $('#admin').innerHTML = `<div class="wrap">
@@ -142,6 +146,7 @@ function renderInviteEditor() {
     <div class="card">
       <p class="small">Die Angaben stecken nur im Einladungslink, nicht im öffentlichen Repository. Der Link ist gleichzeitig der Team-Beitrittslink – am Einsatztag öffnen die Kinder ihn einfach wieder.</p>
       ${f('host', 'Geburtstagskind')}
+      ${f('msg', 'Persönlicher Funkspruch an deine Agenten (optional)', 'ta')}
       <div class="row">${f('d', 'Datum', 'date')}${f('t', 'Beginn', 'time')}${f('end', 'Ende ca.', 'time')}</div>
       ${f('ort', 'Treffpunkt', 'text', 'z. B. bei uns zu Hause, Musterstraße 1')}
       ${f('tel', 'Telefon für Zusagen (WhatsApp)', 'tel', 'z. B. 0170 1234567')}
@@ -175,7 +180,7 @@ function inviteAdminAct(act) {
       adminView = 'invite'; return renderInviteEditor();
     case 'teamInviteSave': {
       const v = k => $('#i_' + k).value.trim();
-      TEAM.inviteDraft = { host: v('host') || 'Jasper', d: v('d'), t: v('t'), end: v('end'), ort: v('ort'), tel: v('tel'), bis: v('bis'), mit: v('mit'), note: v('note') };
+      TEAM.inviteDraft = { host: v('host') || 'Jasper', al: myAlias(), msg: v('msg'), d: v('d'), t: v('t'), end: v('end'), ort: v('ort'), tel: v('tel'), bis: v('bis'), mit: v('mit'), note: v('note') };
       saveTeam(); renderInviteOut(); msg('Gespeichert ✓');
       $('#invOut').scrollIntoView({ behavior: 'smooth' });
       return;
@@ -188,4 +193,49 @@ function inviteAdminAct(act) {
       return copyText(text + '\n' + link, msg);
     }
   }
+}
+
+/* ---------- Einladungs-Studio für Jasper ----------
+   Link: …/operation-s7/#studio – Jasper kann Einladung und Deckname gestalten, sieht aber keine Rätsel.
+   Sein Handy wird dabei automatisch die Zentrale (Host). Die Mission bleibt bis zum Einsatztag versiegelt;
+   den Admin-Modus (Rätsel, Lösungen, Papa-Link) erreicht nur, wer die PIN kennt. */
+const KEY_STUDIO = 'sj7_studio';
+const studioOn = () => !isMember() && !!lsGet(KEY_STUDIO);
+function studioFromHash() {
+  if (location.hash.replace('#', '').split('&')[0] !== 'studio' || isMember()) return;
+  lsSet(KEY_STUDIO, 1);
+}
+function renderStudio() {
+  const inv = TEAM.inviteDraft, others = (TEAM.members || []).filter(m => m.id !== 'host');
+  app.innerHTML = `
+  <div class="card pop">
+    <div class="stamp">EINSATZLEITER-ZENTRALE</div>
+    <h1>Agent ${esc(myAlias())}</h1>
+    <p>Hallo ${esc(D.agentName || 'Jasper')}! Du bist der <b>Einsatzleiter</b> der Operation S7. Bevor die Mission startet, musst du dein Agententeam einberufen.</p>
+    ${aliasBoxHtml('Dein Deckname als Einsatzleiter')}
+  </div>
+  <div class="card">
+    <div class="label">Schritt 1 · Einladung</div>
+    ${inv ? `<p>✅ Einladung für <b>${fmtPartyDate(inv)}</b> ist fertig.</p>` : '<p>Gestalte deine geheime Einberufung – mit Treffpunkt, Uhrzeit und einem persönlichen Funkspruch.</p>'}
+    <button class="btn" id="stEdit">💌 ${inv ? 'Einladung ansehen, ändern & teilen' : 'Einladung gestalten'}</button>
+  </div>
+  <div class="card">
+    <div class="label">Schritt 2 · Dein Team</div>
+    ${others.length ? others.map(m => `<div class="memb">🕵️ ${memberLabel(m)}</div>`).join('')
+      : '<p class="small">Wer sich über deine Einladung einträgt, erscheint hier, wenn deine App gerade offen ist. Alle anderen melden sich am Einsatztag automatisch.</p>'}
+  </div>
+  <div class="card center">
+    <p>🔒 <b>Die Mission ist versiegelt.</b></p>
+    <p class="small">Die Rätsel öffnen sich erst am Einsatztag – auch für dich.</p>
+    <div class="countdown"><span class="label">Countdown bis zum Einsatz</span><div id="cdown">${countdownText(inv || INV_DEFAULT)}</div></div>
+  </div>`;
+  bindAliasBox();
+  $('#stEdit').onclick = () => { $('#admin').hidden = false; document.body.style.overflow = 'hidden'; inviteAdminAct('teamInvite'); };
+  clearInterval(invTimer);
+  invTimer = setInterval(() => {
+    const el = $('#cdown');
+    if (!el) { clearInterval(invTimer); return; }
+    el.textContent = countdownText(inv || INV_DEFAULT);
+    if (isPartyDay(inv || INV_DEFAULT)) render();
+  }, 1000);
 }

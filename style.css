@@ -181,3 +181,11 @@ a{color:var(--accent)}
 .scanner{margin-top:8px;padding:8px 12px;border-radius:10px;background:#0b1813;border:1px solid var(--line);font-size:14px;color:var(--muted)}
 .scanner.on{border-color:#c084fc;color:var(--fg);animation:pulse 1.4s infinite}
 .inv{margin-top:8px;font-size:24px;letter-spacing:4px}
+
+/* Decknamen & Studio */
+.alias{color:var(--accent2);font-style:italic}
+.aliasbox{margin:14px 0 4px;padding:12px;border:1px dashed var(--accent2);border-radius:12px;text-align:center}
+.aliasname{font-family:var(--mono);font-size:22px;margin:4px 0}
+.aliasname b{color:var(--accent2)}
+.msgbox{margin-top:12px;padding:12px 14px;border-left:4px solid var(--accent2);background:rgba(255,197,61,.08);border-radius:10px}
+.msgbox p{margin:4px 0 0}
