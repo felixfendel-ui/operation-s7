@@ -15,7 +15,7 @@ Die Fragmente sind **verschlüsselt** (Geheimalphabet, kein Caesar-Verschieben),
 | 4 | Marienplatz Wolfratshausen | zu Fuß ~10 min | 7 | Z (R) |
 | 5 | S-Bahnhof Ebenhausen-Schäftlarn | S7 → München, 2 Stationen | 65 | M (A) |
 | 6 | Kloster Schäftlarn | zu Fuß ~20 min bergab | 12 | K (G) |
-| 7 | Aussichtspunkt Burg Grünwald | zu Fuß zum Bf Hohenschäftlarn ~25 min, S7 → Höllriegelskreuth | 2 | F (E) |
+| 7 | Aussichtspunkt Burg Grünwald | 🚐 Abholung am Kloster (Papa = „Graufalke“, Verpflegung) zum Bf Hohenschäftlarn, S7 → Höllriegelskreuth | 2 | F (E) |
 | 8 | Kirche Heilig Geist, Pullach | zu Fuß am Isar-Hochufer ~25 min | 4518 | X (N) |
 | 9 | S-Bahnhof Pullach | zu Fuß ~5 min | 30 | B (T) |
 | 10 | Hauptquartier – Tresor | S7 → Wolfratshausen bis Hohenschäftlarn, zu Fuß | ISARAGENT | – |
@@ -102,6 +102,9 @@ python3 -m http.server 8737
 ```
 
 ## Am Tag der Feier (Ende November)
+
+- **Extraktion am Kloster:** Nach dem Rätsel am Kloster schickt der Silberfuchs ein „Extraktionsfahrzeug“. Papa ist Fahrer **Graufalke** und holt das Team vor dem Kloster ab. Erkennungssignal: Papa sagt „Die Isar fließt nach Norden.“, die Kinder antworten „Und der Fuchs kennt jeden Weg.“ Im Auto gibt es die **Agenten-Verpflegung**, dann geht es zum S-Bahnhof Hohenschäftlarn. Losfahren, sobald in der Papa-Zentrale „Station 6 erreicht“ erscheint (dann bleiben ca. 10–15 Minuten fürs Rätsel). Für 8 Kinder plus Begleitung braucht es zwei Autos oder einen Bus.
+- Proviant-Idee passend zur Story: Brezen, Obst, Saft in einer „Verpflegungskiste“ mit TOP-SECRET-Aufkleber, Schokotaler als „Goldmünzen“ (Vorgeschmack auf das Münzrätsel an der Burg).
 
 - **Sonnenuntergang in München ca. 16:30 Uhr**, danach wird es schnell dunkel – **Start spätestens 12:00 Uhr**, besser 11:30.
 - Der Abstieg von Ebenhausen zum Kloster und der Weg am Isar-Hochufer (Höllriegelskreuth → Pullach) sind im November nass und mit Laub bedeckt: feste Schuhe. Wird es knapp: von Höllriegelskreuth eine Station mit der S7 nach Pullach fahren und Station 8 im Admin-Modus mit „Aktuelle Station freischalten“ öffnen – das Rätsel und das Fragment bleiben erhalten.

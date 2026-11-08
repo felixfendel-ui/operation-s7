@@ -126,7 +126,7 @@
       ],
       "hint": "Probier's aus: Ist der Schüler 10, ist der Abt 30. In 12 Jahren wären sie 22 und 42 – ist das doppelt so alt? Nein. Probier andere Zahlen!",
       "fragment": "K",
-      "solved": "**12 – genau wie du!** 🎂 Der Abt nickt zufrieden.\n\nSteig jetzt hinauf zum **S-Bahnhof Hohenschäftlarn** (ca. 25 Minuten, bergauf). Fahre mit der **S7 Richtung München** bis **Höllriegelskreuth** (3 Stationen) und folge dann dem Radar zum Aussichtspunkt über der Isar.",
+      "solved": "**12 – genau wie du!** 🎂 Der Abt nickt zufrieden.\n\n📡 **EILMELDUNG VOM SILBERFUCHS:** „Gute Arbeit, Agenten. Ihr habt die Hälfte geschafft – aber der Maulwurf beobachtet die Wege hinauf zur S-Bahn. Zu gefährlich zu Fuß! Ich schicke euch ein **Extraktionsfahrzeug**.“\n\n🚐 Wartet vor dem Kloster auf den Fahrer der Einheit ISAR – Codename **Graufalke**. Steigt **nur** ein, wenn das Erkennungssignal stimmt:\n\nGraufalke sagt: **„Die Isar fließt nach Norden.“**\nIhr antwortet: **„Und der Fuchs kennt jeden Weg.“**\n\n🥨 Im Fahrzeug wartet die **Agenten-Verpflegung**. Tankt Energie – die zweite Hälfte der Mission wird härter!\n\nGraufalke bringt euch zum **S-Bahnhof Hohenschäftlarn**. Tippt erst auf „Weiter“, wenn ihr aussteigt.",
       "teamQ": "Wie alt ist der Klosterschüler heute?",
       "clueA": "Der Abt sagt: „Ich bin heute **dreimal so alt** wie mein jüngster Klosterschüler.“",
       "clueB": "Der Abt sagt auch: „In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.“"
@@ -138,7 +138,7 @@
       "lat": 48.04506,
       "lon": 11.51331,
       "radius": 60,
-      "mission": "Fahre mit der S7 Richtung München bis Höllriegelskreuth. Folge dann dem Radar zum Aussichtspunkt hoch über der Isar – von dort siehst du die Burg auf der anderen Seite.",
+      "mission": "Frisch gestärkt geht’s weiter: Fahrt mit der **S7 Richtung München** bis **Höllriegelskreuth** (3 Stationen). Folgt dann dem Radar zum Aussichtspunkt hoch über der Isar – von dort seht ihr die Burg auf der anderen Seite.",
       "story": "Siehst du die Burg auf der anderen Isarseite? Das ist die **Burg Grünwald**, über 700 Jahre alt. Die Burgherren bewahrten dort einen Goldschatz auf – aber ein Fälscher hatte seine Finger im Spiel …",
       "riddle": "Du hast **9 Goldmünzen**. Sie sehen alle gleich aus, aber **eine ist schwerer** (die echte!). Du hast eine **Balkenwaage** ohne Gewichte.\n\nWie oft musst du **mindestens** wiegen, um die schwere Münze **ganz sicher** zu finden?",
       "answers": [
