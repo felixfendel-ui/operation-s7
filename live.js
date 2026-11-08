@@ -17,7 +17,7 @@ const LEAFLET = {
 const QUICK_KID = ['💡 Wir brauchen einen Tipp!', '👍 Alles gut', '🚆 Wir sitzen in der S-Bahn', '📞 Bitte ruf mich an', '🆘 Wir haben uns verlaufen'];
 const QUICK_PAPA = ['💡 Tipp schicken', '👍 Super, weiter so!', '📞 Ich rufe gleich an', '⏰ Denkt an die Zeit – bald wird es dunkel', '🚆 Schaut in der MVV-App nach der nächsten S7'];
 const EV_TAG = { start: 'rocket', arrived: 'round_pushpin', forced: 'warning', wrong: 'x', hint: 'bulb',
-  solved: 'white_check_mark', finished: 'trophy', chat: 'speech_balloon', help: 'sos', depot: 'package', task: 'dart', join: 'wave' };
+  solved: 'white_check_mark', finished: 'trophy', chat: 'speech_balloon', help: 'sos', depot: 'package', task: 'dart', join: 'wave', rsvp: 'envelope' };
 /* ntfy.sh erlaubt anonym 250 Nachrichten pro Tag und IP. Jaspers Handy spart deshalb:
    Position nur alle 2 Min. wenn er sich bewegt (sonst alle 10 Min.), bei knappem Kontingent seltener. */
 let QUOTA_LEFT = null, quotaTimer = null, lastSnapPos = null;
@@ -95,13 +95,14 @@ window.addEventListener('online', () => { retryDelay = 2000; flush(); });
 
 /* ---------- Jasper-Seite: Ereignisse & Position ---------- */
 function liveEvent(type, title, message, priority = 3) {
-  if (!liveOn() || !P || !P.name || PAPA || isMember()) return;
+  if (!liveOn() || !P || (!P.name && type !== 'rsvp' && type !== 'join') || PAPA || isMember()) return;
   startQuotaWatch();
   // Unwichtiges zuerst weglassen, wenn das Tageskontingent knapp wird
   if (type === 'wrong') { wrongSent[P.idx] = (wrongSent[P.idx] || 0) + 1; if (wrongSent[P.idx] > 3 || (QUOTA_LEFT !== null && QUOTA_LEFT < 60)) return; }
   if ((type === 'join' || type === 'task') && QUOTA_LEFT !== null && QUOTA_LEFT < 40) return;
   const tags = [EV_TAG[type] || 'spy', 'ev-' + type, 'i' + P.idx, 'pts-' + (Number(P.pts) || 0)];
   if (type === 'depot' && arguments[4]) tags.push('dp-' + arguments[4]);
+  if (type === 'rsvp' && arguments[4]) tags.push(String(arguments[4]).slice(0, 30));
   enqueue({ topic: tp('log'), title, message: message || title, tags, priority });
   // Bei wichtigen Momenten den Stand für die Papa-Zentrale mitschicken (höchstens alle 45 s, Start/Ende immer)
   if (type === 'start' || type === 'finished' || (['arrived', 'forced', 'solved'].includes(type) && Date.now() - lastSnap > 45000)) liveSnapshot(true);
@@ -253,6 +254,7 @@ async function initPapa(topic) {
       <div class="quick">${QUICK_PAPA.map((q, i) => `<button type="button" data-pq="${i}">${esc(q)}</button>`).join('')}</div>
       <div class="sendrow"><input id="pIn" maxlength="300" placeholder="Nachricht an Jasper" autocomplete="off"><button class="btn" id="pSend">Senden</button></div>
       <div class="feedback" id="pFb"></div></div>
+    <div class="card" id="pRsvp" hidden></div>
     <div class="card" id="pStation"></div>
     <div class="card"><div class="adm-head"><h3 class="label" style="margin:0">Verlauf</h3><button class="btn sec small" style="width:auto;margin:0" id="pClear">🧹 Ansicht leeren</button></div><div id="pLog"></div></div>
     <p class="small center">Push aufs Handy: ntfy-App → Server ntfy.sh → Kanal <code>${esc(topic)}-log</code> abonnieren.</p>`;
@@ -347,7 +349,18 @@ async function papaPoll() {
     papaRenderSoon();
   });
 }
-function renderPapa() { renderPapaStatus(); renderPapaStation(); renderPapaChat(); renderPapaLog(); updateMap(false); }
+function renderPapa() { renderPapaStatus(); renderPapaRsvp(); renderPapaStation(); renderPapaChat(); renderPapaLog(); updateMap(false); }
+function renderPapaRsvp() {
+  const el = $('#pRsvp');
+  if (!el) return;
+  const last = {}; // pro Gast die neueste Antwort (ntfy hält Ereignisse ca. 12 Stunden)
+  PS.log.filter(e => (e.tags || []).includes('ev-rsvp')).forEach(e => { const id = (e.tags.find(x => x.startsWith('rid-')) || e.title); last[id] = e; });
+  const list = Object.values(last);
+  el.hidden = !list.length;
+  if (!list.length) return;
+  el.innerHTML = `<div class="label">💌 Antworten auf die Einladung (letzte 12 Std.)</div>` + list.map(e => `<div class="memb">${esc(e.title)}</div>`).join('')
+    + '<p class="small">Die vollständige Liste steht in Jaspers Einsatzleiter-Zentrale.</p>';
+}
 function renderPapaStatus() {
   const el = $('#pStatus'), s = PS.snap;
   if (!el) return;
@@ -395,7 +408,7 @@ function renderPapaLog() {
   if (!el) return;
   if (el.dataset.n === String(PS.log.length)) return;
   el.dataset.n = String(PS.log.length);
-  const icon = tags => ({ rocket: '🚀', round_pushpin: '📍', warning: '⚠️', x: '❌', bulb: '💡', white_check_mark: '✅', trophy: '🏆', speech_balloon: '💬', sos: '🆘', package: '📦', dart: '🎯', wave: '👋' })[tags[0]] || '•';
+  const icon = tags => ({ rocket: '🚀', round_pushpin: '📍', warning: '⚠️', x: '❌', bulb: '💡', white_check_mark: '✅', trophy: '🏆', speech_balloon: '💬', sos: '🆘', package: '📦', dart: '🎯', wave: '👋', envelope: '💌' })[tags[0]] || '•';
   el.innerHTML = PS.log.slice().reverse().slice(0, 150).map(e => `<div class="logrow"><span class="t">${hhmm(e.t)}</span> ${icon(e.tags)} <b>${esc(e.title)}</b>${e.text && e.text !== e.title ? `<div class="small">${esc(e.text)}</div>` : ''}</div>`).join('')
     || '<p class="small">Noch keine Ereignisse.</p>';
 }

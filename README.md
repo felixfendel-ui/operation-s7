@@ -29,6 +29,15 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - Sein Handy wird dabei automatisch die **Zentrale** für den Team-Modus.
 - **Wichtig:** Auf Jaspers Handy einmal den Admin-Modus öffnen und unter „Spiel-Einstellungen“ eine **eigene PIN** setzen – die Standard-PIN steht in diesem öffentlichen Repository. Die PIN wird nur auf dem Gerät gespeichert. Dort auch die Live-Verbindung zu Papa einrichten.
 
+## Zusagen in der App
+
+Gäste tragen sich in der Einladung ein und tippen **„✅ Ich bin dabei“** oder **„❌ Kann leider nicht“**. Die Antwort geht an Jaspers Handy (Zentrale), das sie bestätigt – der Gast sieht dann „Deine Zusage ist angekommen“ und die Liste „Schon im Einsatzteam“.
+
+- Jasper sieht in der Einsatzleiter-Zentrale: wer dabei ist, wer abgesagt hat, wer noch nicht geantwortet hat.
+- Papa bekommt jede Antwort als Push (ntfy-App, falls die Live-Verbindung eingerichtet ist) und sieht sie in der Papa-Zentrale.
+- ntfy hält Nachrichten ca. 12 Stunden: Jasper sollte seine App in den Tagen bis zur Feier ab und zu öffnen. Unbestätigte Zusagen schickt die Gast-App beim nächsten Öffnen automatisch erneut.
+- Wer absagt, wird am Einsatztag nicht ins Team aufgenommen. Zusätzlich gibt es weiterhin den WhatsApp-Knopf (eingeklappt).
+
 ## Decknamen
 
 Jeder Agent bekommt automatisch einen Decknamen (z. B. „Sturmbär“, „Mondskorpion“, „Nebelmarder“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der WhatsApp-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).

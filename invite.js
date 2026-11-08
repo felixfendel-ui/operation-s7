@@ -7,7 +7,7 @@
 const INV_DEFAULT = {
   host: 'Jasper', d: '2026-11-21', t: '11:00', end: '17:30', ort: '', tel: '', bis: '',
   mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
-  note: 'Wir sind mit Begleitung durch Erwachsene mit der S7 zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir.'
+  note: 'Wir sind mit Begleitung durch Erwachsene mit der S7 zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir. Zum Abschluss gibt es bei uns zu Hause Pizza.'
 };
 let invTimer = null;
 
@@ -59,6 +59,7 @@ function inviteCardHtml(inv, who) {
     <h1>Operation S7</h1>
     <p>Du wurdest von <b>Agent ${host}</b> für eine Spezialmission der <b>Einheit ISAR</b> ausgewählt. Anlass: ${host}s <b>12. Geburtstag</b>! 🎂</p>
     <p>Ein legendärer Agent hat entlang der S-Bahn-Linie S7 ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
+    <p>🍕 Nach erfolgreichem Einsatz wartet im Hauptquartier eine streng geheime Belohnung – Codename <b>„Operation Margherita“</b>. Mehr verraten die Akten nicht.</p>
     ${inv.msg ? `<div class="msgbox"><span class="label">Funkspruch von Agent ${esc(inv.al || inv.host || 'Jasper')}</span><p>${esc(inv.msg).replace(/\n/g, '<br>')}</p></div>` : ''}
     <div class="invgrid">
       <div><span class="label">Einsatzbeginn</span><b>${fmtPartyDate(inv)}${inv.t ? ', ' + esc(inv.t) + ' Uhr' : ''}</b></div>
@@ -78,6 +79,26 @@ function rsvpHtml(inv, name) {
   return `<div class="row"><a class="btn" href="https://wa.me/${n}?text=${encodeURIComponent(yes)}" target="_blank" rel="noopener">✅ Ich bin dabei</a>
     <a class="btn sec" href="https://wa.me/${n}?text=${encodeURIComponent(no)}" target="_blank" rel="noopener">❌ Kann nicht</a></div>
     <p class="small center">Antwort per WhatsApp · <a href="sms:+${n}?&body=${encodeURIComponent(yes)}">lieber per SMS zusagen</a></p>`;
+}
+/* Zusage in der App: geht über den Team-Kanal an Jaspers Handy (Zentrale), das sie bestätigt.
+   Die Zentrale muss dafür innerhalb von ~12 Std. einmal geöffnet sein; sonst schickt die App die Zusage beim nächsten Öffnen erneut. */
+function rsvpCardHtml(inv) {
+  const host = esc(inv.al || inv.host || 'Jasper');
+  if (!TEAM.name) return `<div class="card"><div class="label">Bist du dabei?</div><p class="small">Trag dich oben als Agent ein – dann kannst du direkt hier zusagen.</p></div>`;
+  const v = TEAM.rsvp, ok = v && TEAM.rsvpConfirmed === v;
+  const status = !v ? '' : ok
+    ? `<p class="feedback good">${v === 'yes' ? `✅ Deine Zusage ist bei Agent ${host} angekommen!` : '❌ Deine Absage ist angekommen. Schade – vielleicht beim nächsten Einsatz!'}</p>`
+    : `<p class="small">📡 ${v === 'yes' ? 'Zusage' : 'Absage'} wird an die Zentrale gefunkt … Sie kommt an, sobald ${esc(inv.host || 'Jasper')}s App offen ist.</p>`;
+  const yes = Object.entries(TEAM.rsvpList || {}).filter(([, x]) => x.v === 'yes');
+  return `<div class="card"><div class="label">Bist du dabei?</div>
+    <div class="row">
+      <button class="btn ${v === 'yes' ? '' : 'sec'}" data-rsvp="yes">✅ Ich bin dabei</button>
+      <button class="btn ${v === 'no' ? 'danger' : 'sec'}" data-rsvp="no">❌ Kann leider nicht</button>
+    </div>
+    ${status}
+    ${yes.length ? `<div class="label" style="margin-top:12px">Schon im Einsatzteam (${yes.length})</div>` + yes.map(([id, x]) => `<div class="memb">🕵️ ${memberLabel({ name: x.n, alias: x.al })}${id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
+    ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per WhatsApp Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
+  </div>`;
 }
 function parentsHtml(inv) {
   return `<details class="card parents"><summary>ℹ️ Infos für Eltern</summary>
@@ -108,8 +129,14 @@ function renderInviteLobby() {
       ${TEAM.name ? aliasBoxHtml() : ''}
       <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p></div>`;
   }
-  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status
-    + `<div class="card"><div class="label">Bist du dabei?</div>${rsvpHtml(inv, TEAM.name)}</div>` + parentsHtml(inv);
+  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv) + parentsHtml(inv);
+  app.querySelectorAll('[data-rsvp]').forEach(b => {
+    b.onclick = () => {
+      initAudio(); fx(b.dataset.rsvp === 'yes' ? 'good' : 'bad');
+      TEAM.rsvp = b.dataset.rsvp; TEAM.rsvpConfirmed = ''; if (TEAM.rsvp === 'yes') TEAM.kickedMe = false;
+      saveTeam(); sendRsvp(); render();
+    };
+  });
   const jb = $('#joinBtn');
   if (jb) {
     const go = () => {
@@ -220,9 +247,8 @@ function renderStudio() {
     <button class="btn" id="stEdit">💌 ${inv ? 'Einladung ansehen, ändern & teilen' : 'Einladung gestalten'}</button>
   </div>
   <div class="card">
-    <div class="label">Schritt 2 · Dein Team</div>
-    ${others.length ? others.map(m => `<div class="memb">🕵️ ${memberLabel(m)}</div>`).join('')
-      : '<p class="small">Wer sich über deine Einladung einträgt, erscheint hier, wenn deine App gerade offen ist. Alle anderen melden sich am Einsatztag automatisch.</p>'}
+    <div class="label">Schritt 2 · Antworten deiner Agenten</div>
+    ${rsvpSummaryHtml(others)}
   </div>
   <div class="card center">
     <p>🔒 <b>Die Mission ist versiegelt.</b></p>
@@ -238,4 +264,15 @@ function renderStudio() {
     el.textContent = countdownText(inv || INV_DEFAULT);
     if (isPartyDay(inv || INV_DEFAULT)) render();
   }, 1000);
+}
+
+function rsvpSummaryHtml(others) {
+  const rs = TEAM.rsvps || {}, all = Object.entries(rs);
+  const yes = all.filter(([, x]) => x.v === 'yes'), no = all.filter(([, x]) => x.v === 'no');
+  const open = others.filter(m => !rs[m.id]);
+  if (!all.length && !open.length) return '<p class="small">Noch keine Antworten. Sobald deine Freunde in der Einladung zu- oder absagen, erscheinen sie hier (deine App muss dafür ab und zu geöffnet sein).</p>';
+  return `<p><b>${yes.length}</b> dabei · <b>${no.length}</b> abgesagt${open.length ? ` · <b>${open.length}</b> ohne Antwort` : ''}</p>`
+    + yes.map(([, x]) => `<div class="memb">✅ ${memberLabel({ name: x.n, alias: x.al })}</div>`).join('')
+    + no.map(([, x]) => `<div class="memb">❌ ${memberLabel({ name: x.n, alias: x.al })}</div>`).join('')
+    + open.map(m => `<div class="memb">⏳ ${memberLabel(m)}</div>`).join('');
 }

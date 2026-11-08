@@ -116,9 +116,9 @@ function broadcast() {
   clearTimeout(bcastTimer);
   bcastTimer = setTimeout(() => {
     // Nur senden, wenn es Mitspieler gibt und sich der sichtbare Stand geändert hat (spart ntfy-Kontingent)
-    if ((TEAM.members || []).length < 2) return;
+    if ((TEAM.members || []).length < 2 && !Object.keys(TEAM.rsvps || {}).length) return;
     const body = { i: P.idx, s: P.status, st: P.startedAt, fin: P.finishedAt, n: P.name || 'Jasper',
-      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, ...exStateFields() };
+      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, r: TEAM.rsvps || {}, ...exStateFields() };
     const sig = JSON.stringify(body);
     if (sig === lastBcast) return;
     lastBcast = sig; TEAM.v++; saveTeam();
@@ -178,6 +178,26 @@ function hostApply(a) {
       return;
     case 'hello':
       lastBcast = ''; broadcast(); return;
+    case 'rsvp': {
+      if (!a.id || !a.n || (a.v !== 'yes' && a.v !== 'no')) return;
+      const name = String(a.n).slice(0, 24), al = a.al ? String(a.al).slice(0, 24) : '';
+      const prev = (TEAM.rsvps || {})[a.id];
+      TEAM.rsvps = Object.assign({}, TEAM.rsvps, { [a.id]: { n: name, al, v: a.v, t: Date.now() } });
+      const ex = TEAM.members.find(x => x.id === a.id);
+      if (a.v === 'no' && ex) TEAM.members = TEAM.members.filter(x => x.id !== a.id); // Absage: nicht im Team
+      if (a.v === 'yes' && !ex && !(TEAM.kicked || []).includes(a.id)) {
+        const cnt = t => TEAM.members.filter(x => x.trupp === t).length;
+        TEAM.members.push({ id: a.id, name, alias: al, trupp: cnt('A') <= cnt('B') ? 'A' : 'B' });
+      }
+      saveTeam(); broadcast(); teamPanelRefresh();
+      if (!prev || prev.v !== a.v) {
+        const all = Object.values(TEAM.rsvps), yes = all.filter(x => x.v === 'yes');
+        liveEvent('rsvp', `${name}${al ? ' (' + al + ')' : ''} ${a.v === 'yes' ? 'hat zugesagt ✅' : 'hat abgesagt ❌'}`,
+          `Zusagen: ${yes.length} · Absagen: ${all.length - yes.length}${yes.length ? ' – ' + yes.map(x => x.n).join(', ') : ''}`, a.v === 'yes' ? 3 : 2, 'rid-' + a.id);
+        if (typeof studioOn === 'function' && studioOn() && !P.name && $('#admin').hidden) render();
+      }
+      return;
+    }
   }
 }
 function applyState(s) {
@@ -186,18 +206,21 @@ function applyState(s) {
   s.s = ['travel', 'arrived', 'solved'].includes(s.s) ? s.s : 'travel'; s.pts = Number(s.pts) || 0;
   s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
   if (s.v < (TEAM.v || 0)) return;
-  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {})]);
+  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {})]);
   const before = key();
   const wasStatus = P.status, wasIdx = P.idx, wasFin = P.finishedAt;
   TEAM.v = s.v; TEAM.members = s.m || []; TEAM.hostName = s.n; TEAM.started = !!s.st; saveTeam();
   const inTeam = TEAM.members.some(x => x.id === TEAM.id);
   if (inTeam) TEAM.wasIn = true;
-  else if (TEAM.wasIn && TEAM.name) { TEAM.kickedMe = true; TEAM.wasIn = false; if (joinTimer) { clearTimeout(joinTimer); joinTimer = null; } }
+  else if (TEAM.wasIn && TEAM.name && TEAM.rsvp !== 'no') { TEAM.kickedMe = true; TEAM.wasIn = false; if (joinTimer) { clearTimeout(joinTimer); joinTimer = null; } }
   saveTeam();
   P.name = inTeam ? TEAM.name : ''; P.idx = s.i; P.status = s.s; P.startedAt = s.st; P.finishedAt = s.fin;
   P.hints = Object.fromEntries((s.h || []).map(k => [k, true]));
   P.frags = Object.fromEntries((s.fi || []).map(i => [i, '★']));
   exApplyState(s);
+  const rl = {};
+  if (s.r && typeof s.r === 'object') for (const [id, x] of Object.entries(s.r)) if (x && (x.v === 'yes' || x.v === 'no')) rl[String(id).slice(0, 20)] = { n: String(x.n || '?').slice(0, 24), al: String(x.al || '').slice(0, 24), v: x.v };
+  TEAM.rsvpList = rl; TEAM.rsvpConfirmed = rl[TEAM.id] ? rl[TEAM.id].v : ''; saveTeam();
   lsSet(KEY_P, P);
   if (inTeam && joinTimer) { clearTimeout(joinTimer); joinTimer = null; joinDelay = 20000; }
   if (before === key()) return;
@@ -368,7 +391,7 @@ function scheduleJoin() { // Anmeldung wiederholen, bis die Zentrale sie bestät
   }, joinDelay);
 }
 function sendJoin(manual) {
-  if (!isMember() || !TEAM.name || TEAM.kickedMe) return;
+  if (!isMember() || !TEAM.name || TEAM.kickedMe || TEAM.rsvp === 'no') return;
   if (!TEAM.alias) { TEAM.alias = makeAlias(takenAliases()); saveTeam(); }
   teamPublish(Object.assign({ k: 'join', id: TEAM.id, n: TEAM.name, al: TEAM.alias }, manual ? { manual: true } : {}));
 }
@@ -464,9 +487,14 @@ function teamAdminAct(act) {
 }
 
 /* ---------- Start ---------- */
+function sendRsvp() {
+  if (!isMember() || !TEAM.name || !TEAM.rsvp) return;
+  teamPublish({ k: 'rsvp', id: TEAM.id, n: TEAM.name, al: TEAM.alias || '', v: TEAM.rsvp });
+}
 function teamInit() {
   teamJoinFromHash();
   if (TEAM.topic) streamStart();
+  if (isMember() && TEAM.rsvp && TEAM.rsvpConfirmed !== TEAM.rsvp) setTimeout(sendRsvp, 3000);
   if (isHost()) { lastBcast = ''; broadcast(); }
   if (isMember() && TEAM.name) sendJoin();
   setInterval(() => { flush(); liveSnapshot(false); }, 15000);
