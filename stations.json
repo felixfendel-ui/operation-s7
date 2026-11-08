@@ -1,0 +1,225 @@
+{
+  "title": "Operation S7 – Der Isar-Code",
+  "adminPin": "1212",
+  "lockCode": "1511",
+  "agentName": "Jasper",
+  "intro": "**STRENG GEHEIM – NUR FÜR DIE AUGEN VON AGENT JASPER**\n\nDu bist 12 geworden – damit bist du alt genug für die Aufnahmeprüfung in die geheimste Einheit Bayerns: die **Einheit ISAR**. Heute ist es so weit.\n\nDie Legende **„Silberfuchs“** hat 40 Jahre lang für den Geheimdienst in Pullach gearbeitet. Bevor er in Rente ging, hat er ein Codewort **verschlüsselt**, in **9 Fragmente** zerlegt und entlang der S-Bahn-Linie versteckt – von Wolfratshausen bis Pullach.\n\nDie Fragmente sehen aus wie Buchstabensalat. Erst mit der **Geheimtabelle des Silberfuchs** im Hauptquartier wird daraus das echte Codewort – und das öffnet den Tresor.\n\nAber Achtung: Ein Doppelagent, genannt **der Maulwurf**, ist ebenfalls hinter dem Code her. Sei schneller. Sei schlauer.\n\n**Wichtig:** Um ca. 16:30 Uhr wird es dunkel – bis dahin muss die Mission erledigt sein!\n\nDauer: ca. 4 Stunden. Ausrüstung: Handy mit Akku, MVV-Ticket, warme Jacke, Mütze, Trinkflasche, Agenten-Team.",
+  "finale": "**MISSION ERFÜLLT!**\n\nAgent {name}, du hast den Isar-Code geknackt und den Maulwurf ausgetrickst. Hiermit bist du offiziell aufgenommen in die **Einheit ISAR**.\n\nDer Silberfuchs gratuliert dir nachträglich zum **12. Geburtstag**! 🎂\n\nDer Code für das Schloss am Tresor lautet:",
+  "stations": [
+    {
+      "id": "hq-start",
+      "title": "Hauptquartier",
+      "targetName": "Hauptquartier",
+      "lat": 47.98785,
+      "lon": 11.44367,
+      "radius": 220,
+      "free": true,
+      "mission": "Deine Mission beginnt im Hauptquartier.",
+      "story": "Willkommen, Agent {name}. Die erste Nachricht vom Silberfuchs ist verschlüsselt. Er hat dir ein Zahlenrätsel hinterlassen – die Lösung verrät dir, womit du heute reisen wirst.",
+      "riddle": "Ich bin eine Zahl zwischen 1 und 20.\n• Ziehst du von mir 3 ab und nimmst das Ergebnis mal 5, erhältst du 20.\n• Ich bin ungerade und eine Primzahl.\n\nWelche Zahl bin ich?",
+      "answers": [
+        "7",
+        "sieben"
+      ],
+      "hint": "Rechne rückwärts: Was mal 5 ergibt 20? Und dann wieder 3 dazu.",
+      "fragment": "Q",
+      "solved": "Richtig – die **7**! Du reist heute mit der **S-Bahn-Linie S7**.\n\nDein erstes Ziel: der **S-Bahnhof Hohenschäftlarn**. Geh zu Fuß dorthin (ca. 12 Minuten). Dort wartet ein Kontaktmann – oder vielleicht der Maulwurf?",
+      "teamQ": "Ich bin eine Zahl zwischen 1 und 20. Welche Zahl bin ich? (Nur mit den Hinweisen **beider** Trupps eindeutig!)",
+      "clueA": "• Ich bin größer als 5 und kleiner als 12.\n• Ich bin ungerade.",
+      "clueB": "• Ich bin eine Primzahl.\n• Ich bin kleiner als 10."
+    },
+    {
+      "id": "bf-hohenschaeftlarn",
+      "title": "S-Bahnhof Hohenschäftlarn",
+      "targetName": "S-Bahnhof Hohenschäftlarn",
+      "lat": 47.9914,
+      "lon": 11.45754,
+      "radius": 60,
+      "mission": "Geh zu Fuß zum S-Bahnhof Hohenschäftlarn. Das Radar zeigt dir Richtung und Entfernung. Achtung im Straßenverkehr, Agent!",
+      "story": "Funkspruch abgefangen! Drei Agenten waren heute Morgen hier am Bahnhof: **Fuchs**, **Biber** und **Dachs**. Einer von ihnen ist der Maulwurf. Unser Lauschgerät hat ihre Aussagen aufgezeichnet:",
+      "riddle": "🦊 Fuchs: „Der Maulwurf ist Biber.“\n🦫 Biber: „Ich bin nicht der Maulwurf.“\n🦡 Dachs: „Fuchs lügt.“\n\nWir wissen sicher: **Genau einer** der drei sagt die Wahrheit.\n\nWer ist der Maulwurf?",
+      "answers": [
+        "Biber"
+      ],
+      "hint": "Probier alle drei Möglichkeiten durch: Nimm an, Fuchs ist der Maulwurf – wie viele sagen dann die Wahrheit? Dann dasselbe mit Biber und mit Dachs.",
+      "fragment": "W",
+      "solved": "**Biber ist der Maulwurf!** Er ist geflohen – Richtung Süden.\n\nNimm die **S7 Richtung Wolfratshausen** und fahre bis zur **Endstation Wolfratshausen** (3 Stationen, ca. 10 Minuten).\n\n🚆 Die S7 fährt hier etwa alle 20 Minuten – schaut in die MVV-App.",
+      "teamQ": "Wer ist der Maulwurf?",
+      "clueA": "🦊 Fuchs: „Der Maulwurf ist Biber.“\n🦫 Biber: „Ich bin nicht der Maulwurf.“",
+      "clueB": "🦡 Dachs: „Fuchs lügt.“\n\nUnd ganz sicher: **Genau einer** der drei sagt die Wahrheit."
+    },
+    {
+      "id": "bf-wolfratshausen",
+      "title": "Bahnhof Wolfratshausen",
+      "targetName": "Bahnhof Wolfratshausen (Endstation)",
+      "lat": 47.91453,
+      "lon": 11.4271,
+      "radius": 80,
+      "mission": "Fahre mit der S7 bis zur Endstation Wolfratshausen. Erst dort schaltet sich die nächste Nachricht frei.",
+      "story": "Endstation – aber nicht für dich! Der Silberfuchs funkt dir eine seltsame Buchstabenfolge. Er hat sie mit der **Caesar-Verschlüsselung** codiert: Jeder Buchstabe wurde im Alphabet um **3 Stellen nach vorne** geschoben (A→D, B→E, C→F …).",
+      "riddle": "Entschlüssle das Wort:\n\n**O R L V D F K**\n\nDazu schiebst du jeden Buchstaben um 3 Stellen **zurück** (D→A, E→B, F→C …).",
+      "answers": [
+        "Loisach"
+      ],
+      "hint": "O→L, R→O … den Rest schaffst du! Es ist der Name eines Flusses hier in Wolfratshausen.",
+      "fragment": "M",
+      "solved": "**LOISACH** – der Fluss, der durch Wolfratshausen fließt!\n\nDas nächste Fragment liegt in der Altstadt am **Marienplatz**, ganz nah an der Loisach. Lauf hin (ca. 10 Minuten).",
+      "teamQ": "Entschlüsselt das geheime Wort.",
+      "clueA": "Die Geheimbotschaft lautet:\n\n**O R L V D F K**",
+      "clueB": "Der Schlüssel: Der Silberfuchs hat jeden Buchstaben im Alphabet um **3 Stellen nach vorne** geschoben (A→D, B→E …). Zum Entschlüsseln also 3 Stellen **zurück**."
+    },
+    {
+      "id": "wor-marienplatz",
+      "title": "Marienplatz Wolfratshausen",
+      "targetName": "Marienplatz in der Altstadt",
+      "lat": 47.91484,
+      "lon": 11.41851,
+      "radius": 60,
+      "mission": "Lauf in die Altstadt zum Marienplatz an der Loisach.",
+      "story": "Wolfratshausen – klingt nach Wolf, oder? Früher brachten Flößer auf Loisach und Isar Holz und Waren bis nach München und sogar bis nach Wien. Ein alter Flößer hat dem Silberfuchs dieses Rätsel verraten:",
+      "riddle": "Ein Flößer will einen **Wolf**, eine **Ziege** und einen **Kohlkopf** über die Loisach bringen. Sein Floß trägt außer ihm nur **eine** Sache.\n• Allein gelassen frisst der Wolf die Ziege.\n• Allein gelassen frisst die Ziege den Kohl.\n\nWie viele Fahrten über den Fluss braucht er **mindestens**, bis alle drei heil drüben sind? (Hin und zurück zählen jeweils als eine Fahrt.)",
+      "answers": [
+        "7",
+        "sieben"
+      ],
+      "hint": "Die Ziege muss zuerst rüber. Und manchmal muss man etwas wieder zurückbringen …",
+      "fragment": "Z",
+      "solved": "**7 Fahrten** – stark gedacht!\n\nJetzt zurück zum **Bahnhof Wolfratshausen** und mit der **S7 Richtung München** zwei Stationen bis **Ebenhausen-Schäftlarn**. 🚆",
+      "teamQ": "Wie viele Fahrten über den Fluss braucht der Flößer **mindestens**, bis alle drei heil drüben sind? (Hin und zurück zählen jeweils als eine Fahrt.)",
+      "clueA": "Ein Flößer will einen **Wolf**, eine **Ziege** und einen **Kohlkopf** über die Loisach bringen. Sein Floß trägt außer ihm nur **eine** Sache.",
+      "clueB": "Achtung, Gefahr!\n• Allein gelassen frisst der Wolf die Ziege.\n• Allein gelassen frisst die Ziege den Kohl.\n• Solange der Flößer daneben steht, frisst keiner."
+    },
+    {
+      "id": "bf-ebenhausen",
+      "title": "S-Bahnhof Ebenhausen-Schäftlarn",
+      "targetName": "S-Bahnhof Ebenhausen-Schäftlarn",
+      "lat": 47.97872,
+      "lon": 11.4537,
+      "radius": 70,
+      "mission": "Fahre mit der S7 Richtung München bis Ebenhausen-Schäftlarn (2 Stationen).",
+      "story": "Am Bahnhof Ebenhausen hat der Maulwurf eine Spur hinterlassen: eine Zahlenreihe, mit der er seine Komplizen ruft. Wenn du die nächste Zahl kennst, kannst du seine Nachricht fälschen!",
+      "riddle": "Welche Zahl kommt **nicht** als nächste, sondern als **übernächste**?\n\n**2 – 3 – 5 – 9 – 17 – …**",
+      "answers": [
+        "65"
+      ],
+      "hint": "Schau dir die Abstände an: +1, +2, +4, +8 … Also kommt zuerst 33 – und danach?",
+      "fragment": "M",
+      "solved": "**65!** (Erst 33, dann 65.) Der Maulwurf wird in die Irre geschickt.\n\nGeh jetzt zu Fuß hinunter ins Isartal zum **Kloster Schäftlarn** (ca. 1 km, 20 Minuten, steil bergab – Vorsicht!). Dort leben schon seit über 1250 Jahren Mönche.",
+      "teamQ": "Welche Zahl sucht ihr?",
+      "clueA": "Die Zahlenreihe des Maulwurfs:\n\n**2 – 3 – 5 – 9 – 17 – …**",
+      "clueB": "Der Trick: Gesucht ist **nicht** die nächste Zahl der Reihe, sondern die **übernächste**!"
+    },
+    {
+      "id": "kloster-schaeftlarn",
+      "title": "Kloster Schäftlarn",
+      "targetName": "Kloster Schäftlarn im Isartal",
+      "lat": 47.97861,
+      "lon": 11.46726,
+      "radius": 70,
+      "mission": "Geh zu Fuß hinunter ins Isartal zum Kloster Schäftlarn.",
+      "story": "Das Kloster Schäftlarn wurde im Jahr **762** gegründet – vor über 1250 Jahren! Heute leben hier noch Benediktinermönche. Der Silberfuchs hat sein Fragment beim alten Abt versteckt. Der gibt es aber nur heraus, wenn du sein Rätsel löst:",
+      "riddle": "„Ich bin heute **dreimal so alt** wie mein jüngster Klosterschüler. In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.\n\nWie alt ist mein Klosterschüler heute?“",
+      "answers": [
+        "12",
+        "zwoelf",
+        "zwölf"
+      ],
+      "hint": "Probier's aus: Ist der Schüler 10, ist der Abt 30. In 12 Jahren wären sie 22 und 42 – ist das doppelt so alt? Nein. Probier andere Zahlen!",
+      "fragment": "K",
+      "solved": "**12 – genau wie du!** 🎂 Der Abt nickt zufrieden.\n\nSteig jetzt hinauf zum **S-Bahnhof Hohenschäftlarn** (ca. 25 Minuten, bergauf). Fahre mit der **S7 Richtung München** bis **Höllriegelskreuth** (3 Stationen) und folge dann dem Radar zum Aussichtspunkt über der Isar.",
+      "teamQ": "Wie alt ist der Klosterschüler heute?",
+      "clueA": "Der Abt sagt: „Ich bin heute **dreimal so alt** wie mein jüngster Klosterschüler.“",
+      "clueB": "Der Abt sagt auch: „In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.“"
+    },
+    {
+      "id": "blick-burg-gruenwald",
+      "title": "Blick auf Burg Grünwald",
+      "targetName": "Aussichtspunkt Burg Grünwald (bei Höllriegelskreuth)",
+      "lat": 48.04506,
+      "lon": 11.51331,
+      "radius": 60,
+      "mission": "Fahre mit der S7 Richtung München bis Höllriegelskreuth. Folge dann dem Radar zum Aussichtspunkt hoch über der Isar – von dort siehst du die Burg auf der anderen Seite.",
+      "story": "Siehst du die Burg auf der anderen Isarseite? Das ist die **Burg Grünwald**, über 700 Jahre alt. Die Burgherren bewahrten dort einen Goldschatz auf – aber ein Fälscher hatte seine Finger im Spiel …",
+      "riddle": "Du hast **9 Goldmünzen**. Sie sehen alle gleich aus, aber **eine ist schwerer** (die echte!). Du hast eine **Balkenwaage** ohne Gewichte.\n\nWie oft musst du **mindestens** wiegen, um die schwere Münze **ganz sicher** zu finden?",
+      "answers": [
+        "2",
+        "zwei",
+        "2mal",
+        "zweimal"
+      ],
+      "hint": "Teile die 9 Münzen in drei Gruppen zu je 3 Münzen auf. Was verrät dir eine einzige Wägung?",
+      "fragment": "F",
+      "solved": "**Nur 2 Wägungen!** Erst 3 gegen 3 – dann weißt du, in welcher Dreiergruppe sie steckt. Dann 1 gegen 1. Genial.\n\nFolge jetzt dem Weg am Isar-Hochufer nach Norden zur Kirche **Heilig Geist in Pullach** (ca. 1,5 km, 20–25 Minuten).",
+      "teamQ": "Wie oft müsst ihr **mindestens** wiegen, um die schwere Münze **ganz sicher** zu finden?",
+      "clueA": "Ihr habt **9 Goldmünzen**, die alle gleich aussehen. **Eine** davon ist schwerer – die echte!",
+      "clueB": "Ihr habt eine **Balkenwaage** ohne Gewichte. Sie zeigt nur, welche Seite schwerer ist – oder ob beide gleich schwer sind."
+    },
+    {
+      "id": "pullach-heilig-geist",
+      "title": "Heilig Geist, Pullach",
+      "targetName": "Kirche Heilig Geist in Pullach",
+      "lat": 48.05597,
+      "lon": 11.52336,
+      "radius": 60,
+      "mission": "Folge dem Isar-Hochufer nach Norden bis zur Kirche Heilig Geist in Pullach.",
+      "story": "Pullach! Ganz in der Nähe hatte jahrzehntelang der echte **Bundesnachrichtendienst** – Deutschlands Auslandsgeheimdienst – sein Hauptquartier. Hier hat der Silberfuchs gearbeitet. Sein letzter Safe hat ein Zahlenschloss:",
+      "riddle": "Der Code hat **4 Ziffern**, alle verschieden.\n• Die **letzte** Ziffer ist doppelt so groß wie die **erste**.\n• Die **zweite** Ziffer ist die Summe aus der **ersten** und der **dritten**.\n• Die **dritte** Ziffer ist 1.\n• Alle Ziffern zusammengezählt ergeben **18**.\n\nWie lautet der Code?",
+      "answers": [
+        "4518"
+      ],
+      "hint": "Nenne die erste Ziffer X. Dann ist die zweite X+1, die dritte 1 und die letzte 2·X. Zusammen müssen sie 18 ergeben.",
+      "fragment": "X",
+      "solved": "**4518** – der Safe springt auf! Darin liegt ein Fragment und ein Zettel: „Treffpunkt **S-Bahnhof Pullach**.“\n\nGeh hin (ca. 5 Minuten).",
+      "teamQ": "Wie lautet der 4-stellige Code? (Alle Ziffern sind verschieden.)",
+      "clueA": "• Die **letzte** Ziffer ist doppelt so groß wie die **erste**.\n• Die **zweite** Ziffer ist die Summe aus der **ersten** und der **dritten**.",
+      "clueB": "• Die **dritte** Ziffer ist 1.\n• Alle Ziffern zusammengezählt ergeben **18**."
+    },
+    {
+      "id": "bf-pullach",
+      "title": "S-Bahnhof Pullach",
+      "targetName": "S-Bahnhof Pullach",
+      "lat": 48.05896,
+      "lon": 11.52184,
+      "radius": 60,
+      "mission": "Geh zum S-Bahnhof Pullach.",
+      "story": "Letzter Bahnhof der Mission. Auf der Anzeigetafel blinkt eine Nachricht vom Silberfuchs – eine Prüfung für echte Bahn-Agenten:",
+      "riddle": "Ein Zug ist **200 m** lang und fährt mit **20 Metern pro Sekunde** auf einen **400 m** langen Tunnel zu.\n\nWie viele **Sekunden** vergehen von dem Moment, in dem die Lok in den Tunnel fährt, bis der **letzte Wagen** den Tunnel komplett verlassen hat?",
+      "answers": [
+        "30",
+        "30s",
+        "30sek",
+        "30sekunden",
+        "dreissig"
+      ],
+      "hint": "Der Zug muss nicht nur 400 m fahren – auch sein Ende muss noch aus dem Tunnel raus. Wie weit fährt die Lok also insgesamt?",
+      "fragment": "B",
+      "solved": "**30 Sekunden** – perfekt gerechnet! Du hast alle **9 Fragmente**.\n\nFahre jetzt mit der **S7 Richtung Wolfratshausen** zurück bis **Hohenschäftlarn** (4 Stationen) und geh ins **Hauptquartier**. Dort wartet der Tresor!",
+      "teamQ": "Wie viele **Sekunden** vergehen von dem Moment, in dem die Lok in den Tunnel fährt, bis der **letzte Wagen** den Tunnel komplett verlassen hat?",
+      "clueA": "Der Zug ist **200 m** lang und fährt mit **20 Metern pro Sekunde**.",
+      "clueB": "Der Tunnel ist **400 m** lang."
+    },
+    {
+      "id": "hq-finale",
+      "title": "Hauptquartier – der Tresor",
+      "targetName": "Hauptquartier",
+      "lat": 47.98785,
+      "lon": 11.44367,
+      "radius": 220,
+      "final": true,
+      "mission": "Zurück ins Hauptquartier! Mit der S7 Richtung Wolfratshausen bis Hohenschäftlarn, dann zu Fuß nach Hause.",
+      "story": "Du bist zurück im Hauptquartier. Vor dir steht der Tresor des Silberfuchs. Auf dem Display leuchtet seine **Geheimtabelle** auf – damit verwandelst du deine verschlüsselten Fragmente in das echte Codewort. Aber Vorsicht: Der Silberfuchs hat auch falsche Einträge eingebaut, um den Maulwurf zu verwirren.",
+      "riddle": "**GEHEIMTABELLE** (Fragment = echter Buchstabe)\n\nB = T · C = O · D = L · F = E\nH = U · K = G · M = A · P = D\nQ = I · V = C · W = S · X = N\nY = H · Z = R\n\nEntschlüssle deine Fragmente der Reihe nach. Wie lautet das Codewort?",
+      "answers": [
+        "ISARAGENT",
+        "ISAR AGENT",
+        "ISAR-AGENT"
+      ],
+      "hint": "Nimm das erste Fragment, such es links in der Tabelle und schreib den Buchstaben rechts daneben auf. Dann das nächste … Es sind zwei Wörter – das erste ist der Fluss, an dem du heute unterwegs warst.",
+      "fragment": "",
+      "solved": "",
+      "teamQ": "Entschlüsselt die Fragmente der Reihe nach. Wie lautet das Codewort? (Die Fragmente hat nur Einsatzleiter Jasper!)",
+      "clueA": "**GEHEIMTABELLE – Teil 1** (Fragment = echter Buchstabe)\n\nB = T · C = O · D = L · F = E\nH = U · K = G · M = A",
+      "clueB": "**GEHEIMTABELLE – Teil 2** (Fragment = echter Buchstabe)\n\nP = D · Q = I · V = C · W = S\nX = N · Y = H · Z = R"
+    }
+  ]
+}
