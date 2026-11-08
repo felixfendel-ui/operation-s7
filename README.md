@@ -29,6 +29,18 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - Sein Handy wird dabei automatisch die **Zentrale** für den Team-Modus.
 - **Wichtig:** Auf Jaspers Handy einmal den Admin-Modus öffnen und unter „Spiel-Einstellungen“ eine **eigene PIN** setzen – die Standard-PIN steht in diesem öffentlichen Repository. Die PIN wird nur auf dem Gerät gespeichert. Dort auch die Live-Verbindung zu Papa einrichten.
 
+## Trupp-Wettkampf, Funksprüche, Morse
+
+- **Trupp-Wettkampf:** Die Rätsel bleiben Teamarbeit, aber Punkte zählen pro Trupp und pro Agent:
+  - 📦 Depot: +50 für den Trupp des Finders
+  - 🏃 Vorhut-Bonus: +20 für den Trupp des Agenten, dessen Handy die Station zuerst erreicht
+  - 🔐 Codeknacker-Bonus: +10, als ⚡ Blitz (gelöst innerhalb von 3 Min. nach Ankunft) +20
+  - 📡 Spezialauftrag: +30, je zur Hälfte für beide Trupps
+
+  Der Spielstand (🟥 A : B 🟦) steht auf der Rollenkarte und unterwegs. Beim Finale gibt es eine **Rangliste** mit „Bester Trupp“ und **MVP-Agent**.
+- **📻 Funksprüche zum Anhören:** Geschichte, Rätsel (die eigene Hälfte), Aufträge, Lösungen und Finale lassen sich per Knopf vorlesen – mit Funkrauschen und Agentenstimme (Vorlese-Funktion des Handys, funktioniert offline). Auf dem iPhone muss der Stummschalter aus sein.
+- **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
+
 ## Zusagen in der App
 
 Gäste tragen sich in der Einladung ein und tippen **„✅ Ich bin dabei“** oder **„❌ Kann leider nicht“**. Die Antwort geht an Jaspers Handy (Zentrale), das sie bestätigt – der Gast sieht dann „Deine Zusage ist angekommen“ und die Liste „Schon im Einsatzteam“.

@@ -123,9 +123,10 @@ function checkUnlock() {
   if (!p || !st) return;
   if (dist(p, st) <= st.radius + Math.min(p.acc || 0, 25)) requestUnlock(false);
 }
-function unlock(forced, by) {
+function unlock(forced, by, byId) {
   P.status = 'arrived';
   if (forced) P.forced++;
+  exArrived(forced, byId);
   save(); fx('unlock'); render();
   liveEvent(forced ? 'forced' : 'arrived', `Station ${P.idx + 1} erreicht${forced ? ' (manuell freigeschaltet)' : ''}${by ? ' – ' + by : ''}`, cur().title, forced ? 4 : 3);
   keepAwake();
@@ -198,6 +199,7 @@ function renderIntro() {
   <div class="card pop">
     <div class="stamp">TOP SECRET</div>
     <h1>${esc(D.title)}</h1>
+    ${radioBtnHtml('intro')}
     <p>${rich(D.intro)}</p>
   </div>
   <div class="card">
@@ -219,6 +221,7 @@ function renderIntro() {
   $('#startBtn').onclick = go;
   $('#nameIn').onkeydown = e => { if (e.key === 'Enter') go(); };
   bindAliasBox();
+  bindRadio({ intro: D.intro });
 }
 
 function renderTravel() {
@@ -228,6 +231,7 @@ function renderTravel() {
     <div class="label">Station ${P.idx + 1} von ${stations().length} · Nächstes Ziel</div>
     <h2>${esc(st.targetName || st.title)}</h2>
     <p>${rich(st.mission)}</p>
+    ${radioBtnHtml('mission')}
     ${far ? '<p class="small">🚆 Weite Strecke – nimm die S-Bahn wie im Auftrag beschrieben.</p>' : ''}
   </div>
   <div class="radar ${nav ? '' : 'noarrow'}" id="radar">
@@ -243,6 +247,7 @@ function renderTravel() {
   ${exTravelHtml()}
   <div class="card"><div class="label center">Code-Fragmente</div>${fragsHtml()}</div>`;
   exBindTravel();
+  bindRadio({ mission: st.mission });
   const cb = $('#compassBtn'); if (cb) cb.onclick = () => enableCompass().then(render);
   const no = $('#navOv'); if (no) no.onclick = () => { navOverride = P.idx; render(); };
   lastRot = 0;
@@ -294,9 +299,11 @@ function renderRiddle() {
   <div class="card pop">
     <div class="label">📍 Station ${P.idx + 1} von ${stations().length} · Ziel erreicht</div>
     <h2>${esc(st.title)}</h2>
+    ${radioBtnHtml('story')}
     <p>${rich(st.story)}</p>
     ${st.final ? `<div class="label center" style="margin-top:12px">${isMember() ? 'Die Fragmente hat Einsatzleiter ' + esc(TEAM.hostName || 'Jasper') : 'Deine Fragmente'}</div>` + fragsHtml() : ''}
     ${teamHtml || `<div class="riddle">${rich(st.riddle)}</div>`}
+    ${st.morse ? morseHtml(st.morse) : ''}
     ${answer ? `<input id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Deine Lösung">
     <button class="btn" id="ansBtn">${st.final ? '🔐 Tresor öffnen' : '✔ Lösung prüfen'}</button>` : answerBlockedHtml()}
     <div class="feedback" id="fb"></div>
@@ -322,13 +329,18 @@ function renderRiddle() {
     $('#ans').onkeydown = e => { if (e.key === 'Enter') submit(); };
   }
   const co = $('#codeOv'); if (co) co.onclick = () => { codeOverride = P.idx; renderRiddle(); };
+  // Vorlesen: Geschichte + die eigene Hälfte der Hinweise bzw. das ganze Rätsel
+  const me = teamOn() && myMember(), clue = teamHtml && me ? (st['clue' + me.trupp] || '') + '. ' + (st.teamQ || '') : st.riddle;
+  bindRadio({ story: st.story + '. ' + (st.morse ? (st.teamQ || '') : clue) });
+  if (st.morse) bindMorse(st.morse);
   const hb = $('#hintBtn');
   if (hb) hb.onclick = () => { if (requestHint()) return; P.hints[id] = true; save(); renderRiddle(); liveEvent('hint', `Station ${P.idx + 1}: Tipp genutzt`, st.title); };
 }
 
-function solve(by) {
+function solve(by, byId) {
   const st = cur();
   if (st.fragment) P.frags[P.idx] = st.fragment;
+  exSolved(byId);
   if (st.final) {
     P.finishedAt = Date.now(); save(); fx('win'); confetti(); render(); window.scrollTo(0, 0);
     liveEvent('finished', 'Mission erfüllt – Tresor offen!', `Einsatzzeit ${fmtTime(P.finishedAt - P.startedAt)}`, 5);
@@ -347,10 +359,11 @@ function renderSolved() {
       : `<p class="small" style="margin-bottom:0">Verschlüsseltes Fragment ${nr} von ${fragStations().length}</p><div class="bigfrag">${esc(st.fragment)}</div>`) : ''}
     ${fragsHtml()}
   </div>
-  <div class="card"><p>${rich(st.solved)}</p>
+  <div class="card">${radioBtnHtml('solved')}<p>${rich(st.solved)}</p>
     <button class="btn" id="nextBtn">➜ Weiter zum nächsten Ziel</button>
   </div>`;
   $('#nextBtn').onclick = requestNext;
+  bindRadio({ solved: st.solved });
 }
 function doNext() {
   if (P.idx < stations().length - 1) { P.idx++; P.status = 'travel'; }
@@ -364,6 +377,7 @@ function renderVictory() {
   <div class="card center pop">
     <div class="stamp" style="border-color:var(--accent);color:var(--accent)">MISSION ERFÜLLT</div>
     <div style="font-size:64px">🏆</div>
+    ${radioBtnHtml('finale')}
     <p>${rich(D.finale)}</p>
     <div class="lock">${esc(D.lockCode || '')}</div>
     ${fragsHtml()}
@@ -376,8 +390,10 @@ function renderVictory() {
     ${exVictoryHtml()}
     🎖 Rang: <b>${esc(RANKS[RANKS.length - 1])}</b></p>
     <button class="btn sec small" id="againBtn">🎉 Konfetti!</button>
-  </div>`;
+  </div>
+  ${rankingHtml()}`;
   $('#againBtn').onclick = () => { fx('win'); confetti(); };
+  bindRadio({ finale: D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : '') });
 }
 
 /* ---------- Admin-Modus ---------- */

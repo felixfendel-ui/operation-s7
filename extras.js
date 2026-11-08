@@ -11,6 +11,53 @@ const popupQueue = []; // mehrere Meldungen nacheinander statt übereinander
 
 function exInit() {
   P.pts = P.pts || 0; P.depots = P.depots || {}; P.tasks = P.tasks || {}; P.legStart = P.legStart || {};
+  P.tp = P.tp || { A: 0, B: 0 }; P.mp = P.mp || {}; P.arr = P.arr || {};
+}
+
+/* ---------- Trupp-Wettkampf ----------
+   Die Rätsel bleiben Teamarbeit, aber Punkte zählen auch pro Trupp und pro Agent:
+   📦 Depot = Trupp des Finders · 🏃 Vorhut-Bonus = wer zuerst am Ziel ist · 🔐 Codeknacker-Bonus (Blitz < 3 Min. doppelt) ·
+   📡 Spezialauftrag = beide Trupps. Am Ende: Bester Trupp + MVP. */
+const BONUS_VORHUT = 20, BONUS_CODE = 10, BLITZ_MS = 3 * 60000;
+function memberById(id) { return (TEAM.members || []).find(x => x.id === id); }
+function award(pts, mid) {
+  exInit();
+  P.pts += pts;
+  const m = teamOn() && mid ? memberById(mid) : null;
+  if (m) { P.tp[m.trupp] = (P.tp[m.trupp] || 0) + pts; P.mp[mid] = (P.mp[mid] || 0) + pts; }
+  return m;
+}
+function awardBoth(pts) {
+  exInit();
+  P.pts += pts;
+  if (teamOn()) { P.tp.A = (P.tp.A || 0) + Math.round(pts / 2); P.tp.B = (P.tp.B || 0) + Math.round(pts / 2); }
+}
+function flashBonus(text) {
+  const el = document.createElement('div');
+  el.className = 'bonusflash'; el.textContent = text;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2600);
+}
+/* Station erreicht (von app.js unlock aufgerufen) */
+function exArrived(forced, byId) {
+  exInit();
+  P.arr[P.idx] = Date.now();
+  if (forced) return;
+  const m = award(BONUS_VORHUT, byId || 'host');
+  if (m) flashBonus(`🏃 Vorhut-Bonus +${BONUS_VORHUT} für ${m.trupp === 'A' ? '🟥 Trupp A' : '🟦 Trupp B'} (${m.alias || m.name})`);
+}
+/* Rätsel gelöst (von app.js solve aufgerufen) */
+function exSolved(byId) {
+  exInit();
+  const blitz = P.arr[P.idx] && Date.now() - P.arr[P.idx] <= BLITZ_MS;
+  const pts = blitz ? BONUS_CODE * 2 : BONUS_CODE;
+  const m = award(pts, byId || 'host');
+  if (m) flashBonus(`${blitz ? '⚡ Blitz-' : '🔐 '}Codeknacker-Bonus +${pts} für ${m.trupp === 'A' ? '🟥 Trupp A' : '🟦 Trupp B'}`);
+}
+function scoreboardHtml() {
+  exInit();
+  if (!teamOn()) return '';
+  const a = P.tp.A || 0, b = P.tp.B || 0;
+  return `<div class="scoreboard"><span class="sA">🟥 A <b>${a}</b></span><span class="vs">:</span><span class="sB"><b>${b}</b> B 🟦</span></div>`;
 }
 const allDepots = () => D.stations.flatMap(s => s.depots || []);
 const legDepots = () => (cur().depots || []);
@@ -51,18 +98,18 @@ function exTaskCheck() {
 
 /* ---------- Depots ---------- */
 function requestDepot(id) {
-  if (!isMember()) return collectDepot(id, P.name);
+  if (!isMember()) return collectDepot(id, P.name, 'host');
   const now = Date.now();
   if (depotSent[id] && now - depotSent[id] < 20000) return;
   depotSent[id] = now;
   teamAct('depot', { d: id });
 }
-function collectDepot(id, by) {
+function collectDepot(id, by, byId) {
   exInit();
   const dp = depotById(id);
   if (!dp || P.depots[id]) return;
   P.depots[id] = by || '?';
-  P.pts += dp.pts || 50;
+  award(dp.pts || 50, byId || 'host');
   save();
   showDepot(dp, by);
   liveEvent('depot', `Depot geknackt: ${dp.name}${by ? ' – ' + by : ''}`, `+${dp.pts || 50} Punkte · gesamt ${P.pts}`, 2, dp.id);
@@ -80,6 +127,7 @@ function showDepot(dp, by) {
     <h2>${esc(dp.name)}</h2>
     <p>${esc(dp.text)}</p>
     ${by && by !== P.name ? `<p class="small">Gefunden von ${esc(by)}</p>` : ''}
+    ${teamOn() ? `<p class="small">Punkte für den Trupp des Finders</p>` : ''}
     <div class="ptsbig">+${dp.pts || 50} Agentenpunkte</div>
     <button class="btn" id="exOk">Ins Agentengepäck</button></div>`);
 }
@@ -97,6 +145,7 @@ function showTask(k) {
   openExModal(`<div class="center">
     <div class="stamp">📡 SPEZIALAUFTRAG</div>
     <p style="text-align:left;font-size:18px">${rich(t.text)}</p>
+    ${radioBtnHtml('task')}
     ${t.secs && !done ? `<div class="tasktimer" id="taskT">${t.secs}</div><button class="btn warn" id="taskGo">▶ Countdown starten</button>` : ''}
     ${done ? '<p class="feedback good">✅ Erledigt</p><button class="btn" id="exOk">OK</button>'
       : `<button class="btn" id="taskDone">✅ Auftrag erledigt (+${t.pts || 30})</button><button class="btn sec small" id="exOk">Später</button>`}
@@ -110,6 +159,7 @@ function showTask(k) {
       if (s <= 0) { clearInterval(taskTimer); fx('win'); if (el) el.textContent = '✔'; }
     }, 1000);
   };
+  bindRadio({ task: 'Spezialauftrag! ' + t.text });
   const dn = $('#taskDone');
   if (dn) dn.onclick = () => { clearInterval(taskTimer); closeExModal(); requestTaskDone(k); };
 }
@@ -121,7 +171,7 @@ function completeTask(k, by) {
   exInit();
   const st = D.stations[k];
   if (!st || !st.task || P.tasks[k] === 'done') return;
-  P.tasks[k] = 'done'; P.pts += st.task.pts || 30; save(); fx('good');
+  P.tasks[k] = 'done'; awardBoth(st.task.pts || 30); save(); fx('good');
   liveEvent('task', `Spezialauftrag erledigt (Station ${k + 1})${by ? ' – ' + by : ''}`, `+${st.task.pts || 30} Punkte · gesamt ${P.pts}`, 2);
   if (P.status === 'travel') renderTravel();
 }
@@ -151,6 +201,7 @@ function exTravelHtml() {
   const taskOpen = st.task && P.tasks[k] === 'open';
   const total = allDepots().length, have = Object.keys(P.depots).length;
   return `<div class="card excard">
+    ${scoreboardHtml()}
     <div class="exrow"><span>🎖 <b id="exPts">${Number(P.pts) || 0}</b> Agentenpunkte</span><span>📦 ${have}/${total} Depots</span></div>
     ${deps.length ? `<div class="scanner" id="exScan">📡 Depot-Scanner: ${found}/${deps.length} auf dieser Strecke</div>` : ''}
     ${taskOpen ? '<button class="btn warn small" id="exTaskOpen">📡 Offener Spezialauftrag – antippen</button>' : ''}
@@ -177,20 +228,44 @@ function exVictoryHtml() {
   const tasks = Object.values(P.tasks).filter(v => v === 'done').length;
   return `🎖 Agentenpunkte: <b>${Number(P.pts) || 0}</b><br>📦 Depots: <b>${got.length}/${allDepots().length}</b> ${got.map(d => esc(d.icon)).join(' ')}<br>📡 Spezialaufträge: <b>${tasks}</b><br>`;
 }
+/* Rangliste beim Finale */
+function rankingHtml() {
+  exInit();
+  if (!teamOn()) return '';
+  const a = P.tp.A || 0, b = P.tp.B || 0;
+  const best = a === b ? '🤝 Unentschieden – beide Trupps sind Elite!' : `🏆 Bester Trupp: <b>${a > b ? '🟥 Trupp A' : '🟦 Trupp B'}</b>`;
+  const list = TEAM.members.map(m => ({ m, p: P.mp[m.id] || 0 })).sort((x, y) => y.p - x.p);
+  const mvp = list[0] && list[0].p > 0 ? list[0] : null;
+  return `<div class="card center pop">
+    <div class="label">Rangliste</div>
+    ${scoreboardHtml()}
+    <p style="font-size:19px;margin:10px 0">${best}</p>
+    ${mvp ? `<div class="mvp">⭐ MVP-Agent<br><span>${esc(mvp.m.alias || mvp.m.name)}</span><br><small>${esc(mvp.m.name)} · ${mvp.p} Punkte</small></div>` : ''}
+    <div style="text-align:left;margin-top:12px">${list.map((x, i) => `<div class="memb trupp-${x.m.trupp}"><span>${i + 1}. ${memberLabel(x.m)}</span><b>${x.p}</b></div>`).join('')}</div>
+  </div>`;
+}
 
 /* ---------- Team: Zentrale nimmt Funde/Erledigt an, Mitspieler zeigen Neues an ---------- */
 function exHostApply(a) {
-  if (a.k === 'depot') { const dp = depotById(a.d); if (dp && (cur().depots || []).some(x => x.id === a.d)) collectDepot(a.d, a.n); return true; }
+  if (a.k === 'depot') { const dp = depotById(a.d); if (dp && (cur().depots || []).some(x => x.id === a.d)) collectDepot(a.d, a.n, a.id); return true; }
   if (a.k === 'task') { if (P.tasks && P.tasks[a.x] === 'open') completeTask(a.x, a.n); return true; }
   return false;
 }
-function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.tasks }; }
+function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.tasks, tp: P.tp, mp: P.mp }; }
 function exApplyState(s) {
   exInit();
   const before = { dp: Object.assign({}, P.depots), tk: Object.assign({}, P.tasks) };
   P.pts = Number(s.pts) || 0;
   P.depots = s.dp && typeof s.dp === 'object' && !Array.isArray(s.dp) ? s.dp : {};
   P.tasks = s.tk && typeof s.tk === 'object' && !Array.isArray(s.tk) ? s.tk : {};
+  const oldTp = Object.assign({}, P.tp);
+  P.tp = { A: Number(s.tp && s.tp.A) || 0, B: Number(s.tp && s.tp.B) || 0 };
+  P.mp = {}; if (s.mp && typeof s.mp === 'object') for (const [k, v] of Object.entries(s.mp)) P.mp[String(k).slice(0, 20)] = Number(v) || 0;
+  if (memberReady() && (P.tp.A !== (oldTp.A || 0) || P.tp.B !== (oldTp.B || 0))) {
+    const dA = P.tp.A - (oldTp.A || 0), dB = P.tp.B - (oldTp.B || 0);
+    if (dA > 0 && dB === 0) flashBonus(`🎖 🟥 Trupp A +${dA}`); else if (dB > 0 && dA === 0) flashBonus(`🎖 🟦 Trupp B +${dB}`);
+    const sb = $('.scoreboard'); if (sb) sb.outerHTML = scoreboardHtml();
+  }
   if (!memberReady()) return; // in der Einladungs-Lobby nichts verraten
   for (const id of Object.keys(P.depots)) if (!before.dp[id]) { const dp = depotById(id); if (dp) showDepot(dp, P.depots[id]); }
   for (const [k, v] of Object.entries(P.tasks)) if (v === 'open' && !before.tk[k] && +k === P.idx) showTask(+k);
