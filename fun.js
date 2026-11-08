@@ -68,7 +68,7 @@ function speakNext() {
   u.onerror = e => { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return; radioStatus('⚠️ Vorlesen abgebrochen: ' + (e && e.error || 'unbekannt')); stopRadio(); };
   window.__sj7utt.push(u); if (window.__sj7utt.length > 30) window.__sj7utt.shift();
   speechSynthesis.speak(u);
-  try { speechSynthesis.resume(); } catch (e) {} // Chrome startet manchmal „pausiert“
+  if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} } // Chrome startet manchmal „pausiert“
 }
 function radioStatus(msg) {
   const el = radioBtn && radioBtn.nextElementSibling && radioBtn.nextElementSibling.classList.contains('radiostat') ? radioBtn.nextElementSibling : null;
@@ -79,7 +79,8 @@ function playRadio(text, btn) {
   if (radioOn) { const same = btn === radioBtn; stopRadio(); if (same) return; }
   radioBtn = btn; radioOn = true; radioStarted = false;
   radioNoise(0.45); tone(1250, 0, 0.09, 'sine', 0.05);
-  try { speechSynthesis.cancel(); } catch (e) {}
+  // iPhone-Eigenheit: cancel() direkt vor speak() verschluckt die Ansage – nur abbrechen, wenn wirklich etwas läuft
+  if (speechSynthesis.speaking || speechSynthesis.pending) { try { speechSynthesis.cancel(); } catch (e) {} }
   radioQueue = speechChunks(text);
   speakNext(); // direkt im Klick starten (iPhone erlaubt Sprachausgabe nur nach einer Berührung)
   setRadioBtn(true);
@@ -87,14 +88,14 @@ function playRadio(text, btn) {
   radioWatch = setTimeout(() => {
     if (!radioOn || radioStarted) return;
     if (!radioNoVoice) { // gewählte Stimme bleibt stumm → einmal mit der Standardstimme neu versuchen
-      radioNoVoice = true; try { speechSynthesis.cancel(); } catch (e) {}
+      radioNoVoice = true; if (speechSynthesis.speaking || speechSynthesis.pending) { try { speechSynthesis.cancel(); } catch (e) {} }
       radioQueue = speechChunks(text); radioOn = true; speakNext();
       radioWatch = setTimeout(() => {
-        if (radioOn && !radioStarted) { radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter aus, Lautstärke hoch. Sonst die Seite in Safari oder Chrome öffnen.'); stopRadio(); }
+        if (radioOn && !radioStarted) { radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter (Schalter links am Gerät) aus, Lautstärke hoch, dann nochmal tippen.'); stopRadio(); }
       }, 3000);
       return;
     }
-    radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter aus, Lautstärke hoch. Sonst die Seite in Safari oder Chrome öffnen.');
+    radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter (Schalter links am Gerät) aus, Lautstärke hoch, dann nochmal tippen.');
     stopRadio();
   }, 3000);
 }

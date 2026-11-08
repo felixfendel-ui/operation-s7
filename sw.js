@@ -1,5 +1,5 @@
 /* Offline-Cache: erst Netz (damit Updates sofort ankommen), bei Funkloch aus dem Cache. */
-const CACHE = 'sj7-v16';
+const CACHE = 'sj7-v17';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'live.js', 'team.js', 'invite.js', 'extras.js', 'fun.js', 'vendor/qrcode.min.js', 'stations.dat', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
