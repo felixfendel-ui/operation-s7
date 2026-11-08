@@ -40,7 +40,7 @@ Gäste tragen sich in der Einladung ein und tippen **„✅ Ich bin dabei“** o
 
 ## Decknamen
 
-Jeder Agent bekommt automatisch einen Decknamen (z. B. „Sturmbär“, „Mondskorpion“, „Nebelmarder“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der WhatsApp-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).
+Jeder Agent bekommt automatisch einen Decknamen – englisch im Gamer-Stil (z. B. „ShadowHawk“, „NeonViper“, „GhostRaven“) oder deutsch („Sturmbär“, „Mondskorpion“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der WhatsApp-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).
 
 ## Rätseldaten
 

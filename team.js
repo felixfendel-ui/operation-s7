@@ -24,10 +24,15 @@ const teamNames = () => (teamOn() ? TEAM.members.map(m => m.name + (m.alias ? ` 
 const KEY_ALIAS = 'sj7_alias';
 const ALIAS_A = ['Schatten', 'Nacht', 'Sturm', 'Eis', 'Donner', 'Nebel', 'Blitz', 'Stahl', 'Feuer', 'Frost', 'Kupfer', 'Granit', 'Rauch', 'Wolken', 'Mond', 'Tarn', 'Turbo', 'Phantom'];
 const ALIAS_B = ['falke', 'wolf', 'luchs', 'adler', 'otter', 'rabe', 'hai', 'puma', 'kobra', 'panther', 'bär', 'eule', 'viper', 'tiger', 'marder', 'skorpion', 'condor', 'jaguar'];
+// Englische Gamer-Namen im YouTube-Stil (CamelCase), etwas häufiger als die deutschen
+const ALIAS_EN_A = ['Shadow', 'Night', 'Storm', 'Ghost', 'Ice', 'Silent', 'Neon', 'Thunder', 'Frost', 'Steel', 'Turbo', 'Blaze', 'Cyber', 'Stealth', 'Dark', 'Phantom', 'Hyper', 'Iron', 'Rapid', 'Venom'];
+const ALIAS_EN_B = ['Hawk', 'Viper', 'Wolf', 'Raven', 'Cobra', 'Panther', 'Falcon', 'Shark', 'Lynx', 'Raptor', 'Phoenix', 'Tiger', 'Owl', 'Jaguar', 'Eagle', 'Scorpion', 'Dragon', 'Ninja', 'Rider', 'Hunter'];
 function makeAlias(avoid = []) {
   const r = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
   for (let k = 0; k < 40; k++) {
-    const n = ALIAS_A[r(ALIAS_A.length)] + ALIAS_B[r(ALIAS_B.length)];
+    const en = r(10) < 6;
+    const n = en ? ALIAS_EN_A[r(ALIAS_EN_A.length)] + ALIAS_EN_B[r(ALIAS_EN_B.length)]
+      : ALIAS_A[r(ALIAS_A.length)] + ALIAS_B[r(ALIAS_B.length)];
     if (!avoid.includes(n)) return n;
   }
   return 'Agent' + (100 + r(900));
