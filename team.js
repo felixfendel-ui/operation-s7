@@ -151,7 +151,8 @@ function applyState(s) {
   render();
   if (wasIdx !== P.idx || wasStatus !== P.status) window.scrollTo(0, 0);
 }
-const memberReady = () => isMember() && !!TEAM.name && TEAM.members.some(x => x.id === TEAM.id) && !!P.startedAt;
+// Gäste mit Einladung kommen erst am Einsatztag ins Spiel – Testläufe auf Jaspers Handy vorher bleiben unsichtbar
+const memberReady = () => isMember() && !!TEAM.name && TEAM.members.some(x => x.id === TEAM.id) && !!P.startedAt && (!TEAM.invite || isPartyDay(TEAM.invite));
 
 /* ---------- Rollen & geteilte Hinweise ---------- */
 function teamRoles(idx) {
@@ -241,16 +242,19 @@ function requestNext() {
 /* ---------- Beitreten (Mitspieler) ---------- */
 function teamJoinFromHash() {
   if (!location.hash.startsWith('#team=')) return;
-  const topic = decodeURIComponent(location.hash.slice(6));
-  history.replaceState(null, '', location.pathname + location.search);
+  // Link-Anhang bleibt in der Adresse, damit ein Lesezeichen/Home-Bildschirm-Symbol ihn behält
+  const q = new URLSearchParams(location.hash.slice(1));
+  const topic = q.get('team') || '', inv = q.get('inv') ? b64urlDecode(q.get('inv')) : null;
+  if (!topic) return;
   if (isHost() && TEAM.topic === topic) return; // eigener Link auf Jaspers Handy
-  if (isMember() && TEAM.topic === topic) return;
+  if (isMember() && TEAM.topic === topic) { if (inv) { TEAM.invite = inv; saveTeam(); } return; }
   const a = 'abcdefghijkmnpqrstuvwxyz23456789', b = new Uint8Array(10); crypto.getRandomValues(b);
-  TEAM = { topic, role: 'member', id: 'm' + Array.from(b, x => a[x % a.length]).join(''), name: '', since: 0, v: 0, members: [], seen: [] };
+  TEAM = { topic, role: 'member', id: 'm' + Array.from(b, x => a[x % a.length]).join(''), name: '', since: 0, v: 0, members: [], seen: [], invite: inv };
   saveTeam();
   lsSet(KEY_P, newProgress()); P = newProgress();
 }
 function renderLobby() {
+  if (TEAM.invite) return renderInviteLobby();
   const joined = TEAM.name && TEAM.members.some(x => x.id === TEAM.id);
   const me = TEAM.members.find(x => x.id === TEAM.id);
   app.innerHTML = `
@@ -341,15 +345,23 @@ function renderTeamPanel() {
 function teamAdminHtml() {
   return `<div class="card"><h3>TEAM-MODUS (MEHRERE HANDYS)</h3>
     ${isHost() ? `<p class="small">Aktiv · ${TEAM.members.length} Mitglied(er) · Kanal <code>${esc(TEAM.topic)}</code></p>
-      <div class="row"><button class="btn small" data-act="teamPanel">👥 QR-Code & Mitglieder</button>
+      <button class="btn small" data-act="teamInvite">💌 Einladung erstellen</button>
+      <div class="row"><button class="btn sec small" data-act="teamPanel">👥 QR-Code & Mitglieder</button>
       <button class="btn danger small" data-act="teamOff">Team-Modus beenden</button></div>`
     : isMember() ? `<p class="small">Dieses Handy ist Mitspieler im Team von ${esc(TEAM.hostName || '?')}.</p>
       <button class="btn danger small" data-act="teamLeave">Team verlassen</button>`
     : `<p class="small">Auf Jaspers Handy einrichten. Die anderen Kinder treten per QR-Code bei und spielen auf ihren eigenen Handys mit – mit gemeinsamem Spielstand, zwei Trupps und wechselnden Rollen.</p>
-      <button class="btn" data-act="teamNew">👥 Team-Modus einrichten</button>`}</div>`;
+      <div class="row"><button class="btn" data-act="teamNew">👥 Team-Modus einrichten</button><button class="btn sec" data-act="teamInvite">💌 Einladung erstellen</button></div>`}</div>`;
 }
 function teamAdminAct(act) {
+  if (act.startsWith('teamInvite')) return inviteAdminAct(act);
   switch (act) {
+    case 'teamNewQuiet':
+      TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
+        members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', trupp: 'A' }], seen: [] };
+      saveTeam(); streamStart(); broadcast(); teamUi();
+      if (!heartbeat) heartbeat = setInterval(broadcast, 60000);
+      return;
     case 'teamNew':
       TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
         members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', trupp: 'A' }], seen: [] };

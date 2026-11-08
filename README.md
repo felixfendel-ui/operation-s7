@@ -50,6 +50,16 @@ Ein Team, zwei Trupps (🟥 A und 🟦 B), gemeinsamer Spielstand in Echtzeit.
 
 **Wichtig:** Jaspers Handy ist die Zentrale. Die App hält den Bildschirm automatisch wach; trotzdem sollte die App auf Jaspers Handy offen bleiben (Powerbank!). Ist sie kurz zu, holt sie verpasste Aktionen beim Öffnen nach. Die Handys der anderen Kinder verschicken **keine** Standorte – nur Spielaktionen und den Vornamen. Der grüne/rote Punkt oben rechts zeigt die Verbindung.
 
+## Einladung vorab per Link
+
+Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhrzeit, Ende, Treffpunkt, Telefonnummer für Zusagen, „Antwort bis“, Ausrüstung und Eltern-Infos eintragen → „Speichern & Link erzeugen“ → „🔗 Einladung teilen“ (z. B. in die WhatsApp-Gruppe).
+
+- Die Kinder sehen eine geheime „Einberufung“ mit Countdown, tragen ihren Agentennamen ein und sagen per WhatsApp (oder SMS) zu. Eltern finden unten „Infos für Eltern“.
+- Das Spiel bleibt versiegelt. Am Einsatztag öffnen die Kinder **denselben Link** wieder, melden sich automatisch im Team an und starten, sobald Jasper die Mission startet.
+- Testläufe auf Jaspers Handy vor dem Einsatztag landen nicht bei den Gästen. Danach trotzdem „Fortschritt zurücksetzen“.
+- Der Einladungslink ist zugleich der Team-Link. Im Admin-Modus deshalb **nicht** „Team-Modus beenden“, sonst funktioniert die verschickte Einladung am Tag nicht mehr.
+- Datum, Treffpunkt und Telefonnummer stecken nur im Link (Teil nach `#`), nicht im öffentlichen Repository und nicht auf einem Server. Wer den Link hat, sieht sie – also nur an die Gäste schicken.
+
 ## Live-Verbindung zu Papa (ntfy.sh)
 
 Jaspers App meldet jedes Ereignis (Station erreicht, falsche Antwort, Tipp genutzt, gelöst, Mission erfüllt) und alle 2 Minuten seine Position. Über den gelben **📻 Funk**-Knopf kann er Papa schreiben (Schnellknöpfe: Tipp gebraucht, Alles gut, In der S-Bahn, Bitte anrufen, Verlaufen). Papas Antworten erscheinen bei Jasper als Einblendung mit Ton.

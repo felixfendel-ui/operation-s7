@@ -153,3 +153,17 @@ body:has(#teamBtn:not([hidden])) main{padding-bottom:80px}
 .trupp-btn{border:1px solid var(--line);background:#0b1813;border-radius:10px;padding:6px 10px;font-weight:700}
 .memb .rm{border:0;background:none;color:var(--danger);font-size:18px;padding:4px 8px}
 .btn:disabled{opacity:.6}
+
+/* Einladung */
+a.btn{text-align:center;text-decoration:none}
+.invite h1{font-size:30px;letter-spacing:.04em}
+.invgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.invgrid>div{background:#0b1813;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.invgrid .label{display:block;margin-bottom:2px}
+.invgrid b{color:var(--fg)}
+.countdown{margin-top:16px;text-align:center;padding:12px;border:1px dashed var(--accent);border-radius:12px}
+#cdown{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);margin-top:4px}
+details.parents summary{color:var(--fg)}
+details.parents p{font-size:15px}
+a{color:var(--accent)}
+@media (max-width:360px){.invgrid{grid-template-columns:1fr}}

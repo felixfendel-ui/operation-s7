@@ -393,6 +393,7 @@ function renderAdmin() {
   if (adminView === 'edit') return renderEditor();
   if (adminView === 'settings') return renderSettings();
   if (adminView === 'import') return renderImport();
+  if (adminView === 'invite') return renderInviteEditor();
   const p = here();
   const list = stations().map((s, i) => {
     const d = p ? fmtDist(dist(p, s)) : '–';
