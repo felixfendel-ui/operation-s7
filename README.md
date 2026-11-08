@@ -12,10 +12,10 @@ Die Fragmente sind **verschlüsselt** (Geheimalphabet, kein Caesar-Verschieben),
 | 1 | Hauptquartier (zu Hause) – Briefing | – | 7 | Q (I) |
 | 2 | S-Bahnhof Hohenschäftlarn | zu Fuß ~12 min | Biber | W (S) |
 | 3 | Bahnhof Wolfratshausen | S7 → Wolfratshausen, 3 Stationen | Loisach | M (A) |
-| 4 | Marienplatz Wolfratshausen | zu Fuß ~10 min | 7 | Z (R) |
+| 4 | Marienplatz Wolfratshausen | zu Fuß ~10 min | Rot, Gelb, Grün, Blau | Z (R) |
 | 5 | S-Bahnhof Ebenhausen-Schäftlarn | S7 → München, 2 Stationen | 65 | M (A) |
 | 6 | Kloster Schäftlarn | zu Fuß ~20 min bergab | 12 | K (G) |
-| 7 | Aussichtspunkt Burg Grünwald | 🚐 Abholung am Kloster (Papa = „Graufalke“, Verpflegung) zum Bf Hohenschäftlarn, S7 → Höllriegelskreuth | 2 | F (E) |
+| 7 | Aussichtspunkt Burg Grünwald | 🚐 Abholung am Kloster (Papa = „Graufalke“, Verpflegung) zum Bf Hohenschäftlarn, S7 → Höllriegelskreuth | 3 | F (E) |
 | 8 | Kirche Heilig Geist, Pullach | zu Fuß am Isar-Hochufer ~25 min | 4518 | X (N) |
 | 9 | S-Bahnhof Pullach | zu Fuß ~5 min | 30 | B (T) |
 | 10 | Hauptquartier – Tresor | S7 → Wolfratshausen bis Hohenschäftlarn, zu Fuß | ISARAGENT | – |

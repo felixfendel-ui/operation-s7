@@ -56,17 +56,17 @@
       "lon": 11.4271,
       "radius": 80,
       "mission": "Fahre mit der S7 bis zur Endstation Wolfratshausen. Erst dort schaltet sich die nächste Nachricht frei.",
-      "story": "Endstation – aber nicht für dich! Der Silberfuchs funkt dir eine seltsame Buchstabenfolge. Er hat sie mit der **Caesar-Verschlüsselung** codiert: Jeder Buchstabe wurde im Alphabet um **3 Stellen nach vorne** geschoben (A→D, B→E, C→F …).",
-      "riddle": "Entschlüssle das Wort:\n\n**O R L V D F K**\n\nDazu schiebst du jeden Buchstaben um 3 Stellen **zurück** (D→A, E→B, F→C …).",
+      "story": "Endstation – aber nicht für dich! Der Silberfuchs funkt dir eine seltsame Buchstabenfolge. Er hat sie mit einer **doppelten Caesar-Verschlüsselung** codiert: Die Buchstaben wurden im Alphabet nach vorne geschoben – aber nicht alle gleich weit.",
+      "riddle": "Entschlüssle das Wort:\n\n**O P L T D D K**\n\nDer Schlüssel: Schiebe die Buchstaben **abwechselnd 3 und 1 Stelle zurück** – den 1. Buchstaben 3 zurück, den 2. Buchstaben 1 zurück, den 3. wieder 3 zurück und so weiter.",
       "answers": [
         "Loisach"
       ],
-      "hint": "O→L, R→O … den Rest schaffst du! Es ist der Name eines Flusses hier in Wolfratshausen.",
+      "hint": "O → 3 zurück → L. P → 1 zurück → O. Weiter so! Es ist der Name eines Flusses hier in Wolfratshausen.",
       "fragment": "M",
       "solved": "**LOISACH** – der Fluss, der durch Wolfratshausen fließt!\n\nDas nächste Fragment liegt in der Altstadt am **Marienplatz**, ganz nah an der Loisach. Lauf hin (ca. 10 Minuten).",
       "teamQ": "Entschlüsselt das geheime Wort.",
-      "clueA": "Die Geheimbotschaft lautet:\n\n**O R L V D F K**",
-      "clueB": "Der Schlüssel: Der Silberfuchs hat jeden Buchstaben im Alphabet um **3 Stellen nach vorne** geschoben (A→D, B→E …). Zum Entschlüsseln also 3 Stellen **zurück**."
+      "clueA": "Die Geheimbotschaft lautet:\n\n**O P L T D D K**",
+      "clueB": "Der Schlüssel: Der Silberfuchs hat die Buchstaben im Alphabet nach vorne geschoben – **abwechselnd um 3 und um 1 Stelle**. Zum Entschlüsseln also: 1. Buchstabe 3 zurück, 2. Buchstabe 1 zurück, 3. Buchstabe 3 zurück …"
     },
     {
       "id": "wor-marienplatz",
@@ -76,18 +76,19 @@
       "lon": 11.41851,
       "radius": 60,
       "mission": "Lauf in die Altstadt zum Marienplatz an der Loisach.",
-      "story": "Wolfratshausen – klingt nach Wolf, oder? Früher brachten Flößer auf Loisach und Isar Holz und Waren bis nach München und sogar bis nach Wien. Ein alter Flößer hat dem Silberfuchs dieses Rätsel verraten:",
-      "riddle": "Ein Flößer will einen **Wolf**, eine **Ziege** und einen **Kohlkopf** über die Loisach bringen. Sein Floß trägt außer ihm nur **eine** Sache.\n• Allein gelassen frisst der Wolf die Ziege.\n• Allein gelassen frisst die Ziege den Kohl.\n\nWie viele Fahrten über den Fluss braucht er **mindestens**, bis alle drei heil drüben sind? (Hin und zurück zählen jeweils als eine Fahrt.)",
+      "story": "Wolfratshausen – klingt nach Wolf, oder? Früher brachten Flößer auf Loisach und Isar Holz und Waren bis nach München und sogar bis nach Wien. Beim großen **Flößerrennen** starteten vier Flöße – **Rot, Gelb, Grün und Blau** – hier an der Loisach. Der Silberfuchs hat sich den Zieleinlauf notiert, aber in zwei Hälften versteckt:",
+      "riddle": "Vier Flöße – **Rot, Gelb, Grün, Blau** – fahren um die Wette.\n• Rot kommt **direkt vor** Gelb ins Ziel.\n• Grün ist **nicht Erster**.\n• Blau kommt **irgendwann nach** Gelb an.\n• Grün ist **nicht Letzter**.\n\nIn welcher Reihenfolge kommen die Flöße an? (Alle vier Farben der Reihe nach)",
       "answers": [
-        "7",
-        "sieben"
+        "Rot Gelb Grün Blau",
+        "rot, gelb, grün, blau",
+        "rot gelb gruen blau"
       ],
-      "hint": "Die Ziege muss zuerst rüber. Und manchmal muss man etwas wieder zurückbringen …",
+      "hint": "Rot und Gelb kleben zusammen: Rot steht direkt vor Gelb. Wo in der Reihe kann dieses Pärchen stehen, wenn Blau noch danach kommen muss?",
       "fragment": "Z",
-      "solved": "**7 Fahrten** – stark gedacht!\n\nJetzt zurück zum **Bahnhof Wolfratshausen** und mit der **S7 Richtung München** zwei Stationen bis **Ebenhausen-Schäftlarn**. 🚆",
-      "teamQ": "Wie viele Fahrten über den Fluss braucht der Flößer **mindestens**, bis alle drei heil drüben sind? (Hin und zurück zählen jeweils als eine Fahrt.)",
-      "clueA": "Ein Flößer will einen **Wolf**, eine **Ziege** und einen **Kohlkopf** über die Loisach bringen. Sein Floß trägt außer ihm nur **eine** Sache.",
-      "clueB": "Achtung, Gefahr!\n• Allein gelassen frisst der Wolf die Ziege.\n• Allein gelassen frisst die Ziege den Kohl.\n• Solange der Flößer daneben steht, frisst keiner."
+      "solved": "**Rot – Gelb – Grün – Blau!** Zieleinlauf rekonstruiert.\n\nJetzt zurück zum **Bahnhof Wolfratshausen** und mit der **S7 Richtung München** zwei Stationen bis **Ebenhausen-Schäftlarn**. 🚆",
+      "teamQ": "Vier Flöße – **Rot, Gelb, Grün, Blau** – fuhren um die Wette. In welcher Reihenfolge kamen sie ins Ziel? (Alle vier Farben der Reihe nach)",
+      "clueA": "Zielfoto, Teil 1:\n• Rot kommt **direkt vor** Gelb ins Ziel.\n• Grün ist **nicht Erster**.",
+      "clueB": "Zielfoto, Teil 2:\n• Blau kommt **irgendwann nach** Gelb an.\n• Grün ist **nicht Letzter**."
     },
     {
       "id": "bf-ebenhausen",
@@ -139,20 +140,20 @@
       "lon": 11.51331,
       "radius": 60,
       "mission": "Frisch gestärkt geht’s weiter: Fahrt mit der **S7 Richtung München** bis **Höllriegelskreuth** (3 Stationen). Folgt dann dem Radar zum Aussichtspunkt hoch über der Isar – von dort seht ihr die Burg auf der anderen Seite.",
-      "story": "Siehst du die Burg auf der anderen Isarseite? Das ist die **Burg Grünwald**, über 700 Jahre alt. Die Burgherren bewahrten dort einen Goldschatz auf – aber ein Fälscher hatte seine Finger im Spiel …",
-      "riddle": "Du hast **9 Goldmünzen**. Sie sehen alle gleich aus, aber **eine ist schwerer** (die echte!). Du hast eine **Balkenwaage** ohne Gewichte.\n\nWie oft musst du **mindestens** wiegen, um die schwere Münze **ganz sicher** zu finden?",
+      "story": "Siehst du die Burg auf der anderen Isarseite? Das ist die **Burg Grünwald**, über 700 Jahre alt. Die Burgherren bewahrten ihr Gold in **zwei Truhen** auf – aber ein Fälscher hat fast alles gegen falsche Münzen getauscht. Nur **eine einzige** echte Münze ist übrig, und die ist schwerer als die anderen.",
+      "riddle": "In der linken Truhe liegen **5** Münzen, in der rechten Truhe ebenfalls **5**. Alle sehen gleich aus – genau **eine** ist schwerer (die echte!). Ihr habt eine **Balkenwaage** ohne Gewichte.\n\nWie oft müsst ihr **mindestens** wiegen, um die echte Münze **ganz sicher** zu finden?",
       "answers": [
-        "2",
-        "zwei",
-        "2mal",
-        "zweimal"
+        "3",
+        "drei",
+        "3mal",
+        "dreimal"
       ],
-      "hint": "Teile die 9 Münzen in drei Gruppen zu je 3 Münzen auf. Was verrät dir eine einzige Wägung?",
+      "hint": "Eine Wägung hat drei mögliche Ausgänge: links schwerer, rechts schwerer oder gleich. Mit 2 Wägungen schafft man also höchstens 3 × 3 = 9 Münzen. Wie viele Münzen sind es insgesamt?",
       "fragment": "F",
-      "solved": "**Nur 2 Wägungen!** Erst 3 gegen 3 – dann weißt du, in welcher Dreiergruppe sie steckt. Dann 1 gegen 1. Genial.\n\nFolge jetzt dem Weg am Isar-Hochufer nach Norden zur Kirche **Heilig Geist in Pullach** (ca. 1,5 km, 20–25 Minuten).",
-      "teamQ": "Wie oft müsst ihr **mindestens** wiegen, um die schwere Münze **ganz sicher** zu finden?",
-      "clueA": "Ihr habt **9 Goldmünzen**, die alle gleich aussehen. **Eine** davon ist schwerer – die echte!",
-      "clueB": "Ihr habt eine **Balkenwaage** ohne Gewichte. Sie zeigt nur, welche Seite schwerer ist – oder ob beide gleich schwer sind."
+      "solved": "**3 Wägungen!** 10 Münzen sind eine zu viel für 2 Wägungen (die schaffen nur 9). Also: 3 gegen 3 wiegen – dann bleiben höchstens 4 übrig, dann höchstens 2, dann 1. Genial.\n\nFolgt jetzt dem Weg am Isar-Hochufer nach Norden zur Kirche **Heilig Geist in Pullach** (ca. 1,5 km, 20–25 Minuten).",
+      "teamQ": "Alle Münzen aus **beiden** Truhen sehen gleich aus – genau **eine** ist schwerer (die echte!). Ihr habt eine **Balkenwaage** ohne Gewichte. Wie oft müsst ihr **mindestens** wiegen, um die echte Münze **ganz sicher** zu finden?",
+      "clueA": "In der **linken Truhe** liegen **5 Münzen**.",
+      "clueB": "In der **rechten Truhe** liegen **5 Münzen**."
     },
     {
       "id": "pullach-heilig-geist",
