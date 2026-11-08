@@ -1,4 +1,4 @@
-/* Operation S7 – GPS-Schnitzeljagd. Reines Vanilla-JS, keine Abhängigkeiten. */
+/* Operation Silberfuchs – GPS-Schnitzeljagd. Reines Vanilla-JS, keine Abhängigkeiten. */
 'use strict';
 
 const KEY_P = 'sj7_progress';       // Spielfortschritt
@@ -628,7 +628,7 @@ async function init() {
     app.innerHTML = '<div class="card"><h2>Fehler</h2><p>Die Missionsdaten konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.</p></div>';
     return;
   }
-  document.title = D.title.split('–')[0].trim() || 'Operation S7';
+  document.title = D.title.split('–')[0].trim() || 'Operation Silberfuchs';
   if (location.hash.startsWith('#papa=')) {
     P = newProgress(); renderHeader();
     setInterval(tick, 1000);

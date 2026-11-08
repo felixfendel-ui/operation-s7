@@ -7,7 +7,7 @@
 const INV_DEFAULT = {
   host: 'Jasper', d: '2026-11-21', t: '11:00', end: '17:30', ort: '', tel: '', bis: '',
   mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
-  note: 'Wir sind mit Begleitung durch Erwachsene mit der S7 zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir. Zum Abschluss gibt es bei uns zu Hause Pizza.'
+  note: 'Wir sind mit Begleitung durch Erwachsene mit der S-Bahn zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir. Zum Abschluss gibt es bei uns zu Hause Pizza.'
 };
 let invTimer = null;
 
@@ -56,9 +56,9 @@ function inviteCardHtml(inv, who) {
   return `<div class="card invite pop">
     <div class="stamp">STRENG GEHEIM · EINBERUFUNG</div>
     <p class="label">An: Agent ${esc(who || '???')}</p>
-    <h1>Operation S7</h1>
+    <h1>Operation Silberfuchs</h1>
     <p>Du wurdest von <b>Agent ${host}</b> für eine Spezialmission der <b>Einheit ISAR</b> ausgewählt. Anlass: ${host}s <b>12. Geburtstag</b>! 🎂</p>
-    <p>Ein legendärer Agent hat entlang der S-Bahn-Linie S7 ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
+    <p>Ein legendärer Agent hat entlang der S-Bahn an der Isar ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
     <p>🍕 Nach erfolgreichem Einsatz wartet im Hauptquartier eine streng geheime Belohnung – Codename <b>„Operation Margherita“</b>. Mehr verraten die Akten nicht.</p>
     ${inv.msg ? `<div class="msgbox"><span class="label">Funkspruch von Agent ${esc(inv.al || inv.host || 'Jasper')}</span><p>${esc(inv.msg).replace(/\n/g, '<br>')}</p></div>` : ''}
     <div class="invgrid">
@@ -74,8 +74,8 @@ function inviteCardHtml(inv, who) {
 function rsvpHtml(inv, name) {
   if (!inv.tel) return `<p class="small">Sag ${esc(inv.host || 'Jasper')} Bescheid, ob du dabei bist!</p>`;
   const n = waNumber(inv.tel), who = name ? `Agent ${TEAM.alias ? TEAM.alias + ' (' + name + ')' : name}` : 'Ich';
-  const yes = `${who} meldet sich zum Dienst – ich komme zur Operation S7! 🕵️`;
-  const no = `${who} hier – ich kann leider nicht zur Operation S7 kommen. 😕`;
+  const yes = `${who} meldet sich zum Dienst – ich komme zur Operation Silberfuchs! 🕵️`;
+  const no = `${who} hier – ich kann leider nicht zur Operation Silberfuchs kommen. 😕`;
   return `<div class="row"><a class="btn" href="https://wa.me/${n}?text=${encodeURIComponent(yes)}" target="_blank" rel="noopener">✅ Ich bin dabei</a>
     <a class="btn sec" href="https://wa.me/${n}?text=${encodeURIComponent(no)}" target="_blank" rel="noopener">❌ Kann nicht</a></div>
     <p class="small center">Antwort per WhatsApp · <a href="sms:+${n}?&body=${encodeURIComponent(yes)}">lieber per SMS zusagen</a></p>`;
@@ -215,8 +215,8 @@ function inviteAdminAct(act) {
     case 'teamInviteCopy': return copyText(inviteLink(TEAM.inviteDraft), msg);
     case 'teamInviteShare': {
       const link = inviteLink(TEAM.inviteDraft);
-      const text = `🕵️ STRENG GEHEIM: Deine Einberufung zur Operation S7 – nur für deine Augen!`;
-      if (navigator.share) return void navigator.share({ title: 'Operation S7 – Einberufung', text, url: link }).catch(() => {});
+      const text = `🕵️ STRENG GEHEIM: Deine Einberufung zur Operation Silberfuchs – nur für deine Augen!`;
+      if (navigator.share) return void navigator.share({ title: 'Operation Silberfuchs – Einberufung', text, url: link }).catch(() => {});
       return copyText(text + '\n' + link, msg);
     }
   }
@@ -238,7 +238,7 @@ function renderStudio() {
   <div class="card pop">
     <div class="stamp">EINSATZLEITER-ZENTRALE</div>
     <h1>Agent ${esc(myAlias())}</h1>
-    <p>Hallo ${esc(D.agentName || 'Jasper')}! Du bist der <b>Einsatzleiter</b> der Operation S7. Bevor die Mission startet, musst du dein Agententeam einberufen.</p>
+    <p>Hallo ${esc(D.agentName || 'Jasper')}! Du bist der <b>Einsatzleiter</b> der Operation Silberfuchs. Bevor die Mission startet, musst du dein Agententeam einberufen.</p>
     ${aliasBoxHtml('Dein Deckname als Einsatzleiter')}
   </div>
   <div class="card">

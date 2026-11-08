@@ -46,7 +46,7 @@ function ago(t) {
 function randTopic() {
   const a = 'abcdefghijkmnpqrstuvwxyz23456789', b = new Uint8Array(22);
   crypto.getRandomValues(b);
-  return 's7-' + Array.from(b, x => a[x % a.length]).join('');
+  return 'op-' + Array.from(b, x => a[x % a.length]).join('');
 }
 function parseNd(t) {
   return t.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch (e) { return null; } })
@@ -221,11 +221,11 @@ function liveAdminAct(act) {
     case 'liveToggle': LIVE.enabled = !LIVE.enabled; saveLive(); break;
     case 'liveCopy': return copyText(papaLink(), liveMsg);
     case 'liveShare':
-      if (navigator.share) return void navigator.share({ title: 'Operation S7 – Papa-Zentrale', url: papaLink() }).catch(() => {});
+      if (navigator.share) return void navigator.share({ title: 'Operation Silberfuchs – Papa-Zentrale', url: papaLink() }).catch(() => {});
       return copyText(papaLink(), liveMsg);
     case 'liveTest':
       liveMsg('Sende …');
-      return void publish({ topic: tp('log'), title: 'Operation S7: Testnachricht', message: 'Die Live-Verbindung funktioniert.', tags: ['white_check_mark'] })
+      return void publish({ topic: tp('log'), title: 'Operation Silberfuchs: Testnachricht', message: 'Die Live-Verbindung funktioniert.', tags: ['white_check_mark'] })
         .then(() => liveMsg('Testnachricht gesendet ✓'), e => liveMsg('Fehler: ' + e.message));
     default: return;
   }

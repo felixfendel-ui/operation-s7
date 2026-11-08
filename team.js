@@ -432,7 +432,7 @@ function renderTeamPanel() {
   $('#tpClose').onclick = closeTeamPanel;
   const msg = t => { $('#tpFb').textContent = t; };
   $('#tpCopy').onclick = () => copyText(joinLink(), msg);
-  $('#tpShare').onclick = () => (navigator.share ? navigator.share({ title: 'Operation S7 – Team beitreten', url: joinLink() }).catch(() => {}) : copyText(joinLink(), msg));
+  $('#tpShare').onclick = () => (navigator.share ? navigator.share({ title: 'Operation Silberfuchs – Team beitreten', url: joinLink() }).catch(() => {}) : copyText(joinLink(), msg));
   $('#teampanel').querySelectorAll('[data-tt]').forEach(b => {
     b.onclick = () => { const x = TEAM.members[+b.dataset.tt]; x.trupp = x.trupp === 'A' ? 'B' : 'A'; saveTeam(); broadcast(); renderTeamPanel(); };
   });
@@ -462,12 +462,12 @@ function teamAdminAct(act) {
   if (act.startsWith('teamInvite')) return inviteAdminAct(act);
   switch (act) {
     case 'teamNewQuiet':
-      TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
+      TEAM = { topic: randTopic().replace('op-', 'opt-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
         members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', alias: myAlias(), trupp: 'A' }], seen: [] };
       saveTeam(); streamStart(); teamUi();
       return;
     case 'teamNew':
-      TEAM = { topic: randTopic().replace('s7-', 's7t-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
+      TEAM = { topic: randTopic().replace('op-', 'opt-'), role: 'host', id: 'host', name: '', since: Math.floor(Date.now() / 1000) - 5, v: 0,
         members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', alias: myAlias(), trupp: 'A' }], seen: [] };
       saveTeam(); streamStart(); broadcast(); teamUi(); closeAdmin(); return openTeamPanel();
     case 'teamPanel': closeAdmin(); return openTeamPanel();

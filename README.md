@@ -1,4 +1,4 @@
-# Operation S7 – Der Isar-Code
+# Operation Silberfuchs – Der Isar-Code
 
 GPS-Schnitzeljagd als mobile Web-App (reines HTML/CSS/JS, keine Abhängigkeiten, offline-fähig).
 Route: Hohenschäftlarn → Wolfratshausen → Ebenhausen → Kloster Schäftlarn → Höllriegelskreuth → Pullach → zurück. Dauer ca. 5 h.
