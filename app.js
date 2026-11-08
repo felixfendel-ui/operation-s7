@@ -513,11 +513,16 @@ function renderRadioList() {
   add('fin', 'Finale', D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : ''));
   $('#admin').innerHTML = `<div class="wrap">
     <div class="adm-head"><h2>📻 Funksprüche</h2><button class="btn sec small" style="width:auto;margin:0" data-act="back">← Zurück</button></div>
-    <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Auf dem iPhone den Stummschalter ausschalten.</p>
+    <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Auf dem iPhone den Stummschalter ausschalten und die Lautstärke hochdrehen.</p>
+    <div class="row"><button class="btn sec small" id="admBeep">🔊 Ton-Test</button><button class="btn sec small" id="admSay">🗣 Sprach-Test</button></div><div class="small radiostat"></div>
+    <p class="small" id="admDiag">${radioDiagnose()}</p>
     ${stations().some(s => s.morse) ? '<button class="btn warn small" id="admMorse">▶ Morse-Signal (S-Bahnhof Pullach) abspielen</button>' : ''}
     ${items.join('')}</div></div>`;
   bindRadio(texts);
   const mb = $('#admMorse'); if (mb) mb.onclick = () => playMorse(stations().find(s => s.morse).morse, mb);
+  $('#admBeep').onclick = () => { initAudio(); tone(880, 0, 0.4, 'sine', 0.2); tone(1320, 0.45, 0.4, 'sine', 0.2); };
+  $('#admSay').onclick = e => playRadio('Hier spricht der Silberfuchs. Wenn du mich hörst, funktioniert der Funk.', e.currentTarget);
+  setTimeout(() => { const d = $('#admDiag'); if (d) d.innerHTML = radioDiagnose(); }, 1200);
 }
 function renderSettings() {
   $('#admin').innerHTML = `<div class="wrap">
