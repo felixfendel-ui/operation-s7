@@ -457,6 +457,8 @@ function teamAdminHtml() {
   return `<div class="card"><h3>TEAM-MODUS (MEHRERE HANDYS)</h3>
     ${isHost() ? `<p class="small">Aktiv · ${TEAM.members.length} Mitglied(er) · Kanal <code>${esc(TEAM.topic)}</code></p>
       <button class="btn small" data-act="teamInvite">💌 Einladung erstellen</button>
+      <button class="btn sec small" data-act="teamCopyList">🖨 Teamliste für Urkunden kopieren</button>
+      <div class="feedback good" id="teamListFb"></div>
       <div class="row"><button class="btn sec small" data-act="teamPanel">👥 QR-Code & Mitglieder</button>
       <button class="btn danger small" data-act="teamOff">Team-Modus beenden</button></div>`
     : isMember() ? `<p class="small">Dieses Handy ist Mitspieler im Team von ${esc(TEAM.hostName || '?')}.</p>
@@ -477,6 +479,12 @@ function teamAdminAct(act) {
         members: [{ id: 'host', name: P.name || D.agentName || 'Jasper', alias: myAlias(), trupp: 'A' }], seen: [] };
       saveTeam(); streamStart(); broadcast(); teamUi(); closeAdmin(); return openTeamPanel();
     case 'teamPanel': closeAdmin(); return openTeamPanel();
+    case 'teamCopyList': { // für die Druckvorlage druck/tresor-druck.html: „Vorname; Deckname“, Einsatzleiter mit *
+      const yes = TEAM.rsvps || {};
+      const list = TEAM.members.filter(m => m.id === 'host' || !yes[m.id] || yes[m.id].v === 'yes')
+        .map(m => `${m.name}; ${m.alias || m.name}${m.id === 'host' ? ' *' : ''}`).join('\n');
+      return copyText(list, t => { const e = $('#teamListFb'); if (e) e.textContent = t + ' – ' + TEAM.members.length + ' Agenten'; });
+    }
     case 'teamOff':
       if (!confirm('Team-Modus beenden? Die anderen Handys bekommen dann keine Updates mehr.')) return;
       break;
