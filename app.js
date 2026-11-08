@@ -418,6 +418,7 @@ function renderAdmin() {
   if (adminView === 'settings') return renderSettings();
   if (adminView === 'import') return renderImport();
   if (adminView === 'invite') return renderInviteEditor();
+  if (adminView === 'radio') return renderRadioList();
   const p = here();
   const list = stations().map((s, i) => {
     const d = p ? fmtDist(dist(p, s)) : '–';
@@ -449,6 +450,9 @@ function renderAdmin() {
     <div class="card"><h3>STATIONEN (${stations().length})</h3>${list}</div>
     ${isMember() ? '' : liveAdminHtml()}
     ${teamAdminHtml()}
+    <div class="card"><h3>FUNKSPRÜCHE</h3>
+      <p class="small">Alle Funksprüche zum Probehören – so klingen sie auf diesem Gerät. (Achtung: enthält Rätsel und Geschichte.)</p>
+      <button class="btn sec small" data-act="radioList">📻 Funksprüche anhören</button></div>
     <div class="card"><h3>DATEN</h3>
       <p class="small">${isOverridden() ? '⚠️ Es gibt lokale Änderungen auf diesem Gerät. Damit alle Geräte sie bekommen: JSON exportieren und im Repository als <code>stations.json</code> ersetzen.' : 'Die Stationen kommen aus stations.json.'}</p>
       <div class="row"><button class="btn small" data-act="download">⬇ JSON herunterladen</button>
@@ -493,6 +497,27 @@ function renderEditor() {
       <p class="small">Formatierung: **fett**, {name} = Agentenname.</p>
       <button class="btn" data-act="editSave">💾 Speichern</button>
     </div></div>`;
+}
+/* Admin: alle Funksprüche der Reihe nach probehören */
+function renderRadioList() {
+  const texts = {}, items = [];
+  const add = (key, label, text) => { if (!text) return; texts[key] = text; items.push(`<div class="st-item"><div><b>${esc(label)}</b></div>${radioBtnHtml(key)}<div class="meta">${esc(speechText(text).slice(0, 110))}…</div></div>`); };
+  add('intro', 'Intro (Missionsstart)', D.intro);
+  stations().forEach((st, i) => {
+    const n = `${i + 1}. ${st.title}`;
+    if (i > 0) add('m' + i, `${n} – Auftrag unterwegs`, st.mission);
+    if (st.task) add('t' + i, `${n} – Spezialauftrag`, 'Spezialauftrag! ' + st.task.text);
+    add('s' + i, `${n} – Ankunft & Rätsel`, st.story + '. ' + (st.morse ? (st.teamQ || '') : st.riddle));
+    if (st.solved) add('l' + i, `${n} – Nach dem Lösen`, st.solved);
+  });
+  add('fin', 'Finale', D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : ''));
+  $('#admin').innerHTML = `<div class="wrap">
+    <div class="adm-head"><h2>📻 Funksprüche</h2><button class="btn sec small" style="width:auto;margin:0" data-act="back">← Zurück</button></div>
+    <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Auf dem iPhone den Stummschalter ausschalten.</p>
+    ${stations().some(s => s.morse) ? '<button class="btn warn small" id="admMorse">▶ Morse-Signal (S-Bahnhof Pullach) abspielen</button>' : ''}
+    ${items.join('')}</div></div>`;
+  bindRadio(texts);
+  const mb = $('#admMorse'); if (mb) mb.onclick = () => playMorse(stations().find(s => s.morse).morse, mb);
 }
 function renderSettings() {
   $('#admin').innerHTML = `<div class="wrap">
@@ -596,6 +621,7 @@ function adminAct(act, i) {
         D = nd; saveData(); if (P.idx >= D.stations.length) P.idx = 0; save(); adminView = 'main'; return renderAdmin();
       } catch (e) { $('#impfb').textContent = 'Fehler: ' + e.message; return; }
     case 'settings': adminView = 'settings'; return renderSettings();
+    case 'radioList': adminView = 'radio'; return renderRadioList();
     case 'settingsSave':
       lsSet('sj7_pin', $('#s_pin').value.trim() || adminPin()); // PIN getrennt speichern, damit Stations-Updates weiter ankommen
       if (D.title === $('#s_title').value && D.lockCode === $('#s_lock').value && D.intro === $('#s_intro').value && D.finale === $('#s_finale').value) { adminView = 'main'; return renderAdmin(); }
