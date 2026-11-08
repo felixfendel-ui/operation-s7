@@ -45,7 +45,7 @@ function exTaskCheck() {
   if (half || late) {
     P.tasks[k] = 'open'; save();
     showTask(k);
-    liveEvent('chat', `Spezialauftrag Station ${k + 1}`, st.task.text.replace(/\*\*/g, '').slice(0, 140), 2);
+    liveEvent('task', `Spezialauftrag Station ${k + 1}`, st.task.text.replace(/\*\*/g, '').slice(0, 140), 2);
   }
 }
 
@@ -65,7 +65,7 @@ function collectDepot(id, by) {
   P.pts += dp.pts || 50;
   save();
   showDepot(dp, by);
-  liveEvent('solved', `Depot geknackt: ${dp.name}${by ? ' – ' + by : ''}`, `+${dp.pts || 50} Punkte · gesamt ${P.pts}`, 2);
+  liveEvent('depot', `Depot geknackt: ${dp.name}${by ? ' – ' + by : ''}`, `+${dp.pts || 50} Punkte · gesamt ${P.pts}`, 2, dp.id);
   if (P.status === 'travel') renderTravel();
 }
 function showDepot(dp, by) {
@@ -122,7 +122,7 @@ function completeTask(k, by) {
   const st = D.stations[k];
   if (!st || !st.task || P.tasks[k] === 'done') return;
   P.tasks[k] = 'done'; P.pts += st.task.pts || 30; save(); fx('good');
-  liveEvent('solved', `Spezialauftrag erledigt (Station ${k + 1})${by ? ' – ' + by : ''}`, `+${st.task.pts || 30} Punkte · gesamt ${P.pts}`, 2);
+  liveEvent('task', `Spezialauftrag erledigt (Station ${k + 1})${by ? ' – ' + by : ''}`, `+${st.task.pts || 30} Punkte · gesamt ${P.pts}`, 2);
   if (P.status === 'travel') renderTravel();
 }
 
@@ -135,8 +135,12 @@ function openExModal(html) {
 }
 function closeExModal() {
   $('#exmodal').hidden = true; clearInterval(taskTimer); lastPopupKey = '';
-  const next = popupQueue.shift();
-  if (next) setTimeout(next.fn, 300);
+  let next;
+  while ((next = popupQueue.shift())) {
+    // Aufträge nur zeigen, wenn sie noch offen sind und zur aktuellen Strecke gehören
+    if (next.key[0] === 't' && (+next.key.slice(1) !== P.idx || P.tasks[+next.key.slice(1)] !== 'open')) continue;
+    setTimeout(next.fn, 300); break;
+  }
 }
 
 /* ---------- Anzeige ---------- */
@@ -147,7 +151,7 @@ function exTravelHtml() {
   const taskOpen = st.task && P.tasks[k] === 'open';
   const total = allDepots().length, have = Object.keys(P.depots).length;
   return `<div class="card excard">
-    <div class="exrow"><span>🎖 <b id="exPts">${P.pts}</b> Agentenpunkte</span><span>📦 ${have}/${total} Depots</span></div>
+    <div class="exrow"><span>🎖 <b id="exPts">${Number(P.pts) || 0}</b> Agentenpunkte</span><span>📦 ${have}/${total} Depots</span></div>
     ${deps.length ? `<div class="scanner" id="exScan">📡 Depot-Scanner: ${found}/${deps.length} auf dieser Strecke</div>` : ''}
     ${taskOpen ? '<button class="btn warn small" id="exTaskOpen">📡 Offener Spezialauftrag – antippen</button>' : ''}
     ${have ? `<div class="inv">${allDepots().filter(d => P.depots[d.id]).map(d => `<span title="${esc(d.name)}">${esc(d.icon)}</span>`).join('')}</div>` : ''}
@@ -171,7 +175,7 @@ function exVictoryHtml() {
   exInit();
   const got = allDepots().filter(d => P.depots[d.id]);
   const tasks = Object.values(P.tasks).filter(v => v === 'done').length;
-  return `🎖 Agentenpunkte: <b>${P.pts}</b><br>📦 Depots: <b>${got.length}/${allDepots().length}</b> ${got.map(d => esc(d.icon)).join(' ')}<br>📡 Spezialaufträge: <b>${tasks}</b><br>`;
+  return `🎖 Agentenpunkte: <b>${Number(P.pts) || 0}</b><br>📦 Depots: <b>${got.length}/${allDepots().length}</b> ${got.map(d => esc(d.icon)).join(' ')}<br>📡 Spezialaufträge: <b>${tasks}</b><br>`;
 }
 
 /* ---------- Team: Zentrale nimmt Funde/Erledigt an, Mitspieler zeigen Neues an ---------- */
@@ -184,7 +188,10 @@ function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.ta
 function exApplyState(s) {
   exInit();
   const before = { dp: Object.assign({}, P.depots), tk: Object.assign({}, P.tasks) };
-  P.pts = s.pts || 0; P.depots = s.dp || {}; P.tasks = s.tk || {};
+  P.pts = Number(s.pts) || 0;
+  P.depots = s.dp && typeof s.dp === 'object' && !Array.isArray(s.dp) ? s.dp : {};
+  P.tasks = s.tk && typeof s.tk === 'object' && !Array.isArray(s.tk) ? s.tk : {};
+  if (!memberReady()) return; // in der Einladungs-Lobby nichts verraten
   for (const id of Object.keys(P.depots)) if (!before.dp[id]) { const dp = depotById(id); if (dp) showDepot(dp, P.depots[id]); }
-  for (const [k, v] of Object.entries(P.tasks)) if (v === 'open' && !before.tk[k] && memberReady()) showTask(+k);
+  for (const [k, v] of Object.entries(P.tasks)) if (v === 'open' && !before.tk[k] && +k === P.idx) showTask(+k);
 }

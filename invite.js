@@ -6,7 +6,7 @@
 
 const INV_DEFAULT = {
   host: 'Jasper', d: '2026-11-21', t: '11:00', end: '17:30', ort: '', tel: '', bis: '',
-  mit: '📱 Handy mit vollem Akku und mobilem Internet\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
+  mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
   note: 'Wir sind mit Begleitung durch Erwachsene mit der S7 zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir.'
 };
 let invTimer = null;
@@ -127,7 +127,8 @@ function renderInviteLobby() {
     el.textContent = countdownText(inv);
     if (!party && isPartyDay(inv)) render();
   }, 1000);
-  if (party && TEAM.name && !joinTimer && !(joined && P.startedAt)) joinTimer = setInterval(sendJoin, 20000);
+  if (TEAM.kickedMe) { app.insertAdjacentHTML('beforeend', kickedHtml()); bindRejoin(); return; }
+  if (party && TEAM.name && !joinTimer && !joined) scheduleJoin();
 }
 
 /* ---------- Einladung erstellen (Admin auf Jaspers Handy oder am Mac) ---------- */

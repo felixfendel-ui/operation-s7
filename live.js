@@ -17,7 +17,16 @@ const LEAFLET = {
 const QUICK_KID = ['💡 Wir brauchen einen Tipp!', '👍 Alles gut', '🚆 Wir sitzen in der S-Bahn', '📞 Bitte ruf mich an', '🆘 Wir haben uns verlaufen'];
 const QUICK_PAPA = ['💡 Tipp schicken', '👍 Super, weiter so!', '📞 Ich rufe gleich an', '⏰ Denkt an die Zeit – bald wird es dunkel', '🚆 Schaut in der MVV-App nach der nächsten S7'];
 const EV_TAG = { start: 'rocket', arrived: 'round_pushpin', forced: 'warning', wrong: 'x', hint: 'bulb',
-  solved: 'white_check_mark', finished: 'trophy', chat: 'speech_balloon', help: 'sos' };
+  solved: 'white_check_mark', finished: 'trophy', chat: 'speech_balloon', help: 'sos', depot: 'package', task: 'dart', join: 'wave' };
+/* ntfy.sh erlaubt anonym 250 Nachrichten pro Tag und IP. Jaspers Handy spart deshalb:
+   Position nur alle 2 Min. wenn er sich bewegt (sonst alle 10 Min.), bei knappem Kontingent seltener. */
+let QUOTA_LEFT = null, quotaTimer = null, lastSnapPos = null;
+const wrongSent = {};
+async function refreshQuota() {
+  try { const r = await fetch(NTFY + '/v1/account'); const d = await r.json(); QUOTA_LEFT = d.stats ? d.stats.messages_remaining : null; } catch (e) {}
+  return QUOTA_LEFT;
+}
+function startQuotaWatch() { if (!quotaTimer) { refreshQuota(); quotaTimer = setInterval(refreshQuota, 10 * 60000); } }
 
 const lsRead = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }; // app.js lädt erst danach
 let LIVE = Object.assign({ enabled: false, topic: '', server: NTFY }, lsRead(KEY_L) || {});
@@ -62,6 +71,7 @@ function enqueue(m) {
   lsSet(KEY_OUT, OUTBOX);
   flush();
 }
+let retryDelay = 2000, retryTimer = null, lastSendError = '';
 async function flush() {
   if (flushing || !OUTBOX.length) return;
   flushing = true;
@@ -72,21 +82,40 @@ async function flush() {
       OUTBOX = OUTBOX.filter(x => x !== m); // per Identität entfernen – die Liste kann sich währenddessen ändern
       lsSet(KEY_OUT, OUTBOX);
     }
-  } catch (e) { /* später erneut */ } finally { flushing = false; }
+    retryDelay = 2000; lastSendError = '';
+  } catch (e) {
+    // Funkloch oder ntfy-Ratenlimit: mit wachsendem Abstand (2 s … 30 s) erneut versuchen
+    lastSendError = e.message || 'Netzwerkfehler';
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(flush, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, 30000);
+  } finally { flushing = false; }
 }
+window.addEventListener('online', () => { retryDelay = 2000; flush(); });
 
 /* ---------- Jasper-Seite: Ereignisse & Position ---------- */
 function liveEvent(type, title, message, priority = 3) {
   if (!liveOn() || !P || !P.name || PAPA || isMember()) return;
-  enqueue({ topic: tp('log'), title, message: message || title, tags: [EV_TAG[type] || 'spy', 'ev-' + type, 'i' + P.idx], priority });
-  liveSnapshot(true);
+  startQuotaWatch();
+  // Unwichtiges zuerst weglassen, wenn das Tageskontingent knapp wird
+  if (type === 'wrong') { wrongSent[P.idx] = (wrongSent[P.idx] || 0) + 1; if (wrongSent[P.idx] > 3 || (QUOTA_LEFT !== null && QUOTA_LEFT < 60)) return; }
+  if ((type === 'join' || type === 'task') && QUOTA_LEFT !== null && QUOTA_LEFT < 40) return;
+  const tags = [EV_TAG[type] || 'spy', 'ev-' + type, 'i' + P.idx, 'pts-' + (Number(P.pts) || 0)];
+  if (type === 'depot' && arguments[4]) tags.push('dp-' + arguments[4]);
+  enqueue({ topic: tp('log'), title, message: message || title, tags, priority });
+  // Bei wichtigen Momenten den Stand für die Papa-Zentrale mitschicken (höchstens alle 45 s, Start/Ende immer)
+  if (type === 'start' || type === 'finished' || (['arrived', 'forced', 'solved'].includes(type) && Date.now() - lastSnap > 45000)) liveSnapshot(true);
 }
 function liveSnapshot(force) {
   if (!liveOn() || !P || !P.name || PAPA || isMember()) return;
-  const now = Date.now();
-  if (!force && now - lastSnap < POS_EVERY) return;
-  lastSnap = now;
-  const p = here();
+  startQuotaWatch();
+  const now = Date.now(), p = here();
+  const moved = !lastSnapPos || (p && dist(lastSnapPos, p) > 30);
+  let every = moved ? POS_EVERY : 10 * 60000;
+  if (QUOTA_LEFT !== null && QUOTA_LEFT < 80) every = Math.max(every, 6 * 60000);
+  if (QUOTA_LEFT !== null && QUOTA_LEFT < 30) every = 20 * 60000;
+  if (!force && now - lastSnap < every) return;
+  lastSnap = now; if (p) lastSnapPos = { lat: p.lat, lon: p.lon };
   const s = { n: P.name, i: P.idx, s: P.status, f: Object.keys(P.frags).length, st: P.startedAt, fin: P.finishedAt, t: now };
   if (teamOn()) s.tm = teamNames();
   s.pts = P.pts || 0; s.dp = Object.keys(P.depots || {});
@@ -109,7 +138,8 @@ function handlePapaMsg(m) {
   CHAT.push({ id: m.id, from: 'papa', text: m.message, t: m.time * 1000 });
   lsSet(KEY_CHAT, CHAT);
   fx('unlock');
-  if ($('#chat').hidden) { unread++; showToast(m.message); } else renderChat();
+  if ($('#chat').hidden) { unread++; showToast(m.message); }
+  else { const box = $('#msgs'); if (box) { box.innerHTML = chatListHtml(CHAT, 'kid'); box.scrollTop = box.scrollHeight; } } // Entwurf im Eingabefeld bleibt erhalten
   liveUi();
 }
 function liveUi() {
@@ -166,9 +196,11 @@ function sendKid(text) {
 
 /* ---------- Admin-Bereich ---------- */
 function liveAdminHtml() {
+  refreshQuota().then(q => { const e = $('#quotaLeft'); if (e && q !== null) e.textContent = q; });
   const t = LIVE.topic;
   return `<div class="card"><h3>LIVE-VERBINDUNG ZU PAPA</h3>
-    <p class="small">Status: <b>${liveOn() ? 'aktiv' : 'aus'}</b>${t ? ` · Kanal <code>${esc(t)}</code>` : ''}${OUTBOX.length ? ` · ${OUTBOX.length} Nachricht(en) warten auf Netz` : ''}</p>
+    <p class="small">Status: <b>${liveOn() ? 'aktiv' : 'aus'}</b>${t ? ` · Kanal <code>${esc(t)}</code>` : ''}${OUTBOX.length ? ` · ${OUTBOX.length} Nachricht(en) warten auf Netz` : ''}${lastSendError ? ` · letzter Fehler: ${esc(lastSendError)}` : ''}</p>
+    <p class="small">ntfy-Kontingent heute (pro Internet-Anschluss): <b id="quotaLeft">${QUOTA_LEFT === null ? '…' : QUOTA_LEFT}</b> von 250 Nachrichten übrig. Eine Jagd braucht etwa 150–200 – am Vortag nicht mehr viel testen.</p>
     ${t ? `<p class="small">1. Papa-Link auf Papas Handy/PC öffnen (Karte, Verlauf, Lösungen, Chat).<br>
       2. Für Push: ntfy-App installieren, Server ntfy.sh, Kanal <code>${esc(t)}-log</code> abonnieren.<br>
       Wer den Kanalnamen kennt, kann mitlesen – Link nur an Papa geben.</p>
@@ -248,9 +280,7 @@ async function initPapa(topic) {
   };
   loadLeaflet().then(initMap).catch(() => { $('#map').innerHTML = '<p class="small center" style="padding:40px 0">Karte konnte nicht geladen werden.</p>'; });
   await papaPoll();
-  setInterval(papaPoll, PAPA_POLL);
-  setInterval(renderPapaStatus, 20000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) papaPoll(); });
+  setInterval(() => { const st = STREAMS.papaview; PS.online = !!(st && st.ok); renderPapaStatus(); }, 20000);
 }
 async function papaSend(text, fromInput) {
   text = String(text || '').trim();
@@ -260,41 +290,62 @@ async function papaSend(text, fromInput) {
     await publish({ topic: tp('papa'), title: 'Papa', message: text, tags: ['radio'] });
     if (fromInput) $('#pIn').value = '';
     fb.className = 'feedback good'; fb.textContent = 'Gesendet ✓ – Jasper sieht es, sobald seine App offen ist.';
-    papaPoll();
   } catch (e) { fb.className = 'feedback bad'; fb.textContent = 'Senden fehlgeschlagen: ' + e.message; }
 }
+/* Erst einmal alles Vorhandene laden, danach eine dauerhafte Verbindung (SSE) statt alle 10 s nachzufragen –
+   das schont das ntfy-Anfragenbudget des Heim-Anschlusses, an dem am Feiertag auch die Kinderhandys hängen. */
+function papaHandle(m) {
+  let newKid = false;
+  if (PS.seen.has(m.id)) return false;
+  PS.seen.add(m.id);
+  PS.since = Math.max(PS.since, m.time);
+  if (PS.clearedAt && m.time * 1000 < PS.clearedAt) return false;
+  if (m.topic === tp('pos')) {
+    try {
+      const s = JSON.parse(m.message);
+      if (!PS.snap || s.t >= PS.snap.t) PS.snap = s;
+      if (s.lat != null) PS.track.push([s.lat, s.lon, s.t]);
+    } catch (e) {}
+  } else if (m.topic === tp('papa')) {
+    PS.chat.push({ from: 'papa', text: m.message, t: m.time * 1000 });
+  } else {
+    const tags = m.tags || [];
+    PS.log.push({ title: m.title || '', text: m.message || '', t: m.time * 1000, tags });
+    // Stand sofort aus dem Ereignis ableiten (Positionsmeldungen kommen seltener)
+    const ti = tags.find(x => /^i\d+$/.test(x)), k = ti ? +ti.slice(1) : null;
+    const tpt = tags.find(x => /^pts-\d+$/.test(x)), tdp = tags.find(x => /^dp-[a-z]+$/.test(x));
+    if (PS.snap && tpt) PS.snap.pts = Math.max(Number(PS.snap.pts) || 0, +tpt.slice(4));
+    if (PS.snap && tdp) PS.snap.dp = Array.from(new Set([...(Array.isArray(PS.snap.dp) ? PS.snap.dp : []), tdp.slice(3)]));
+    if (PS.snap && k !== null && m.time * 1000 > PS.snap.t) {
+      if (tags.includes('ev-arrived') || tags.includes('ev-forced')) Object.assign(PS.snap, { i: k, s: 'arrived', t: m.time * 1000 });
+      else if (tags.includes('ev-solved')) Object.assign(PS.snap, { i: k, s: 'solved', t: m.time * 1000 });
+      else if (tags.includes('ev-finished')) Object.assign(PS.snap, { fin: m.time * 1000, t: m.time * 1000 });
+    }
+    if (tags.includes('ev-chat') || tags.includes('ev-help')) {
+      PS.chat.push({ from: 'kid', text: m.message, t: m.time * 1000 });
+      newKid = true;
+    }
+  }
+  return newKid;
+}
+let papaRenderTimer = null;
+function papaRenderSoon() { clearTimeout(papaRenderTimer); papaRenderTimer = setTimeout(renderPapa, 150); }
 async function papaPoll() {
+  const topics = `${tp('log')},${tp('pos')},${tp('papa')}`;
   const since = PS.since || (PS.clearedAt ? Math.floor(PS.clearedAt / 1000) : 'all');
   try {
-    const r = await fetch(`${LIVE.server}/${tp('log')},${tp('pos')},${tp('papa')}/json?poll=1&since=${since}`);
+    const r = await fetch(`${LIVE.server}/${topics}/json?poll=1&since=${since}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    let newKid = false;
-    for (const m of parseNd(await r.text()).sort((a, b) => a.time - b.time)) {
-      if (PS.seen.has(m.id)) continue;
-      PS.seen.add(m.id);
-      PS.since = Math.max(PS.since, m.time);
-      if (PS.clearedAt && m.time * 1000 < PS.clearedAt) continue;
-      if (m.topic === tp('pos')) {
-        try {
-          const s = JSON.parse(m.message);
-          if (!PS.snap || s.t >= PS.snap.t) PS.snap = s;
-          if (s.lat != null) PS.track.push([s.lat, s.lon, s.t]);
-        } catch (e) {}
-      } else if (m.topic === tp('papa')) {
-        PS.chat.push({ from: 'papa', text: m.message, t: m.time * 1000 });
-      } else {
-        const tags = m.tags || [];
-        PS.log.push({ title: m.title || '', text: m.message || '', t: m.time * 1000, tags });
-        if (tags.includes('ev-chat') || tags.includes('ev-help')) {
-          PS.chat.push({ from: 'kid', text: m.message, t: m.time * 1000 });
-          if (PS.loaded) newKid = true;
-        }
-      }
-    }
-    PS.loaded = true; PS.online = true;
-    renderPapa();
-    if (newKid) { fx('unlock'); document.title = '📻 Neue Nachricht – Papa-Zentrale'; setTimeout(() => { document.title = 'Papa-Zentrale'; }, 10000); }
-  } catch (e) { PS.online = false; renderPapaStatus(); }
+    parseNd(await r.text()).sort((a, b) => a.time - b.time).forEach(papaHandle);
+    PS.online = true;
+  } catch (e) { PS.online = false; }
+  PS.loaded = true;
+  renderPapa();
+  openStream('papaview', topics, () => PS.since || since, m => {
+    PS.online = true;
+    if (papaHandle(m) && PS.loaded) { fx('unlock'); document.title = '📻 Neue Nachricht – Papa-Zentrale'; setTimeout(() => { document.title = 'Papa-Zentrale'; }, 10000); }
+    papaRenderSoon();
+  });
 }
 function renderPapa() { renderPapaStatus(); renderPapaStation(); renderPapaChat(); renderPapaLog(); updateMap(false); }
 function renderPapaStatus() {
@@ -302,7 +353,8 @@ function renderPapaStatus() {
   if (!el) return;
   const off = PS.online === false ? '<p class="feedback bad">⚠️ Keine Verbindung zu ntfy.sh – versuche es weiter …</p>' : '';
   if (!s) { el.innerHTML = `<div class="label">Agent</div><p>Noch keine Meldung. Sobald Jasper die Mission startet (mit eingeschalteter Live-Verbindung), erscheint er hier.</p>${off}`; return; }
-  const n = D.stations.length, i = Math.min(s.i, n - 1), st = D.stations[i];
+  const n = D.stations.length, i = Math.max(0, Math.min(Number(s.i) || 0, n - 1)), st = D.stations[i];
+  const num = x => (Number.isFinite(Number(x)) ? Number(x) : 0);
   const label = s.fin ? '🏆 <b>Mission erfüllt!</b>' : s.s === 'travel' ? `unterwegs zu <b>${i + 1}. ${esc(st.targetName || st.title)}</b>`
     : s.s === 'arrived' ? `knobelt am Rätsel bei <b>${i + 1}. ${esc(st.title)}</b>` : `hat <b>${i + 1}. ${esc(st.title)}</b> gelöst`;
   const d = s.lat != null && !s.fin ? ' · Abstand zum Ziel ' + fmtDist(dist(s, st)) : '';
@@ -310,8 +362,8 @@ function renderPapaStatus() {
     ? `<p class="feedback bad">⚠️ Seit ${Math.round((Date.now() - s.t) / 60000)} Min. keine Meldung – Handy gesperrt, App zu oder kein Netz.</p>` : '';
   el.innerHTML = `<div class="label">Agent · Station ${Math.min(i + 1, n)} von ${n}</div><h2>${esc(s.n)}</h2><p>${label}</p>
     ${s.tm ? `<p class="small">👥 Team (${s.tm.length}): ${esc(s.tm.join(', '))}</p>` : ''}
-    ${s.pts != null ? `<p class="small">🎖 ${s.pts} Agentenpunkte · 📦 ${(s.dp || []).length}/${allDepots().length} Depots</p>` : ''}
-    <p class="small">Letzte Meldung ${ago(s.t)} (${hhmm(s.t)})${s.acc != null ? ' · GPS ±' + s.acc + ' m' : ''}${d} · Fragmente ${s.f}/${D.stations.filter(x => x.fragment).length}${s.sim ? ' · 🧪 simuliert' : ''}</p>
+    ${s.pts != null ? `<p class="small">🎖 ${num(s.pts)} Agentenpunkte · 📦 ${(Array.isArray(s.dp) ? s.dp : []).length}/${allDepots().length} Depots</p>` : ''}
+    <p class="small">Letzte Meldung ${ago(s.t)} (${hhmm(s.t)})${s.acc != null ? ' · GPS ±' + num(s.acc) + ' m' : ''}${d} · Fragmente ${num(s.f)}/${D.stations.filter(x => x.fragment).length}${s.sim ? ' · 🧪 simuliert' : ''}</p>
     <div class="pbar"><div style="width:${(s.fin ? n : i + (s.s === 'solved' ? 1 : 0)) / n * 100}%"></div></div>${stale}${off}`;
   P.startedAt = s.st; P.finishedAt = s.fin; tick();
 }
@@ -343,7 +395,7 @@ function renderPapaLog() {
   if (!el) return;
   if (el.dataset.n === String(PS.log.length)) return;
   el.dataset.n = String(PS.log.length);
-  const icon = tags => ({ rocket: '🚀', round_pushpin: '📍', warning: '⚠️', x: '❌', bulb: '💡', white_check_mark: '✅', trophy: '🏆', speech_balloon: '💬', sos: '🆘' })[tags[0]] || '•';
+  const icon = tags => ({ rocket: '🚀', round_pushpin: '📍', warning: '⚠️', x: '❌', bulb: '💡', white_check_mark: '✅', trophy: '🏆', speech_balloon: '💬', sos: '🆘', package: '📦', dart: '🎯', wave: '👋' })[tags[0]] || '•';
   el.innerHTML = PS.log.slice().reverse().slice(0, 150).map(e => `<div class="logrow"><span class="t">${hhmm(e.t)}</span> ${icon(e.tags)} <b>${esc(e.title)}</b>${e.text && e.text !== e.title ? `<div class="small">${esc(e.text)}</div>` : ''}</div>`).join('')
     || '<p class="small">Noch keine Ereignisse.</p>';
 }

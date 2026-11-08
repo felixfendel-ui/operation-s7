@@ -23,7 +23,7 @@
       ],
       "hint": "Rechne rückwärts: Was mal 5 ergibt 20? Und dann wieder 3 dazu.",
       "fragment": "Q",
-      "solved": "Richtig – die **7**! Du reist heute mit der **S-Bahn-Linie S7**.\n\nDein erstes Ziel: der **S-Bahnhof Hohenschäftlarn**. Geh zu Fuß dorthin (ca. 12 Minuten). Dort wartet ein Kontaktmann – oder vielleicht der Maulwurf?",
+      "solved": "Richtig – die **7**! Du reist heute mit der **S-Bahn-Linie S7**.\n\nDein erstes Ziel: der **S-Bahnhof Hohenschäftlarn**. Geh zu Fuß dorthin (ca. 20 Minuten). Dort wartet ein Kontaktmann – oder vielleicht der Maulwurf?",
       "teamQ": "Ich bin eine Zahl zwischen 1 und 20. Welche Zahl bin ich? (Nur mit den Hinweisen **beider** Trupps eindeutig!)",
       "clueA": "• Ich bin größer als 5 und kleiner als 12.\n• Ich bin ungerade.",
       "clueB": "• Ich bin eine Primzahl.\n• Ich bin kleiner als 10."
@@ -80,7 +80,7 @@
       ],
       "hint": "O → 3 zurück → L. P → 1 zurück → O. Weiter so! Es ist der Name eines Flusses hier in Wolfratshausen.",
       "fragment": "M",
-      "solved": "**LOISACH** – der Fluss, der durch Wolfratshausen fließt!\n\nDas nächste Fragment liegt in der Altstadt am **Marienplatz**, ganz nah an der Loisach. Lauf hin (ca. 10 Minuten).",
+      "solved": "**LOISACH** – der Fluss, der durch Wolfratshausen fließt!\n\nDas nächste Fragment liegt in der Altstadt am **Marienplatz**, ganz nah an der Loisach. Lauf hin (ca. 12 Minuten).",
       "teamQ": "Entschlüsselt das geheime Wort.",
       "clueA": "Die Geheimbotschaft lautet:\n\n**O P L T D D K**",
       "clueB": "Der Schlüssel: Der Silberfuchs hat die Buchstaben im Alphabet nach vorne geschoben – **abwechselnd um 3 und um 1 Stelle**. Zum Entschlüsseln also: 1. Buchstabe 3 zurück, 2. Buchstabe 1 zurück, 3. Buchstabe 3 zurück …",
@@ -102,9 +102,7 @@
       "story": "Wolfratshausen – klingt nach Wolf, oder? Früher brachten Flößer auf Loisach und Isar Holz und Waren bis nach München und sogar bis nach Wien. Beim großen **Flößerrennen** starteten vier Flöße – **Rot, Gelb, Grün und Blau** – hier an der Loisach. Der Silberfuchs hat sich den Zieleinlauf notiert, aber in zwei Hälften versteckt:",
       "riddle": "Vier Flöße – **Rot, Gelb, Grün, Blau** – fahren um die Wette.\n• Rot kommt **direkt vor** Gelb ins Ziel.\n• Grün ist **nicht Erster**.\n• Blau kommt **irgendwann nach** Gelb an.\n• Grün ist **nicht Letzter**.\n\nIn welcher Reihenfolge kommen die Flöße an? (Alle vier Farben der Reihe nach)",
       "answers": [
-        "Rot Gelb Grün Blau",
-        "rot, gelb, grün, blau",
-        "rot gelb gruen blau"
+        "Rot Gelb Grün Blau"
       ],
       "hint": "Rot und Gelb kleben zusammen: Rot steht direkt vor Gelb. Wo in der Reihe kann dieses Pärchen stehen, wenn Blau noch danach kommen muss?",
       "fragment": "Z",
@@ -166,7 +164,6 @@
       "riddle": "„Ich bin heute **dreimal so alt** wie mein jüngster Klosterschüler. In **12 Jahren** bin ich nur noch **doppelt so alt** wie er.\n\nWie alt ist mein Klosterschüler heute?“",
       "answers": [
         "12",
-        "zwoelf",
         "zwölf"
       ],
       "hint": "Probier's aus: Ist der Schüler 10, ist der Abt 30. In 12 Jahren wären sie 22 und 42 – ist das doppelt so alt? Nein. Probier andere Zahlen!",
@@ -255,7 +252,7 @@
       ],
       "hint": "Nenne die erste Ziffer X. Dann ist die zweite X+1, die dritte 1 und die letzte 2·X. Zusammen müssen sie 18 ergeben.",
       "fragment": "X",
-      "solved": "**4518** – der Safe springt auf! Darin liegt ein Fragment und ein Zettel: „Treffpunkt **S-Bahnhof Pullach**.“\n\nGeh hin (ca. 5 Minuten).",
+      "solved": "**4518** – der Safe springt auf! Darin liegt ein Fragment und ein Zettel: „Treffpunkt **S-Bahnhof Pullach**.“\n\nGeh hin (ca. 8 Minuten).",
       "teamQ": "Wie lautet der 4-stellige Code? (Alle Ziffern sind verschieden.)",
       "clueA": "• Die **letzte** Ziffer ist doppelt so groß wie die **erste**.\n• Die **zweite** Ziffer ist die Summe aus der **ersten** und der **dritten**.",
       "clueB": "• Die **dritte** Ziffer ist 1.\n• Alle Ziffern zusammengezählt ergeben **18**.",
@@ -321,9 +318,7 @@
       "story": "Du bist zurück im Hauptquartier. Vor dir steht der Tresor des Silberfuchs. Auf dem Display leuchtet seine **Geheimtabelle** auf – damit verwandelst du deine verschlüsselten Fragmente in das echte Codewort. Aber Vorsicht: Der Silberfuchs hat auch falsche Einträge eingebaut, um den Maulwurf zu verwirren.",
       "riddle": "**GEHEIMTABELLE** (Fragment = echter Buchstabe)\n\nB = T · C = O · D = L · F = E\nH = U · K = G · M = A · P = D\nQ = I · V = C · W = S · X = N\nY = H · Z = R\n\nEntschlüssle deine Fragmente der Reihe nach. Wie lautet das Codewort?",
       "answers": [
-        "ISARAGENT",
-        "ISAR AGENT",
-        "ISAR-AGENT"
+        "ISARAGENT"
       ],
       "hint": "Nimm das erste Fragment, such es links in der Tabelle und schreib den Buchstaben rechts daneben auf. Dann das nächste … Es sind zwei Wörter – das erste ist der Fluss, an dem du heute unterwegs warst.",
       "fragment": "",

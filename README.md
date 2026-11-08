@@ -70,7 +70,7 @@ Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhr
 
 ## Live-Verbindung zu Papa (ntfy.sh)
 
-Jaspers App meldet jedes Ereignis (Station erreicht, falsche Antwort, Tipp genutzt, gelöst, Mission erfüllt) und alle 2 Minuten seine Position. Über den gelben **📻 Funk**-Knopf kann er Papa schreiben (Schnellknöpfe: Tipp gebraucht, Alles gut, In der S-Bahn, Bitte anrufen, Verlaufen). Papas Antworten erscheinen bei Jasper als Einblendung mit Ton.
+Jaspers App meldet jedes Ereignis (Station erreicht, falsche Antwort, Tipp genutzt, gelöst, Mission erfüllt) und seine Position (alle 2 Minuten, solange er unterwegs ist; im Stehen alle 10 Minuten). Über den gelben **📻 Funk**-Knopf kann er Papa schreiben (Schnellknöpfe: Tipp gebraucht, Alles gut, In der S-Bahn, Bitte anrufen, Verlaufen). Papas Antworten erscheinen bei Jasper als Einblendung mit Ton.
 
 **Einrichten (auf Jaspers Handy, vor dem Start):**
 1. Admin-Modus öffnen → „📡 Live-Verbindung einrichten“. Es wird ein geheimer Zufallskanal erzeugt (nur auf diesem Gerät gespeichert, nicht im Repository).
@@ -132,6 +132,9 @@ python3 -m http.server 8737
 ## Tipps für den Tag
 
 - Handy voll laden + Powerbank; Bildschirm geht sonst aus und GPS pausiert – beim Entsperren aktualisiert sich alles.
+- **Nur in Safari bzw. Chrome öffnen, nicht als Home-Bildschirm-App.** Auf dem iPhone hat eine Home-Bildschirm-App einen eigenen Speicher – Team, Einladung und Live-Verbindung wären dort weg. (Ein Lesezeichen auf dem Home-Bildschirm öffnet jetzt normal in Safari.)
+- **Beim Start zu Hause WLAN aus, mobile Daten an.** ntfy.sh begrenzt Anfragen pro Internet-Anschluss; 8 Handys plus Papa-Zentrale im selben WLAN können kurz ausgebremst werden. Die App versucht es dann automatisch erneut, aber mit mobilen Daten geht es sofort.
+- **ntfy-Kontingent:** 250 Nachrichten pro Tag und Anschluss. Eine Jagd braucht auf Jaspers Handy ca. 150–200. Am Vortag nicht mehr ausgiebig testen; der Admin-Modus zeigt das Restkontingent. Wird es knapp, schickt die App Position seltener und lässt Unwichtiges weg.
 - Die App vorher einmal online öffnen, dann funktioniert sie auch bei Funklöchern.
 - S7 südlich von Höllriegelskreuth etwa alle 20 min – Fahrplan in der MVV-App prüfen, Tageskarte für die Strecke Wolfratshausen–Pullach einplanen.
 - Pausen: Kloster Schäftlarn (Bräustüberl) oder Pullach – im November warmen Tee/Kakao in der Thermoskanne mitnehmen.
