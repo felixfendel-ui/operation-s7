@@ -183,6 +183,7 @@ function fragsHtml() {
 function render() {
   renderHeader();
   liveUi(); teamUi(); sosUi();
+  if (typeof needAwake === 'function') { if (needAwake()) keepAwake(); else releaseAwake(); }
   if (isMember() && !memberReady()) return renderLobby();
   if (!P.name) return renderIntro();
   if (P.finishedAt) return renderVictory();
@@ -208,6 +209,7 @@ function renderIntro() {
     ${aliasBoxHtml()}
     ${rulesHtml()}
     ${checkBtnHtml()}
+    ${offlineCardHtml()}
     <button class="btn" id="startBtn">🔓 Mission starten</button>
     <p class="small">Die App fragt nach deinem Standort (für das Radar) und auf dem iPhone nach dem Kompass. Bitte jeweils erlauben.</p>
     ${isHost() ? `<p class="small">👥 Team-Modus: ${TEAM.members.length - 1} Mitspieler beigetreten. QR-Code über den Team-Knopf unten links.</p>` : ''}
@@ -224,11 +226,12 @@ function renderIntro() {
   $('#nameIn').onkeydown = e => { if (e.key === 'Enter') go(); };
   bindAliasBox();
   bindRadio({ intro: D.intro });
+  bindOffline();
 }
 
 function renderTravel() {
   const st = cur(), far = here() && dist(here(), st) > 3000, nav = canNavigate();
-  app.innerHTML = `${teamRoleHtml()}
+  app.innerHTML = `${teamRoleHtml()}${moleHtml()}${akkuHtml()}
   <div class="card pop">
     <div class="label">Station ${P.idx + 1} von ${stations().length} · Nächstes Ziel</div>
     <h2>${esc(st.targetName || st.title)}</h2>
@@ -246,7 +249,7 @@ function renderTravel() {
   <p class="center small" id="gpsinfo"></p>
   <div id="teamHere">${hereHtml()}</div>
   <div id="forcebox"></div>
-  ${nav ? '' : '<button class="btn sec small" id="navOv">🧭 Navigator ausgefallen? Pfeil hier anzeigen</button>'}
+  ${nav || sabotageActive() ? '' : '<button class="btn sec small" id="navOv">🧭 Navigator ausgefallen? Pfeil hier anzeigen</button>'}
   ${compassOn ? '' : '<button class="btn sec small" id="compassBtn">🧭 Kompass aktivieren</button><p class="center small" id="compassMsg"></p>'}
   ${exTravelHtml()}
   <div class="card"><div class="label center">Code-Fragmente</div>${fragsHtml()}</div>`;
@@ -280,7 +283,8 @@ function updateLive() {
   lastRot += delta;
   $('#arrow').style.transform = `rotate(${lastRot}deg)`;
   const r = teamRoles(P.idx), me = myMember();
-  $('#dirinfo').innerHTML = !canNavigate() ? `Nur der 🧭 Navigator sieht die Richtung: <b>${esc(r && me && r.nav[me.trupp] ? r.nav[me.trupp].name : '')}</b> – folgt ihm!`
+  $('#dirinfo').innerHTML = sabotageActive() ? `🦡 <b>Störsender aktiv!</b> Noch ${Math.max(0, Math.ceil((P.sab.until - Date.now()) / 1000))} Sek. ohne Pfeil.`
+    : !canNavigate() ? `Nur der 🧭 Navigator sieht die Richtung: <b>${esc(r && me && r.nav[me.trupp] ? r.nav[me.trupp].name : '')}</b> – folgt ihm!`
     : compassOn && heading !== null
     ? 'Der Pfeil zeigt zum Ziel. Halte das Handy flach vor dich.'
     : `Ziel liegt im <b>${dirName(b)}</b>. <span class="small">(Pfeil: Norden = oben)</span>`;
@@ -382,6 +386,7 @@ function doNext() {
   if (P.idx < stations().length - 1) { P.idx++; P.status = 'travel'; }
   else { P.finishedAt = Date.now(); }
   save(); render(); window.scrollTo(0, 0); checkUnlock();
+  liveSnapshot(true); // Papa-Zentrale sofort auf die neue Station setzen (wichtig für die Fernsteuerung)
 }
 
 function renderVictory() {

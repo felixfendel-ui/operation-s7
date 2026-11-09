@@ -240,3 +240,18 @@ a{color:var(--accent)}
 .album{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
 .album figure{margin:0}.album img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block}
 .album figcaption{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Offline, Maulwurf, Akku, Diashow, Fernsteuerung */
+.offlinebox{margin:10px 0;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-size:14px}
+.offlinebox .btn{margin-top:8px}
+.molebar{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.moletrack{display:flex;justify-content:space-between;font-size:18px;margin-bottom:4px}
+.moletrack span{flex:1;text-align:center;color:var(--muted)}.moletrack span.done{color:var(--accent)}
+.muted{color:var(--muted)}
+.akkubox{margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(90,180,255,.1);border:1px solid #5ab4ff;font-size:14px}
+.slideshow{position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center}
+.slideshow img{max-width:100%;max-height:100%;object-fit:contain;animation:kb 4.5s ease-out}
+.slideshow .cap{position:absolute;left:0;right:0;bottom:6%;text-align:center;font:700 28px/1.3 var(--mono);color:#fff;text-shadow:0 2px 8px #000}
+.slideshow .hint{position:absolute;top:12px;right:16px;color:#aaa;font-size:12px}
+@keyframes kb{from{transform:scale(1.08)}to{transform:scale(1)}}
+#pRemote select{font-size:15px}

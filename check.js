@@ -52,10 +52,12 @@ function openCheck() {
         ${ckRow('net', '📡 Verbindung', '', 'Für Team-Funk und Papa-Zentrale.')}
       </div>
       <div id="ckSum"></div>
+      ${offlineCardHtml()}
       <p class="small">Browser: ${IS_IOS ? 'iPhone/iPad' : IS_ANDROID ? 'Android' : 'Computer'}${window.isSecureContext ? '' : ' · ⚠️ keine sichere Verbindung (https nötig)'}${'wakeLock' in navigator ? ' · Bildschirm-wach: ✅' : ' · Bildschirm-wach: nicht verfügbar – Auto-Sperre in den Einstellungen verlängern'}</p>
     </div></div>`;
   $('#ckClose').onclick = closeCheck;
   $('#ckStart').onclick = runCheck;
+  bindOffline();
 }
 function closeCheck() {
   $('#checkpanel').hidden = true; document.body.style.overflow = '';

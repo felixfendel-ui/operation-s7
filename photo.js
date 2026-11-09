@@ -98,9 +98,10 @@ async function albumHtmlInto(el) {
   if (!list.length && !others.length) { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="card"><div class="label">📸 Missions-Album</div>
     ${list.length ? `<div class="album">${list.map(p => `<figure><img src="${URL.createObjectURL(p.blob)}" alt=""><figcaption>${esc((D.stations[p.k] || {}).title || '')}</figcaption></figure>`).join('')}</div>
-      <button class="btn small" id="albumShare">📤 Fotos speichern oder teilen</button>` : ''}
+      <div class="row"><button class="btn small" id="albumShare">📤 Fotos speichern oder teilen</button><button class="btn sec small" id="albumShow">▶ Diashow (Fernseher)</button></div>` : ''}
     ${others.length ? `<p class="small">Weitere Fotos liegen auf den Handys von: ${esc([...new Set(others.map(([, v]) => v.by))].join(', '))}</p>` : ''}
   </div>`;
+  const sb = $('#albumShow'); if (sb) sb.onclick = () => slideshow(list);
   const b = $('#albumShare');
   if (b) b.onclick = async () => {
     const files = list.map(p => new File([p.blob], `Operation-Silberfuchs-${String(p.k + 1).padStart(2, '0')}.jpg`, { type: 'image/jpeg' }));

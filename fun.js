@@ -98,13 +98,15 @@ function playFile(src, btn, onFail) {
   if (same) return;
   playerBtn = btn || null;
   if (btn) { if (!btn.dataset.label) btn.dataset.label = btn.textContent; btn.classList.add('on'); btn.textContent = '⏹ Stoppen'; }
-  player.src = src;
+  player.src = (window.AUDIO_BLOBS && AUDIO_BLOBS[src]) || src; // Offline-Paket bevorzugen
   player.onended = () => stopPlayer();
   player.onerror = () => { stopPlayer(); if (onFail) onFail(); };
   const pr = player.play(); // direkt im Tippen starten (iPhone)
   if (pr && pr.catch) pr.catch(err => { if (err && err.name === 'AbortError') return; stopPlayer(); if (onFail) onFail(); });
 }
 function playRadio(text, btn) {
+  const pv = papaVoiceFor(text); // Papas eigene Aufnahme (Start, Halbzeit, Finale)
+  if (pv) return playFile(pv, btn, () => { const h2 = fnvHash(String(text || '')); if (AUDIO_INDEX && AUDIO_INDEX.has(h2)) playFile('audio/' + h2 + '.m4a?v=' + AUDIO_V, btn); else speakRadio(text, btn); });
   const h = fnvHash(String(text || ''));
   if (AUDIO_INDEX && AUDIO_INDEX.has(h)) return playFile('audio/' + h + '.m4a?v=' + AUDIO_V, btn, () => speakRadio(text, btn));
   speakRadio(text, btn);
@@ -191,7 +193,9 @@ function openSos() {
     <div class="sospos">${p ? `📍 Euer Standort zum Vorlesen:<br><b>${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</b> (±${Math.round(p.acc || 0)} m)<br>
       <a href="https://maps.apple.com/?ll=${p.lat},${p.lon}&q=Hier%20sind%20wir" target="_blank" rel="noopener">In Karten öffnen</a>` : '📍 Standort wird gesucht …'}</div>
     <p class="small" style="text-align:left">Jemand fehlt? Bleibt an der Stelle, an der ihr ihn zuletzt gesehen habt, und ruft Papa an. Wer verloren ist: zum letzten Bahnhof zurück und dort warten.</p>
+    ${takeoverHtml()}
     <button class="btn sec small" id="exOk">Zurück zur Mission</button></div>`);
+  bindTakeover();
   liveEvent('help', `🆘 Notfall-Knopf geöffnet${P && P.name ? ' – ' + P.name : ''}`, p ? `Standort ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}` : 'Standort unbekannt', 5);
 }
 const RULES = ['Immer zusammenbleiben – niemand geht allein, auch nicht kurz.',

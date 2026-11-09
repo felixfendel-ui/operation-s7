@@ -42,7 +42,8 @@ function exArrived(forced, byId) {
   exInit();
   P.arr[P.idx] = Date.now();
   if (forced) return;
-  const m = award(BONUS_VORHUT, byId || 'host');
+  moleArrived();
+  const m = award(BONUS_VORHUT, byId || myId());
   if (m) flashBonus(`🏃 Vorhut-Bonus +${BONUS_VORHUT} für ${m.trupp === 'A' ? '🟥 Trupp A' : '🟦 Trupp B'} (${m.alias || m.name})`);
 }
 /* Rätsel gelöst (von app.js solve aufgerufen) */
@@ -50,7 +51,7 @@ function exSolved(byId) {
   exInit();
   const blitz = P.arr[P.idx] && Date.now() - P.arr[P.idx] <= BLITZ_MS;
   const pts = blitz ? BONUS_CODE * 2 : BONUS_CODE;
-  const m = award(pts, byId || 'host');
+  const m = award(pts, byId || myId());
   if (m) flashBonus(`${blitz ? '⚡ Blitz-' : '🔐 '}Codeknacker-Bonus +${pts} für ${m.trupp === 'A' ? '🟥 Trupp A' : '🟦 Trupp B'}`);
 }
 function scoreboardHtml() {
@@ -98,7 +99,7 @@ function exTaskCheck() {
 
 /* ---------- Depots ---------- */
 function requestDepot(id) {
-  if (!isMember()) return collectDepot(id, P.name, 'host');
+  if (!isMember()) return collectDepot(id, P.name, myId());
   const now = Date.now();
   if (depotSent[id] && now - depotSent[id] < 20000) return;
   depotSent[id] = now;
@@ -109,7 +110,7 @@ function collectDepot(id, by, byId) {
   const dp = depotById(id);
   if (!dp || P.depots[id]) return;
   P.depots[id] = by || '?';
-  award(dp.pts || 50, byId || 'host');
+  award(dp.pts || 50, byId || myId());
   save();
   showDepot(dp, by);
   liveEvent('depot', `Depot geknackt: ${dp.name}${by ? ' – ' + by : ''}`, `+${dp.pts || 50} Punkte · gesamt ${P.pts}`, 2, dp.id);

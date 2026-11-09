@@ -47,6 +47,28 @@ An jeder Station verlangt der Silberfuchs ein **Gruppenfoto in einer bestimmten 
 
 Die Fotos bleiben **nur auf dem Handy, das sie aufgenommen hat** (nichts wird hochgeladen). Beim Finale zeigt jedes Handy sein **Missions-Album** mit „Fotos speichern oder teilen“ und darunter, auf wessen Handys weitere Fotos liegen. Im Notfall lässt sich ein Foto überspringen (ohne Punkte).
 
+## Papa-Fernsteuerung & Live-Überraschungen
+
+In der Papa-Zentrale gibt es eine **🎛 Fernsteuerung** (wirkt auf Jaspers Handy): **Station öffnen**, **Station überspringen** (gilt als gelöst, Fragment inklusive), **Tipp freischalten**, **🦡 Maulwurf-Sabotage** (2 Min. kein Richtungspfeil auf allen Handys), **🎁 Bonusauftrag** (+30) und den **Maulwurf bremsen/beschleunigen** (±10 Min.).
+
+## Maulwurf-Verfolgung
+
+Eine Leiste zeigt, wo der Maulwurf laut Zeitplan gerade ist und wo das Team ist. Wer vor dem Maulwurf eine Station erreicht, bekommt +10 für beide Trupps (mit Hinweis „Nicht rennen – Sicherheit geht vor“).
+
+## Offline-Paket & Akku
+
+- **📥 Offline-Paket:** lädt alle Funksprüche (ca. 7 MB) aufs Handy – morgens im WLAN, dann laufen sie auch im Funkloch (Technik-Check, Start, Einsatztag-Lobby).
+- **Akku sparen:** Nur Jaspers Handy und die aktuellen Navigatoren halten den Bildschirm wach; die anderen dürfen das Handy einstecken und am Ziel kurz entsperren.
+
+## Zentrale übernehmen
+
+Fällt Jaspers Handy aus, kann ein anderes Handy über 🆘 → „Jaspers Handy antwortet nicht?“ prüfen und nach 30 Sek. ohne Antwort **die Zentrale übernehmen** (Spielstand, Fragmente, Papa-Verbindung). Meldet sich Jaspers Handy wieder, spielt es automatisch als Agent weiter.
+
+## Papas Sprachnachrichten · Diashow
+
+- Eigene Sprachmemos (`stimme/start|halbzeit|finale.*`) → `python3 tools/papa_voice.py` → ersetzen die Computerstimme bei Intro, Abholung und Finale (mit Funk-Klang).
+- Missions-Album: **▶ Diashow (Fernseher)** – Vollbild, per AirPlay/Bildschirmsynchronisation.
+
 ## Technik-Check
 
 Knopf **„🔧 Technik-Check“** in der Einladung, in Jaspers Zentrale, vor dem Start und im Admin-Modus – oder direkt `…/operation-s7/#check`.

@@ -135,6 +135,7 @@ async function kidPoll() {
   } catch (e) {}
 }
 function handlePapaMsg(m) {
+  if (String(m.message || '').startsWith(CMD)) return handlePapaCmd(m); // Fernsteuerung, kein Chat
   if (CHAT.some(c => c.id === m.id)) return;
   CHAT.push({ id: m.id, from: 'papa', text: m.message, t: m.time * 1000 });
   lsSet(KEY_CHAT, CHAT);
@@ -247,6 +248,7 @@ async function initPapa(topic) {
   document.addEventListener('click', initAudio, { once: true });
   app.innerHTML = `
     <div class="card" id="pStatus"><p>Verbinde …</p></div>
+    ${papaRemoteHtml()}
     <div class="card mapcard"><div id="map"></div>
       <div class="row" style="margin-top:8px"><button class="btn sec small" id="pFollow">🎯 Jasper folgen</button><button class="btn sec small" id="pAll">🗺 Ganze Route</button></div></div>
     <div class="card"><h3 class="label">Funk</h3>
@@ -259,6 +261,7 @@ async function initPapa(topic) {
     <div class="card"><div class="adm-head"><h3 class="label" style="margin:0">Verlauf</h3><button class="btn sec small" style="width:auto;margin:0" id="pClear">🧹 Ansicht leeren</button></div><div id="pLog"></div></div>
     <p class="small center">Push aufs Handy: ntfy-App → Server ntfy.sh → Kanal <code>${esc(topic)}-log</code> abonnieren.</p>`;
   $('#pSend').onclick = () => papaSend($('#pIn').value, true);
+  bindPapaRemote();
   $('#pIn').onkeydown = e => { if (e.key === 'Enter') papaSend($('#pIn').value, true); };
   app.querySelectorAll('[data-pq]').forEach(b => {
     b.onclick = () => {
@@ -309,7 +312,8 @@ function papaHandle(m) {
       if (s.lat != null) PS.track.push([s.lat, s.lon, s.t]);
     } catch (e) {}
   } else if (m.topic === tp('papa')) {
-    PS.chat.push({ from: 'papa', text: m.message, t: m.time * 1000 });
+    if (String(m.message || '').startsWith(CMD)) { let c = {}; try { c = JSON.parse(m.message.slice(CMD.length)); } catch (e) {} PS.log.push({ title: `🎛 Befehl gesendet: ${c.c || '?'}`, text: c.text ? String(c.text).replace(/\*\*/g, '').slice(0, 80) : '', t: m.time * 1000, tags: ['spy'] }); }
+    else PS.chat.push({ from: 'papa', text: m.message, t: m.time * 1000 });
   } else {
     const tags = m.tags || [];
     PS.log.push({ title: m.title || '', text: m.message || '', t: m.time * 1000, tags });

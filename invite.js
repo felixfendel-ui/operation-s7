@@ -132,7 +132,7 @@ function renderInviteLobby() {
       <p>${joined ? `Du bist dabei: <b>${TRUPP[me.trupp]}</b>` : '📡 Melde dich bei der Zentrale an … (Jaspers App muss geöffnet sein)'}</p>
       ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${memberLabel(x)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
       ${TEAM.name ? aliasBoxHtml() : ''}
-      <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p></div>`;
+      <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p>${offlineCardHtml()}</div>`;
   }
   app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv)
     + `<div class="card"><div class="label">Vorbereitung</div><p class="small">Teste dein Handy schon vor dem Einsatztag – am besten draußen und zusammen mit deinen Eltern.</p>${checkBtnHtml()}</div>`
@@ -159,7 +159,7 @@ function renderInviteLobby() {
     jb.onclick = go;
     $('#joinName').onkeydown = e => { if (e.key === 'Enter') go(); };
   }
-  bindAliasBox();
+  bindAliasBox(); bindOffline();
   clearInterval(invTimer);
   invTimer = setInterval(() => {
     const el = $('#cdown');

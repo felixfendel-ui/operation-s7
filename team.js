@@ -15,7 +15,7 @@ const STREAMS = {};
 const saveTeam = () => { TEAM.seen = TEAM.seen.slice(-300); lsSet(KEY_T, TEAM); };
 const isHost = () => TEAM.role === 'host' && !!TEAM.topic;
 const isMember = () => TEAM.role === 'member' && !!TEAM.topic;
-const myId = () => (isMember() ? TEAM.id : 'host');
+const myId = () => (isMember() ? TEAM.id : (TEAM.id || 'host')); // nach einer Übernahme behält die neue Zentrale ihre eigene ID
 const myMember = () => (TEAM.members || []).find(m => m.id === myId());
 const teamOn = () => !!TEAM.topic && (TEAM.members || []).length >= 2;
 const teamNames = () => (teamOn() ? TEAM.members.map(m => m.name + (m.alias ? ` (${m.alias})` : '')) : undefined);
@@ -47,7 +47,7 @@ function myAlias() {
 function rerollMyAlias() {
   const n = makeAlias(takenAliases().concat(myAlias()));
   if (isMember()) { TEAM.alias = n; saveTeam(); if (TEAM.name) sendJoin(true); }
-  else { lsSet(KEY_ALIAS, n); const h = (TEAM.members || []).find(m => m.id === 'host'); if (h) { h.alias = n; saveTeam(); broadcast(); } }
+  else { lsSet(KEY_ALIAS, n); const h = (TEAM.members || []).find(m => m.id === myId()); if (h) { h.alias = n; saveTeam(); broadcast(); } }
   return n;
 }
 const memberLabel = m => `${esc(m.name)}${m.alias ? ` <span class="alias">„${esc(m.alias)}“</span>` : ''}`;
@@ -105,6 +105,7 @@ document.addEventListener('visibilitychange', () => {
 async function keepAwake() {
   try {
     if (!('wakeLock' in navigator) || document.hidden || !P || !P.name || P.finishedAt) return;
+    if (!needAwake()) return releaseAwake(); // Akku sparen, wenn man gerade nicht Navigator ist
     if (wakeLock && !wakeLock.released) return;
     wakeLock = await navigator.wakeLock.request('screen');
   } catch (e) {}
@@ -123,7 +124,7 @@ function broadcast() {
     // Nur senden, wenn es Mitspieler gibt und sich der sichtbare Stand geändert hat (spart ntfy-Kontingent)
     if ((TEAM.members || []).length < 2 && !Object.keys(TEAM.rsvps || {}).length) return;
     const body = { i: P.idx, s: P.status, st: P.startedAt, fin: P.finishedAt, n: P.name || 'Jasper', hr: P.status === 'travel' ? hereIds() : [],
-      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, r: TEAM.rsvps || {}, ...exStateFields() };
+      h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, r: TEAM.rsvps || {}, ...exStateFields(), ...moreStateFields() };
     const sig = JSON.stringify(body);
     if (sig === lastBcast) return;
     lastBcast = sig; TEAM.v++; saveTeam();
@@ -132,7 +133,7 @@ function broadcast() {
 }
 function teamAfterSave() {
   if (!isHost()) return;
-  const h = TEAM.members.find(m => m.id === 'host');
+  const h = TEAM.members.find(m => m.id === myId());
   if (h && P.name && h.name !== P.name) h.name = P.name;
   if (h && h.alias !== myAlias()) h.alias = myAlias();
   broadcast();
@@ -144,11 +145,13 @@ function handleTeamMsg(m) {
   if (TEAM.seen.includes(m.id)) return;
   TEAM.seen.push(m.id); saveTeam();
   let a; try { a = JSON.parse(m.message); } catch (e) { return; }
+  if (a.k === 'state') noteStateSeen();
+  if (maybeDemote(a)) return;
   if (isHost() && a.k !== 'state') hostApply(a);
   else if (isMember() && a.k === 'state') applyState(a);
 }
 function hostApply(a) {
-  if (exHostApply(a)) return;
+  if (exHostApply(a) || moreHostApply(a)) return;
   const st = cur(), sid = st.id || P.idx, who = a.n ? ` (${a.n})` : '';
   switch (a.k) {
     case 'join': {
@@ -211,7 +214,7 @@ function applyState(s) {
   s.s = ['travel', 'arrived', 'solved'].includes(s.s) ? s.s : 'travel'; s.pts = Number(s.pts) || 0;
   s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
   if (s.v < (TEAM.v || 0)) return;
-  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {}), JSON.stringify(P.tp || {}), JSON.stringify(P.photos || {})]);
+  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {}), JSON.stringify(P.tp || {}), JSON.stringify(P.photos || {}), P.ev ? P.ev.id : '', P.sab ? P.sab.id : '', P.moleOffset || 0]);
   const before = key();
   const wasStatus = P.status, wasIdx = P.idx, wasFin = P.finishedAt;
   TEAM.v = s.v; TEAM.members = s.m || []; TEAM.hostName = s.n; TEAM.started = !!s.st; saveTeam();
@@ -223,6 +226,7 @@ function applyState(s) {
   P.hints = Object.fromEntries((s.h || []).map(k => [k, true]));
   P.frags = Object.fromEntries((s.fi || []).map(i => [i, '★']));
   exApplyState(s);
+  moreApplyState(s);
   const rl = {};
   if (s.r && typeof s.r === 'object') for (const [id, x] of Object.entries(s.r)) if (x && (x.v === 'yes' || x.v === 'no')) rl[String(id).slice(0, 20)] = { n: String(x.n || '?').slice(0, 24), al: String(x.al || '').slice(0, 24), v: x.v };
   TEAM.rsvpList = rl; TEAM.rsvpConfirmed = rl[TEAM.id] ? rl[TEAM.id].v : ''; saveTeam();
@@ -258,6 +262,7 @@ function teamRoles(idx) {
 }
 function rolesKey() { const r = teamRoles(P.idx); return r ? r.code.id + '|' + (r.nav.A || {}).id + '|' + (r.nav.B || {}).id + '|' + (myMember() || {}).trupp : ''; }
 function canNavigate() {
+  if (sabotageActive()) return false; // Maulwurf-Störsender
   const r = teamRoles(P.idx), me = myMember();
   if (!r || !me) return true;
   return navOverride === P.idx || (r.nav[me.trupp] && r.nav[me.trupp].id === me.id);
@@ -341,11 +346,11 @@ function updateHere() {
   const b = $('#hereOverride');
   if (b) b.onclick = () => {
     const missing = TEAM.members.filter(m => !hereIds().includes(m.id)).map(m => m.alias || m.name);
-    if (confirm(`Es fehlen noch Meldungen von: ${missing.join(', ')}.\n\nSind wirklich ALLE Agenten hier zusammen? Dann Station öffnen.`)) unlock(true, P.name, 'host');
+    if (confirm(`Es fehlen noch Meldungen von: ${missing.join(', ')}.\n\nSind wirklich ALLE Agenten hier zusammen? Dann Station öffnen.`)) unlock(true, P.name, myId());
   };
 }
 function requestUnlock(forced) {
-  if (!isMember()) return teamOn() ? markHere('host', P.name, forced) : unlock(forced);
+  if (!isMember()) return teamOn() ? markHere(myId(), P.name, forced) : unlock(forced);
   const k = P.idx, now = Date.now();
   if (unlockSent[k] && now - unlockSent[k] < 90000) return; // Meldung alle 90 s erneuern (gilt 5 Min.)
   unlockSent[k] = now;
