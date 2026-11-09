@@ -180,7 +180,7 @@ function papaTel() {
 function sosUi() {
   const b = $('#sosBtn');
   if (!b) return;
-  const playing = (P && P.name && !P.finishedAt) || (isMember() && TEAM.name);
+  const playing = (P && P.name && !P.finishedAt && (!isMember() || memberReady())); // erst im Einsatz, nicht schon in der Einladung
   b.hidden = !playing || PAPA;
 }
 function openSos() {
