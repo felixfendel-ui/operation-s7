@@ -1,6 +1,6 @@
 /* Offline-Cache: erst Netz (damit Updates sofort ankommen), bei Funkloch aus dem Cache. */
-const CACHE = 'sj7-v22';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'live.js', 'team.js', 'invite.js', 'extras.js', 'fun.js', 'vendor/qrcode.min.js', 'stations.dat', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-512.png'];
+const CACHE = 'sj7-v23';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'live.js', 'team.js', 'invite.js', 'extras.js', 'fun.js', 'check.js', 'vendor/qrcode.min.js', 'stations.dat', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

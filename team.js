@@ -418,7 +418,7 @@ function renderLobbyInner() {
   </div>` : `<div class="card"><div class="label">Team</div>
     ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${memberLabel(x)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : '<p class="small">Warte auf Antwort der Zentrale. Jaspers App muss geöffnet sein.</p>'}
     <p class="small" style="margin-top:12px">${joined ? (P.startedAt ? 'Los geht’s …' : '⏳ Warte, bis Einsatzleiter Jasper die Mission startet.') : ''}</p>
-  </div><div class="card">${aliasBoxHtml()}</div>`}`;
+  </div><div class="card">${aliasBoxHtml()}${checkBtnHtml()}</div>`}`;
   bindAliasBox();
   const jb = $('#joinBtn');
   if (jb) {

@@ -133,7 +133,9 @@ function renderInviteLobby() {
       ${TEAM.name ? aliasBoxHtml() : ''}
       <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p></div>`;
   }
-  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv) + rulesHtml() + parentsHtml(inv);
+  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv)
+    + `<div class="card"><div class="label">Vorbereitung</div><p class="small">Teste dein Handy schon vor dem Einsatztag – am besten draußen und zusammen mit deinen Eltern.</p>${checkBtnHtml()}</div>`
+    + rulesHtml() + parentsHtml(inv);
   const po = $('#parentsOk');
   if (po) po.onchange = () => { TEAM.parentsOk = po.checked; saveTeam(); const yb = app.querySelector('[data-rsvp=yes]'); if (yb) yb.disabled = !po.checked; };
   app.querySelectorAll('[data-rsvp]').forEach(b => {
@@ -253,6 +255,7 @@ function renderStudio() {
     ${inv ? `<p>✅ Einladung für <b>${fmtPartyDate(inv)}</b> ist fertig.</p>` : '<p>Gestalte deine geheime Einberufung – mit Treffpunkt, Uhrzeit und einem persönlichen Funkspruch.</p>'}
     <button class="btn" id="stEdit">💌 ${inv ? 'Einladung ansehen, ändern & teilen' : 'Einladung gestalten'}</button>
   </div>
+  <div class="card"><div class="label">Technik</div><p class="small">Prüfe dein Handy vorab – du bist die Zentrale!</p>${checkBtnHtml()}</div>
   <div class="card">
     <div class="label">Schritt 2 · Antworten deiner Agenten</div>
     ${rsvpSummaryHtml(others)}

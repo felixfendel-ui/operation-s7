@@ -207,6 +207,7 @@ function renderIntro() {
     <input id="nameIn" maxlength="24" autocomplete="off" placeholder="z. B. Jasper" value="${esc(D.agentName || '')}" style="margin-top:8px">
     ${aliasBoxHtml()}
     ${rulesHtml()}
+    ${checkBtnHtml()}
     <button class="btn" id="startBtn">🔓 Mission starten</button>
     <p class="small">Die App fragt nach deinem Standort (für das Radar) und auf dem iPhone nach dem Kompass. Bitte jeweils erlauben.</p>
     ${isHost() ? `<p class="small">👥 Team-Modus: ${TEAM.members.length - 1} Mitspieler beigetreten. QR-Code über den Team-Knopf unten links.</p>` : ''}
@@ -457,6 +458,7 @@ function renderAdmin() {
     <div class="card"><h3>STATIONEN (${stations().length})</h3>${list}</div>
     ${isMember() ? '' : liveAdminHtml()}
     ${teamAdminHtml()}
+    <div class="card"><h3>TECHNIK</h3>${checkBtnHtml()}</div>
     <div class="card"><h3>FUNKSPRÜCHE</h3>
       <p class="small">Alle Funksprüche zum Probehören – so klingen sie auf diesem Gerät. (Achtung: enthält Rätsel und Geschichte.)</p>
       <button class="btn sec small" data-act="radioList">📻 Funksprüche anhören</button></div>
@@ -702,6 +704,7 @@ async function init() {
   $('#sosBtn').onclick = openSos;
   document.addEventListener('visibilitychange', () => { if (!document.hidden) kidPoll(); });
   if (new URLSearchParams(location.search).has('admin')) openAdmin();
+  if (location.hash === '#check') openCheck();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 init();

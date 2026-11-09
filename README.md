@@ -41,6 +41,13 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - **📻 Funksprüche zum Anhören:** Alle Funksprüche sind als Audiodateien (`audio/`, deutsche Stimme „Reed (Deutsch)“ mit Funkrauschen) aufgenommen und laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Nur wenn eine Aufnahme fehlt, liest die Handy-Stimme vor. **Nach jeder Textänderung neu aufnehmen:** `node tools/seal.mjs && python3 tools/voices.py`
 - **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
 
+## Technik-Check
+
+Knopf **„🔧 Technik-Check“** in der Einladung, in Jaspers Zentrale, vor dem Start und im Admin-Modus – oder direkt `…/operation-s7/#check`.
+Prüft **Standort** (Genauigkeit, Ziel unter 35 m), **Kompass** (Richtung ändert sich beim Drehen), **Ton** (Testsignal) und **Verbindung** zum Funk-Server. Bei Problemen steht darunter die passende Anleitung für iPhone bzw. Android.
+
+Empfehlung: Jedes Kind macht den Check **ein paar Tage vorher zu Hause mit den Eltern** (draußen, mobile Daten) und am Einsatztag nochmal vor dem Start.
+
 ## Sicherheit (Gruppe ohne Erwachsene)
 
 - **Eltern-Infos** in der Einladung sagen klar, dass die Kinder ohne erwachsene Begleitung unterwegs sind (ältere Einladungstexte werden automatisch ersetzt).
