@@ -7,7 +7,7 @@
 const INV_DEFAULT = {
   host: 'Jasper', d: '2026-11-21', t: '11:00', end: '17:30', ort: '', tel: '', bis: '',
   mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
-  note: 'Wir sind mit Begleitung durch Erwachsene mit der S-Bahn zwischen Wolfratshausen und Pullach unterwegs. Fahrkarten und Verpflegung organisieren wir. Zum Abschluss gibt es bei uns zu Hause Pizza.'
+  note: 'Die Kinder sind als Gruppe ohne erwachsene Begleitung unterwegs: mit der S-Bahn zwischen Wolfratshausen und Pullach und zu Fuß (u. a. Isartal beim Kloster Schäftlarn, Isar-Hochufer in Pullach). Wir verfolgen die Gruppe live per App, sind die ganze Zeit telefonisch erreichbar und treffen die Kinder unterwegs am Kloster Schäftlarn (Verpflegung). Fahrkarten organisieren wir. Bitte gebt eurem Kind ein aufgeladenes Handy mit mobilem Internet und wetterfeste Kleidung mit. Zum Abschluss gibt es bei uns zu Hause Pizza.'
 };
 let invTimer = null;
 
@@ -91,8 +91,10 @@ function rsvpCardHtml(inv) {
     : `<p class="small">📡 ${v === 'yes' ? 'Zusage' : 'Absage'} wird an die Zentrale gefunkt … Sie kommt an, sobald ${esc(inv.host || 'Jasper')}s App offen ist.</p>`;
   const yes = Object.entries(TEAM.rsvpList || {}).filter(([, x]) => x.v === 'yes');
   return `<div class="card"><div class="label">Bist du dabei?</div>
+    <label class="chk consent"><input type="checkbox" id="parentsOk" ${TEAM.parentsOk ? 'checked' : ''}>
+      <span>Meine Eltern haben die <b>Infos für Eltern</b> (unten) gelesen und sind einverstanden, dass ich ohne Erwachsene mit der Gruppe unterwegs bin.</span></label>
     <div class="row">
-      <button class="btn ${v === 'yes' ? '' : 'sec'}" data-rsvp="yes">✅ Ich bin dabei</button>
+      <button class="btn ${v === 'yes' ? '' : 'sec'}" data-rsvp="yes" ${TEAM.parentsOk ? '' : 'disabled'}>✅ Ich bin dabei</button>
       <button class="btn ${v === 'no' ? 'danger' : 'sec'}" data-rsvp="no">❌ Kann leider nicht</button>
     </div>
     ${status}
@@ -100,9 +102,11 @@ function rsvpCardHtml(inv) {
     ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per WhatsApp Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
   </div>`;
 }
+const fixNote = n => (!n || /Begleitung durch Erwachsene/.test(n) ? INV_DEFAULT.note : n); // ältere Einladungen
 function parentsHtml(inv) {
   return `<details class="card parents"><summary>ℹ️ Infos für Eltern</summary>
-    <p>${esc(inv.note || '')}</p>
+    <p>${esc(fixNote(inv.note))}</p>
+    <p><b>Sicherheit in der App:</b> Jedes Handy hat oben einen 🆘-Knopf (Papa anrufen oder 112, mit Standortanzeige). An jeder Station zählt das Team durch, bevor es weitergeht, und an Bahnsteig, Steilhang und Isar-Hochufer erscheinen Sicherheitshinweise.</p>
     <p>Das Spiel ist eine Web-App im Browser – nichts installieren. Für das Rätsel-Radar fragt die App am Einsatztag nach dem Standort; <b>der Standort der Gäste wird nicht verschickt</b>, er wird nur auf dem eigenen Handy verwendet. Übertragen werden nur der Vorname und Spielaktionen (z. B. „Rätsel gelöst“).</p>
     ${inv.tel ? `<p>Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}
   </details>`;
@@ -129,7 +133,9 @@ function renderInviteLobby() {
       ${TEAM.name ? aliasBoxHtml() : ''}
       <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p></div>`;
   }
-  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv) + parentsHtml(inv);
+  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv) + rulesHtml() + parentsHtml(inv);
+  const po = $('#parentsOk');
+  if (po) po.onchange = () => { TEAM.parentsOk = po.checked; saveTeam(); const yb = app.querySelector('[data-rsvp=yes]'); if (yb) yb.disabled = !po.checked; };
   app.querySelectorAll('[data-rsvp]').forEach(b => {
     b.onclick = () => {
       initAudio(); fx(b.dataset.rsvp === 'yes' ? 'good' : 'bad');
@@ -164,6 +170,7 @@ function renderInviteLobby() {
 
 /* ---------- Einladung erstellen (Admin auf Jaspers Handy oder am Mac) ---------- */
 function renderInviteEditor() {
+  if (TEAM.inviteDraft && /Begleitung durch Erwachsene/.test(TEAM.inviteDraft.note || '')) { TEAM.inviteDraft.note = INV_DEFAULT.note; saveTeam(); }
   const inv = Object.assign({}, INV_DEFAULT, TEAM.inviteDraft || {});
   if (!TEAM.inviteDraft) inv.host = P.name || D.agentName || 'Jasper';
   const f = (k, label, type = 'text', ph = '') => `<div class="field"><label for="i_${k}">${label}</label>${type === 'ta'
@@ -272,7 +279,7 @@ function rsvpSummaryHtml(others) {
   const open = others.filter(m => !rs[m.id]);
   if (!all.length && !open.length) return '<p class="small">Noch keine Antworten. Sobald deine Freunde in der Einladung zu- oder absagen, erscheinen sie hier (deine App muss dafür ab und zu geöffnet sein).</p>';
   return `<p><b>${yes.length}</b> dabei · <b>${no.length}</b> abgesagt${open.length ? ` · <b>${open.length}</b> ohne Antwort` : ''}</p>`
-    + yes.map(([, x]) => `<div class="memb">✅ ${memberLabel({ name: x.n, alias: x.al })}</div>`).join('')
+    + yes.map(([, x]) => `<div class="memb">✅ ${memberLabel({ name: x.n, alias: x.al })}${x.po ? ' <span class="small">· Eltern einverstanden</span>' : ''}</div>`).join('')
     + no.map(([, x]) => `<div class="memb">❌ ${memberLabel({ name: x.n, alias: x.al })}</div>`).join('')
     + open.map(m => `<div class="memb">⏳ ${memberLabel(m)}</div>`).join('');
 }

@@ -182,7 +182,7 @@ function fragsHtml() {
 
 function render() {
   renderHeader();
-  liveUi(); teamUi();
+  liveUi(); teamUi(); sosUi();
   if (isMember() && !memberReady()) return renderLobby();
   if (!P.name) return renderIntro();
   if (P.finishedAt) return renderVictory();
@@ -206,6 +206,7 @@ function renderIntro() {
     <label class="label" for="nameIn">Dein Agentenname</label>
     <input id="nameIn" maxlength="24" autocomplete="off" placeholder="z. B. Jasper" value="${esc(D.agentName || '')}" style="margin-top:8px">
     ${aliasBoxHtml()}
+    ${rulesHtml()}
     <button class="btn" id="startBtn">🔓 Mission starten</button>
     <p class="small">Die App fragt nach deinem Standort (für das Radar) und auf dem iPhone nach dem Kompass. Bitte jeweils erlauben.</p>
     ${isHost() ? `<p class="small">👥 Team-Modus: ${TEAM.members.length - 1} Mitspieler beigetreten. QR-Code über den Team-Knopf unten links.</p>` : ''}
@@ -232,6 +233,7 @@ function renderTravel() {
     <h2>${esc(st.targetName || st.title)}</h2>
     <p>${rich(st.mission)}</p>
     ${radioBtnHtml('mission')}
+    ${safetyHtml(st)}
     ${far ? '<p class="small">🚆 Weite Strecke – nimm die S-Bahn wie im Auftrag beschrieben.</p>' : ''}
   </div>
   <div class="radar ${nav ? '' : 'noarrow'}" id="radar">
@@ -360,9 +362,11 @@ function renderSolved() {
     ${fragsHtml()}
   </div>
   <div class="card">${radioBtnHtml('solved')}<p>${rich(st.solved)}</p>
+    ${countHtml()}
     <button class="btn" id="nextBtn">➜ Weiter zum nächsten Ziel</button>
   </div>`;
   $('#nextBtn').onclick = requestNext;
+  bindCount('#nextBtn');
   bindRadio({ solved: st.solved });
 }
 function doNext() {
@@ -692,6 +696,7 @@ async function init() {
   if (P.name && !P.finishedAt) { startGeo(); keepAwake(); }
   setInterval(tick, 1000);
   $('#funk').onclick = openChat;
+  $('#sosBtn').onclick = openSos;
   document.addEventListener('visibilitychange', () => { if (!document.hidden) kidPoll(); });
   if (new URLSearchParams(location.search).has('admin')) openAdmin();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

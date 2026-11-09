@@ -41,6 +41,14 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - **📻 Funksprüche zum Anhören:** Alle Funksprüche sind als Audiodateien (`audio/`, deutsche Stimme „Reed (Deutsch)“ mit Funkrauschen) aufgenommen und laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Nur wenn eine Aufnahme fehlt, liest die Handy-Stimme vor. **Nach jeder Textänderung neu aufnehmen:** `node tools/seal.mjs && python3 tools/voices.py`
 - **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
 
+## Sicherheit (Gruppe ohne Erwachsene)
+
+- **Eltern-Infos** in der Einladung sagen klar, dass die Kinder ohne erwachsene Begleitung unterwegs sind (ältere Einladungstexte werden automatisch ersetzt).
+- **Zusage nur mit Einverständnis:** Vor „Ich bin dabei“ muss das Kind bestätigen, dass die Eltern die Infos gelesen haben und einverstanden sind. Jasper sieht „Eltern einverstanden“ in seiner Zentrale.
+- **🆘-Knopf** oben rechts auf jedem Handy: Papa anrufen (Nummer aus der Einladung), Notruf 112, eigener Standort zum Vorlesen. Papa bekommt eine Push-Meldung, sobald jemand ihn öffnet.
+- **Agenten-Regeln** vor dem Start und in der Einladung, **Sicherheitshinweise** an Bahnsteig, Steilhang und Isar-Hochufer (`safety` je Station).
+- **Durchzählen:** Im Team geht es erst weiter, wenn bestätigt ist, dass alle Agenten zusammen sind.
+
 ## Zusagen in der App
 
 Gäste tragen sich in der Einladung ein und tippen **„✅ Ich bin dabei“** oder **„❌ Kann leider nicht“**. Die Antwort geht an Jaspers Handy (Zentrale), das sie bestätigt – der Gast sieht dann „Deine Zusage ist angekommen“ und die Liste „Schon im Einsatzteam“.
@@ -163,7 +171,7 @@ python3 -m http.server 8737
 
 ## Am Tag der Feier (Ende November)
 
-- **Extraktion am Kloster:** Nach dem Rätsel am Kloster schickt der Silberfuchs ein „Extraktionsfahrzeug“. Papa ist Fahrer **Graufalke** und holt das Team vor dem Kloster ab. Erkennungssignal: Papa sagt „Die Isar fließt nach Norden.“, die Kinder antworten „Und der Fuchs kennt jeden Weg.“ Im Auto gibt es die **Agenten-Verpflegung**, dann geht es zum S-Bahnhof Hohenschäftlarn. Losfahren, sobald in der Papa-Zentrale „Station 6 erreicht“ erscheint (dann bleiben ca. 10–15 Minuten fürs Rätsel). Für 8 Kinder plus Begleitung braucht es zwei Autos oder einen Bus.
+- **Extraktion am Kloster:** Nach dem Rätsel am Kloster schickt der Silberfuchs ein „Extraktionsfahrzeug“. Papa ist Fahrer **Graufalke** und holt das Team vor dem Kloster ab. Erkennungssignal: Papa sagt „Die Isar fließt nach Norden.“, die Kinder antworten „Und der Fuchs kennt jeden Weg.“ Im Auto gibt es die **Agenten-Verpflegung**, dann geht es zum S-Bahnhof Hohenschäftlarn. Losfahren, sobald in der Papa-Zentrale „Station 6 erreicht“ erscheint (dann bleiben ca. 10–15 Minuten fürs Rätsel). Für 8 Kinder braucht es zwei Autos oder einen Kleinbus (Kindersitz-/Gurtregeln beachten).
 - Proviant-Idee passend zur Story: Brezen, Obst, Saft in einer „Verpflegungskiste“ mit TOP-SECRET-Aufkleber, Schokotaler als „Goldmünzen“ (Vorgeschmack auf das Münzrätsel an der Burg).
 
 - **Sonnenuntergang in München ca. 16:30 Uhr**, danach wird es schnell dunkel – **Start spätestens 12:00 Uhr**, besser 11:30.

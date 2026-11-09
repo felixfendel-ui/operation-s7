@@ -187,7 +187,7 @@ function hostApply(a) {
       if (!a.id || !a.n || (a.v !== 'yes' && a.v !== 'no')) return;
       const name = String(a.n).slice(0, 24), al = a.al ? String(a.al).slice(0, 24) : '';
       const prev = (TEAM.rsvps || {})[a.id];
-      TEAM.rsvps = Object.assign({}, TEAM.rsvps, { [a.id]: { n: name, al, v: a.v, t: Date.now() } });
+      TEAM.rsvps = Object.assign({}, TEAM.rsvps, { [a.id]: { n: name, al, v: a.v, po: !!a.po, t: Date.now() } });
       const ex = TEAM.members.find(x => x.id === a.id);
       if (a.v === 'no' && ex) TEAM.members = TEAM.members.filter(x => x.id !== a.id); // Absage: nicht im Team
       if (a.v === 'yes' && !ex && !(TEAM.kicked || []).includes(a.id)) {
@@ -503,7 +503,7 @@ function teamAdminAct(act) {
 /* ---------- Start ---------- */
 function sendRsvp() {
   if (!isMember() || !TEAM.name || !TEAM.rsvp) return;
-  teamPublish({ k: 'rsvp', id: TEAM.id, n: TEAM.name, al: TEAM.alias || '', v: TEAM.rsvp });
+  teamPublish({ k: 'rsvp', id: TEAM.id, n: TEAM.name, al: TEAM.alias || '', v: TEAM.rsvp, po: !!TEAM.parentsOk });
 }
 function teamInit() {
   teamJoinFromHash();
