@@ -41,6 +41,12 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - **📻 Funksprüche zum Anhören:** Alle Funksprüche sind als Audiodateien (`audio/`, deutsche Stimme „Reed (Deutsch)“ mit Funkrauschen) aufgenommen und laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Nur wenn eine Aufnahme fehlt, liest die Handy-Stimme vor. **Nach jeder Textänderung neu aufnehmen:** `node tools/seal.mjs && python3 tools/voices.py`
 - **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
 
+## Beweisfotos
+
+An jeder Station verlangt der Silberfuchs ein **Gruppenfoto in einer bestimmten Pose** (`photo` je Station: Fahndungsfoto am Bahnhofsschild, erschrockene Gesichter an der Endstation, Flößerrennen, Mönchs-Pose im Kloster, Burgwächter, Siegerfoto mit Tresor …). „Weiter“ geht erst, wenn ein Handy das Foto gemacht hat (+20 Punkte, je zur Hälfte für beide Trupps) – gleichzeitig ein Beweis, dass alle zusammen sind. Papa sieht „📸 Beweisfoto Station x“ im Verlauf.
+
+Die Fotos bleiben **nur auf dem Handy, das sie aufgenommen hat** (nichts wird hochgeladen). Beim Finale zeigt jedes Handy sein **Missions-Album** mit „Fotos speichern oder teilen“ und darunter, auf wessen Handys weitere Fotos liegen. Im Notfall lässt sich ein Foto überspringen (ohne Punkte).
+
 ## Technik-Check
 
 Knopf **„🔧 Technik-Check“** in der Einladung, in Jaspers Zentrale, vor dem Start und im Admin-Modus – oder direkt `…/operation-s7/#check`.

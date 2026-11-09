@@ -107,6 +107,7 @@ function parentsHtml(inv) {
   return `<details class="card parents"><summary>ℹ️ Infos für Eltern</summary>
     <p>${esc(fixNote(inv.note))}</p>
     <p><b>Sicherheit in der App:</b> Jedes Handy hat oben einen 🆘-Knopf (Papa anrufen oder 112, mit Standortanzeige). An jeder Station zählt das Team durch, bevor es weitergeht, und an Bahnsteig, Steilhang und Isar-Hochufer erscheinen Sicherheitshinweise.</p>
+    <p><b>Gruppenfotos:</b> An jeder Station macht das Team ein „Beweisfoto“. Die Fotos werden nur auf dem Handy gespeichert, mit dem sie aufgenommen wurden – sie werden nicht hochgeladen oder verschickt.</p>
     <p>Das Spiel ist eine Web-App im Browser – nichts installieren. Für das Rätsel-Radar fragt die App am Einsatztag nach dem Standort; <b>der Standort der Gäste wird nicht verschickt</b>, er wird nur auf dem eigenen Handy verwendet. Übertragen werden nur der Vorname und Spielaktionen (z. B. „Rätsel gelöst“).</p>
     ${inv.tel ? `<p>Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}
   </details>`;

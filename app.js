@@ -366,11 +366,16 @@ function renderSolved() {
     ${fragsHtml()}
   </div>
   <div class="card">${radioBtnHtml('solved')}<p>${rich(st.solved)}</p>
+    ${photoCardHtml(st, P.idx)}
     ${countHtml()}
     <button class="btn" id="nextBtn">➜ Weiter zum nächsten Ziel</button>
   </div>`;
   $('#nextBtn').onclick = requestNext;
-  bindCount('#nextBtn');
+  // Weiter erst mit Beweisfoto (falls die Station eins verlangt) und nach dem Durchzählen
+  const gate = () => { const b = $('#nextBtn'), c = $('#countOk'); if (b) b.disabled = (st.photo && !photoDone(P.idx)) || (c && !c.checked); };
+  const cc = $('#countOk'); if (cc) cc.onchange = gate;
+  bindPhoto(P.idx, () => render());
+  gate();
   bindRadio({ solved: st.solved });
 }
 function doNext() {
@@ -399,7 +404,11 @@ function renderVictory() {
     🎖 Rang: <b>${esc(RANKS[RANKS.length - 1])}</b></p>
     <button class="btn sec small" id="againBtn">🎉 Konfetti!</button>
   </div>
-  ${rankingHtml()}`;
+  ${rankingHtml()}
+  <div class="card">${photoCardHtml(stations()[stations().length - 1], stations().length - 1)}</div>
+  <div id="album"></div>`;
+  bindPhoto(stations().length - 1, () => render());
+  albumHtmlInto($('#album'));
   $('#againBtn').onclick = () => { fx('win'); confetti(); };
   bindRadio({ finale: D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : '') });
 }

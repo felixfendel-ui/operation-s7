@@ -231,3 +231,12 @@ a{color:var(--accent)}
 .cknorth{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;font-family:var(--mono);font-weight:800;color:var(--danger);padding-top:6px;transition:transform .2s}
 .cksum{margin-top:12px;padding:12px;border-radius:12px;font-weight:700;text-align:center}
 .cksum.ok{background:rgba(57,255,136,.12);color:var(--accent)}.cksum.warn{background:rgba(255,197,61,.12);color:var(--accent2)}.cksum.bad{background:rgba(255,90,90,.12);color:var(--danger)}
+
+/* Beweisfotos & Album */
+.photocard{margin:12px 0;padding:12px;border-radius:12px;border:1px dashed var(--accent2);background:rgba(255,197,61,.06)}
+.photobtn{display:block;cursor:pointer}
+.photothumb{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin:8px 0}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;padding:6px 0}
+.album{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
+.album figure{margin:0}.album img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block}
+.album figcaption{font-size:11px;color:var(--muted);margin-top:2px}

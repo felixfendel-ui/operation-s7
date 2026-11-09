@@ -248,16 +248,19 @@ function rankingHtml() {
 /* ---------- Team: Zentrale nimmt Funde/Erledigt an, Mitspieler zeigen Neues an ---------- */
 function exHostApply(a) {
   if (a.k === 'depot') { const dp = depotById(a.d); if (dp && (cur().depots || []).some(x => x.id === a.d)) collectDepot(a.d, a.n, a.id); return true; }
+  if (a.k === 'photo') { const k = Number(a.x); if (Number.isInteger(k) && D.stations[k] && D.stations[k].photo) markPhoto(k, a.n, !!a.skip); return true; }
   if (a.k === 'task') { if (P.tasks && P.tasks[a.x] === 'open') completeTask(a.x, a.n); return true; }
   return false;
 }
-function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.tasks, tp: P.tp, mp: P.mp }; }
+function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.tasks, tp: P.tp, mp: P.mp, ph: P.photos || {} }; }
 function exApplyState(s) {
   exInit();
   const before = { dp: Object.assign({}, P.depots), tk: Object.assign({}, P.tasks) };
   P.pts = Number(s.pts) || 0;
   P.depots = s.dp && typeof s.dp === 'object' && !Array.isArray(s.dp) ? s.dp : {};
   P.tasks = s.tk && typeof s.tk === 'object' && !Array.isArray(s.tk) ? s.tk : {};
+  P.photos = {};
+  if (s.ph && typeof s.ph === 'object') for (const [k, v] of Object.entries(s.ph)) if (v && D.stations[+k]) P.photos[+k] = { by: String(v.by || '?').slice(0, 24), skip: !!v.skip };
   const oldTp = Object.assign({}, P.tp);
   P.tp = { A: Number(s.tp && s.tp.A) || 0, B: Number(s.tp && s.tp.B) || 0 };
   P.mp = {}; if (s.mp && typeof s.mp === 'object') for (const [k, v] of Object.entries(s.mp)) P.mp[String(k).slice(0, 20)] = Number(v) || 0;
