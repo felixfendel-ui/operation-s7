@@ -243,6 +243,7 @@ function renderTravel() {
   </div>
   <p class="center" id="dirinfo"></p>
   <p class="center small" id="gpsinfo"></p>
+  <div id="teamHere">${hereHtml()}</div>
   <div id="forcebox"></div>
   ${nav ? '' : '<button class="btn sec small" id="navOv">🧭 Navigator ausgefallen? Pfeil hier anzeigen</button>'}
   ${compassOn ? '' : '<button class="btn sec small" id="compassBtn">🧭 Kompass aktivieren</button><p class="center small" id="compassMsg"></p>'}
@@ -252,6 +253,7 @@ function renderTravel() {
   bindRadio({ mission: st.mission });
   const cb = $('#compassBtn'); if (cb) cb.onclick = () => enableCompass().then(render);
   const no = $('#navOv'); if (no) no.onclick = () => { navOverride = P.idx; render(); };
+  updateHere();
   lastRot = 0;
   updateLive();
 }
@@ -292,6 +294,7 @@ function updateLive() {
     };
   } else if (!near && fb.dataset.on) { fb.dataset.on = ''; fb.innerHTML = ''; }
   exUpdateLive();
+  if (teamOn() && !$('#teamHere').innerHTML) updateHere();
 }
 
 function renderRiddle() {

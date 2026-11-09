@@ -215,3 +215,7 @@ a{color:var(--accent)}
 .countchk{margin:12px 0 4px;padding:10px;border:1px dashed var(--accent);border-radius:10px}
 .sospos{margin:12px 0;padding:10px;border-radius:10px;background:#0b1813;font-size:14px}
 .exmodal a.btn{display:block}
+
+.herebox{margin:10px 0;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);font-size:15px;text-align:center}
+.herebox.on{border-color:var(--accent);background:rgba(57,255,136,.07)}
+.herebox .btn{margin-top:8px}

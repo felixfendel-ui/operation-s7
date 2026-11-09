@@ -48,6 +48,7 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - **🆘-Knopf** oben rechts auf jedem Handy: Papa anrufen (Nummer aus der Einladung), Notruf 112, eigener Standort zum Vorlesen. Papa bekommt eine Push-Meldung, sobald jemand ihn öffnet.
 - **Agenten-Regeln** vor dem Start und in der Einladung, **Sicherheitshinweise** an Bahnsteig, Steilhang und Isar-Hochufer (`safety` je Station).
 - **Durchzählen:** Im Team geht es erst weiter, wenn bestätigt ist, dass alle Agenten zusammen sind.
+- **Nur gemeinsam:** Im Team öffnet sich eine Station erst, wenn **alle Handys** am Ziel gemeldet sind („Am Ziel 5/8 · Es fehlen …“). Die Gäste-Handys melden dabei nur „bin da“, keine Koordinaten. Meldet sich ein Handy nicht (Akku leer, kein GPS), kann Jasper die Station nach Rückfrage trotzdem öffnen.
 
 ## Zusagen in der App
 

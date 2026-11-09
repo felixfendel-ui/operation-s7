@@ -122,7 +122,7 @@ function broadcast() {
   bcastTimer = setTimeout(() => {
     // Nur senden, wenn es Mitspieler gibt und sich der sichtbare Stand geändert hat (spart ntfy-Kontingent)
     if ((TEAM.members || []).length < 2 && !Object.keys(TEAM.rsvps || {}).length) return;
-    const body = { i: P.idx, s: P.status, st: P.startedAt, fin: P.finishedAt, n: P.name || 'Jasper',
+    const body = { i: P.idx, s: P.status, st: P.startedAt, fin: P.finishedAt, n: P.name || 'Jasper', hr: P.status === 'travel' ? hereIds() : [],
       h: Object.keys(P.hints), fi: Object.keys(P.frags).map(Number), m: TEAM.members, r: TEAM.rsvps || {}, ...exStateFields() };
     const sig = JSON.stringify(body);
     if (sig === lastBcast) return;
@@ -167,7 +167,7 @@ function hostApply(a) {
       saveTeam(); broadcast(); teamPanelRefresh(); return;
     }
     case 'unlock':
-      if (P.name && !P.finishedAt && a.i === P.idx && P.status === 'travel') unlock(!!a.forced, a.n, a.id);
+      if (P.name && !P.finishedAt && a.i === P.idx && P.status === 'travel') markHere(a.id, a.n, !!a.forced);
       return;
     case 'solve':
       if (a.i === P.idx && P.status === 'arrived') solve(a.n, a.id);
@@ -226,6 +226,9 @@ function applyState(s) {
   const rl = {};
   if (s.r && typeof s.r === 'object') for (const [id, x] of Object.entries(s.r)) if (x && (x.v === 'yes' || x.v === 'no')) rl[String(id).slice(0, 20)] = { n: String(x.n || '?').slice(0, 24), al: String(x.al || '').slice(0, 24), v: x.v };
   TEAM.rsvpList = rl; TEAM.rsvpConfirmed = rl[TEAM.id] ? rl[TEAM.id].v : ''; saveTeam();
+  const oldHere = (TEAM.hereList || []).join();
+  TEAM.hereList = (Array.isArray(s.hr) ? s.hr : []).map(x => String(x).slice(0, 20));
+  if (oldHere !== TEAM.hereList.join()) updateHere();
   lsSet(KEY_P, P);
   if (inTeam && joinTimer) { clearTimeout(joinTimer); joinTimer = null; joinDelay = 20000; }
   if (before === key()) return;
@@ -297,13 +300,57 @@ function answerBlockedHtml() {
 }
 
 /* ---------- Aktionen: Host führt direkt aus, Mitspieler funken an die Zentrale ---------- */
+/* ---------- Zusammen am Ziel ----------
+   Im Team öffnet sich eine Station erst, wenn ALLE Handys am Ziel gemeldet sind (nur „bin da“, keine Koordinaten).
+   Meldungen gelten 5 Minuten. Fällt ein Handy aus, kann Jasper die Station nach Rückfrage trotzdem öffnen. */
+const HERE_VALID = 5 * 60000;
+function hereIds() {
+  const h = (P.here && P.here[P.idx]) || {}, now = Date.now();
+  return Object.keys(h).filter(id => now - h[id].t < HERE_VALID && (TEAM.members || []).some(m => m.id === id));
+}
+function markHere(id, name, forced) {
+  if (!P.name || P.finishedAt || P.status !== 'travel') return;
+  P.here = P.here || {};
+  const h = P.here[P.idx] = P.here[P.idx] || {};
+  const isNew = !h[id];
+  h[id] = { t: Date.now(), f: !!forced, first: isNew && !Object.keys(h).some(k => k !== id) };
+  save();
+  if (isNew) liveEvent('arrived', `${name || '?'} ist am Ziel (${hereIds().length}/${TEAM.members.length})`, cur().title, 2);
+  checkAllHere();
+  if (P.status === 'travel') updateHere();
+}
+function checkAllHere() {
+  if (!isHost() || !teamOn() || !P.name || P.finishedAt || P.status !== 'travel') return;
+  const ids = hereIds();
+  if (ids.length < TEAM.members.length) return;
+  const h = P.here[P.idx], firstId = Object.keys(h).sort((a, b) => h[a].t - h[b].t)[0], first = memberById(firstId);
+  unlock(Object.values(h).every(x => x.f), first ? first.name : '', firstId);
+}
+function hereHtml() {
+  if (!teamOn() || P.status !== 'travel') return '';
+  const ids = isHost() ? hereIds() : (TEAM.hereList || []);
+  if (!ids.length) return `<div class="herebox">👥 Die Station öffnet sich erst, wenn <b>alle ${TEAM.members.length} Agenten</b> am Ziel sind.</div>`;
+  const missing = TEAM.members.filter(m => !ids.includes(m.id));
+  return `<div class="herebox on">👥 Am Ziel: <b>${ids.length}/${TEAM.members.length}</b>${missing.length ? ` · Es fehlen: ${missing.map(m => esc(m.alias || m.name)).join(', ')}` : ''}
+    ${isHost() && missing.length ? '<button class="btn sec small" id="hereOverride">Alle da, aber ein Handy meldet sich nicht? Station öffnen</button>' : ''}</div>`;
+}
+function updateHere() {
+  const el = $('#teamHere');
+  if (!el) return;
+  el.innerHTML = hereHtml();
+  const b = $('#hereOverride');
+  if (b) b.onclick = () => {
+    const missing = TEAM.members.filter(m => !hereIds().includes(m.id)).map(m => m.alias || m.name);
+    if (confirm(`Es fehlen noch Meldungen von: ${missing.join(', ')}.\n\nSind wirklich ALLE Agenten hier zusammen? Dann Station öffnen.`)) unlock(true, P.name, 'host');
+  };
+}
 function requestUnlock(forced) {
-  if (!isMember()) return unlock(forced);
+  if (!isMember()) return teamOn() ? markHere('host', P.name, forced) : unlock(forced);
   const k = P.idx, now = Date.now();
-  if (unlockSent[k] && now - unlockSent[k] < 20000) return;
+  if (unlockSent[k] && now - unlockSent[k] < 90000) return; // Meldung alle 90 s erneuern (gilt 5 Min.)
   unlockSent[k] = now;
   teamAct('unlock', { forced: !!forced });
-  const gi = $('#gpsinfo'); if (gi) gi.textContent = '📡 Ziel erreicht – Zentrale wird benachrichtigt …';
+  const gi = $('#gpsinfo'); if (gi) gi.textContent = '📡 Du bist am Ziel – warte auf die anderen Agenten …';
 }
 function requestSolve() {
   if (!isMember()) return solve();
@@ -509,6 +556,7 @@ function teamInit() {
   teamJoinFromHash();
   if (TEAM.topic) streamStart();
   if (isMember() && TEAM.rsvp && TEAM.rsvpConfirmed !== TEAM.rsvp) setTimeout(sendRsvp, 3000);
+  setInterval(() => { if (isHost()) { checkAllHere(); if (P.status === 'travel') { updateHere(); broadcast(); } } }, 30000); // abgelaufene Meldungen
   if (isHost()) { lastBcast = ''; broadcast(); }
   if (isMember() && TEAM.name) sendJoin();
   setInterval(() => { flush(); liveSnapshot(false); }, 15000);
