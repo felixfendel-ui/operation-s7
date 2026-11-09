@@ -187,9 +187,8 @@ function openSos() {
   const tel = papaTel(), p = here();
   openExModal(`<div class="center">
     <div class="stamp" style="border-color:var(--danger);color:var(--danger)">🆘 NOTFALL</div>
-    <p style="text-align:left">Kein Spiel mehr – das hier ist echt. Bleibt zusammen und ruft Hilfe.</p>
+    <p style="text-align:left">Kein Spiel mehr – das hier ist echt. Bleibt zusammen und ruft Papa an.</p>
     ${tel ? `<a class="btn" href="tel:+${tel}">📞 Papa (Zentrale) anrufen</a>` : '<p class="small">Papas Nummer fehlt in der Einladung.</p>'}
-    <a class="btn danger" href="tel:112">🚑 Notruf 112</a>
     <div class="sospos">${p ? `📍 Euer Standort zum Vorlesen:<br><b>${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</b> (±${Math.round(p.acc || 0)} m)<br>
       <a href="https://maps.apple.com/?ll=${p.lat},${p.lon}&q=Hier%20sind%20wir" target="_blank" rel="noopener">In Karten öffnen</a>` : '📍 Standort wird gesucht …'}</div>
     <p class="small" style="text-align:left">Jemand fehlt? Bleibt an der Stelle, an der ihr ihn zuletzt gesehen habt, und ruft Papa an. Wer verloren ist: zum letzten Bahnhof zurück und dort warten.</p>
@@ -202,7 +201,7 @@ const RULES = ['Immer zusammenbleiben – niemand geht allein, auch nicht kurz.'
   'Am Bahnsteig hinter der weißen Linie. Erst einsteigen, wenn alle da sind.',
   'Im Wald und am Isar-Hochufer auf dem Weg bleiben – nie an die Kante.',
   'Straßen nur an Ampel oder Zebrastreifen überqueren.',
-  'Notfall: 🆘-Knopf oben rechts – Papa anrufen oder 112.'];
+  'Notfall: 🆘-Knopf oben rechts – direkt Papa anrufen.'];
 function rulesHtml() {
   return `<div class="card rules"><div class="label">🛡️ Agenten-Regeln</div><ol>${RULES.map(r => `<li>${esc(r)}</li>`).join('')}</ol></div>`;
 }

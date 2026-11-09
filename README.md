@@ -80,7 +80,7 @@ Empfehlung: Jedes Kind macht den Check **ein paar Tage vorher zu Hause mit den E
 
 - **Eltern-Infos** in der Einladung sagen klar, dass die Kinder ohne erwachsene Begleitung unterwegs sind (ältere Einladungstexte werden automatisch ersetzt).
 - **Zusage nur mit Einverständnis:** Vor „Ich bin dabei“ muss das Kind bestätigen, dass die Eltern die Infos gelesen haben und einverstanden sind. Jasper sieht „Eltern einverstanden“ in seiner Zentrale.
-- **🆘-Knopf** oben rechts auf jedem Handy: Papa anrufen (Nummer aus der Einladung), Notruf 112, eigener Standort zum Vorlesen. Papa bekommt eine Push-Meldung, sobald jemand ihn öffnet.
+- **🆘-Knopf** oben rechts auf jedem Handy: Papa anrufen (Nummer aus der Einladung), eigener Standort zum Vorlesen. Papa bekommt eine Push-Meldung, sobald jemand ihn öffnet.
 - **Agenten-Regeln** vor dem Start und in der Einladung, **Sicherheitshinweise** an Bahnsteig, Steilhang und Isar-Hochufer (`safety` je Station).
 - **Durchzählen:** Im Team geht es erst weiter, wenn bestätigt ist, dass alle Agenten zusammen sind.
 - **Nur gemeinsam:** Im Team öffnet sich eine Station erst, wenn **alle Handys** am Ziel gemeldet sind („Am Ziel 5/8 · Es fehlen …“). Die Gäste-Handys melden dabei nur „bin da“, keine Koordinaten. Meldet sich ein Handy nicht (Akku leer, kein GPS), kann Jasper die Station nach Rückfrage trotzdem öffnen.
@@ -222,5 +222,5 @@ python3 -m http.server 8737
 - **Beim Start zu Hause WLAN aus, mobile Daten an.** ntfy.sh begrenzt Anfragen pro Internet-Anschluss; 8 Handys plus Papa-Zentrale im selben WLAN können kurz ausgebremst werden. Die App versucht es dann automatisch erneut, aber mit mobilen Daten geht es sofort.
 - **ntfy-Kontingent:** 250 Nachrichten pro Tag und Anschluss. Eine Jagd braucht auf Jaspers Handy ca. 150–200. Am Vortag nicht mehr ausgiebig testen; der Admin-Modus zeigt das Restkontingent. Wird es knapp, schickt die App Position seltener und lässt Unwichtiges weg.
 - Die App vorher einmal online öffnen, dann funktioniert sie auch bei Funklöchern.
-- S7 südlich von Höllriegelskreuth etwa alle 20 min – Fahrplan in der MVV-App prüfen, Tageskarte für die Strecke Wolfratshausen–Pullach einplanen.
+- S7 südlich von Höllriegelskreuth etwa alle 20 min – Fahrplan in der MVV-App prüfen. Jedes Kind bringt seine eigene MVV-Karte (Schulweg-Ticket) mit – vorher klären, ob sie für Wolfratshausen–Pullach gilt.
 - Pausen: Kloster Schäftlarn (Bräustüberl) oder Pullach – im November warmen Tee/Kakao in der Thermoskanne mitnehmen.

@@ -6,8 +6,8 @@
 
 const INV_DEFAULT = {
   host: 'Jasper', d: '2026-11-21', t: '11:00', end: '17:30', ort: '', tel: '', bis: '',
-  mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
-  note: 'Die Kinder sind als Gruppe ohne erwachsene Begleitung unterwegs: mit der S-Bahn zwischen Wolfratshausen und Pullach und zu Fuß (u. a. Isartal beim Kloster Schäftlarn, Isar-Hochufer in Pullach). Wir verfolgen die Gruppe live per App, sind die ganze Zeit telefonisch erreichbar und treffen die Kinder unterwegs am Kloster Schäftlarn (Verpflegung). Fahrkarten organisieren wir. Bitte gebt eurem Kind ein aufgeladenes Handy mit mobilem Internet und wetterfeste Kleidung mit. Zum Abschluss gibt es bei uns zu Hause Pizza.'
+  mit: '📱 Handy mit vollem Akku und mobilem Internet (Link in Safari/Chrome öffnen, nicht als App speichern)\n🎫 Deine MVV-Karte (Schulweg-Ticket bzw. Deutschlandticket)\n🔋 Powerbank (falls vorhanden)\n🧥 Warme, wetterfeste Kleidung und feste Schuhe\n💧 Trinkflasche',
+  note: 'Die Kinder sind als Gruppe ohne erwachsene Begleitung unterwegs: mit der S-Bahn zwischen Wolfratshausen und Pullach und zu Fuß (u. a. Isartal beim Kloster Schäftlarn, Isar-Hochufer in Pullach). Wir verfolgen die Gruppe live per App, sind die ganze Zeit telefonisch erreichbar und treffen die Kinder unterwegs am Kloster Schäftlarn (Verpflegung). Bitte gebt eurem Kind seine MVV-Karte (Schulweg-Ticket) mit – sie muss für die Strecke Wolfratshausen–Pullach gelten (ein Deutschlandticket passt immer) –, außerdem ein aufgeladenes Handy mit mobilem Internet und wetterfeste Kleidung. Zum Abschluss gibt es bei uns zu Hause Pizza.'
 };
 let invTimer = null;
 
@@ -67,7 +67,7 @@ function inviteCardHtml(inv, who) {
       ${inv.end ? `<div><span class="label">Einsatzende</span><b>ca. ${esc(inv.end)} Uhr</b></div>` : ''}
       ${inv.bis ? `<div><span class="label">Antwort bis</span><b>${esc(inv.bis)}</b></div>` : ''}
     </div>
-    ${inv.mit ? `<div class="label" style="margin-top:14px">Ausrüstung</div><p>${esc(inv.mit).replace(/\n/g, '<br>')}</p>` : ''}
+    ${inv.mit ? `<div class="label" style="margin-top:14px">Ausrüstung</div><p>${esc(fixMit(inv.mit)).replace(/\n/g, '<br>')}</p>` : ''}
     <div class="countdown"><span class="label">Countdown bis zum Einsatz</span><div id="cdown">${countdownText(inv)}</div></div>
   </div>`;
 }
@@ -102,11 +102,12 @@ function rsvpCardHtml(inv) {
     ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per WhatsApp Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
   </div>`;
 }
-const fixNote = n => (!n || /Begleitung durch Erwachsene/.test(n) ? INV_DEFAULT.note : n); // ältere Einladungen
+const fixNote = n => (!n || /Begleitung durch Erwachsene|Fahrkarten organisieren wir/.test(n) ? INV_DEFAULT.note : n); // ältere Einladungen
+const fixMit = m => (m && !/MVV/.test(m) ? m.replace(/(\n|$)/, '\n🎫 Deine MVV-Karte (Schulweg-Ticket bzw. Deutschlandticket)$1') : m);
 function parentsHtml(inv) {
   return `<details class="card parents"><summary>ℹ️ Infos für Eltern</summary>
     <p>${esc(fixNote(inv.note))}</p>
-    <p><b>Sicherheit in der App:</b> Jedes Handy hat oben einen 🆘-Knopf (Papa anrufen oder 112, mit Standortanzeige). An jeder Station zählt das Team durch, bevor es weitergeht, und an Bahnsteig, Steilhang und Isar-Hochufer erscheinen Sicherheitshinweise.</p>
+    <p><b>Sicherheit in der App:</b> Jedes Handy hat oben einen 🆘-Knopf (ruft direkt Papa an, mit Standortanzeige). An jeder Station zählt das Team durch, bevor es weitergeht, und an Bahnsteig, Steilhang und Isar-Hochufer erscheinen Sicherheitshinweise.</p>
     <p><b>Gruppenfotos:</b> An jeder Station macht das Team ein „Beweisfoto“. Die Fotos werden nur auf dem Handy gespeichert, mit dem sie aufgenommen wurden – sie werden nicht hochgeladen oder verschickt.</p>
     <p>Das Spiel ist eine Web-App im Browser – nichts installieren. Für das Rätsel-Radar fragt die App am Einsatztag nach dem Standort; <b>der Standort der Gäste wird nicht verschickt</b>, er wird nur auf dem eigenen Handy verwendet. Übertragen werden nur der Vorname und Spielaktionen (z. B. „Rätsel gelöst“).</p>
     ${inv.tel ? `<p>Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}
@@ -173,7 +174,11 @@ function renderInviteLobby() {
 
 /* ---------- Einladung erstellen (Admin auf Jaspers Handy oder am Mac) ---------- */
 function renderInviteEditor() {
-  if (TEAM.inviteDraft && /Begleitung durch Erwachsene/.test(TEAM.inviteDraft.note || '')) { TEAM.inviteDraft.note = INV_DEFAULT.note; saveTeam(); }
+  if (TEAM.inviteDraft) {
+    const d = TEAM.inviteDraft, n0 = d.note, m0 = d.mit;
+    d.note = fixNote(d.note); d.mit = fixMit(d.mit);
+    if (n0 !== d.note || m0 !== d.mit) saveTeam();
+  }
   const inv = Object.assign({}, INV_DEFAULT, TEAM.inviteDraft || {});
   if (!TEAM.inviteDraft) inv.host = P.name || D.agentName || 'Jasper';
   const f = (k, label, type = 'text', ph = '') => `<div class="field"><label for="i_${k}">${label}</label>${type === 'ta'
