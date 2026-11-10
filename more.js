@@ -187,13 +187,31 @@ function completeBonus(id, by) {
   P.bonusDone[id] = 1; awardBoth(30); save(); fx('good');
   liveEvent('task', `🎁 Bonusauftrag erledigt${by ? ' – ' + by : ''}`, `+30 Punkte · gesamt ${P.pts}`, 2);
 }
+/* ---------- Geheimes Ziel aufdecken (kostet Punkte) ---------- */
+const isRevealed = k => !!(P && P.revealed && P.revealed[k]);
+function requestReveal() {
+  if (!confirm('Ziel aufdecken? Dann seht ihr den echten Namen des Ziels – das kostet 20 Agentenpunkte.')) return;
+  if (isMember()) { teamAct('reveal'); P.revealed = Object.assign({}, P.revealed, { [P.idx]: 1 }); render(); return; }
+  doReveal(P.idx, P.name);
+}
+function doReveal(k, by) {
+  P.revealed = P.revealed || {};
+  if (P.revealed[k] || k !== P.idx) return;
+  P.revealed[k] = 1;
+  P.pts = Math.max(0, (P.pts || 0) - 20);
+  if (teamOn()) { P.tp.A = Math.max(0, (P.tp.A || 0) - 10); P.tp.B = Math.max(0, (P.tp.B || 0) - 10); }
+  save(); render();
+  liveEvent('hint', `Station ${k + 1}: Ziel aufgedeckt${by ? ' – ' + by : ''}`, D.stations[k].targetName || '', 2);
+}
 function moreHostApply(a) {
+  if (a.k === 'reveal') { doReveal(Number(a.i), a.n); return true; }
   if (a.k === 'bonus') { completeBonus(String(a.e || ''), a.n); return true; }
   return false;
 }
-function moreStateFields() { return { ev: P.ev || null, sab: P.sab || null, bd: P.bonusDone || {}, mo: P.moleOffset || 0, hid: myId(), lp: liveOn() ? LIVE.topic : '' }; }
+function moreStateFields() { return { rv: P.revealed || {}, ev: P.ev || null, sab: P.sab || null, bd: P.bonusDone || {}, mo: P.moleOffset || 0, hid: myId(), lp: liveOn() ? LIVE.topic : '' }; }
 function moreApplyState(s) {
   P.moleOffset = Number(s.mo) || 0;
+  P.revealed = {}; if (s.rv && typeof s.rv === 'object') Object.keys(s.rv).forEach(k => { if (D.stations[+k]) P.revealed[+k] = 1; });
   P.bonusDone = s.bd && typeof s.bd === 'object' ? s.bd : {};
   TEAM.lp = typeof s.lp === 'string' ? s.lp.slice(0, 64) : '';
   const ev = s.ev && typeof s.ev === 'object' ? { id: String(s.ev.id || '').slice(0, 20), type: 'bonus', text: String(s.ev.text || '').slice(0, 300) } : null;

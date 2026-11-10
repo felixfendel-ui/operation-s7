@@ -41,6 +41,10 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 - **📻 Funksprüche zum Anhören:** Alle Funksprüche sind als Audiodateien (`audio/`, deutsche Stimme „Reed (Deutsch)“ mit Funkrauschen) aufgenommen und laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Nur wenn eine Aufnahme fehlt, liest die Handy-Stimme vor. **Nach jeder Textänderung neu aufnehmen:** `node tools/seal.mjs && python3 tools/voices.py`
 - **Morse-Rätsel** am S-Bahnhof Pullach: Die App piept das Passwort (und zeigt es als · –); jeder Trupp hat eine Hälfte der Morse-Tabelle.
 
+## Geheime Ziele
+
+Unterwegs sehen die Kinder nicht den Ortsnamen, sondern einen **Codenamen** (z. B. „🎯 Kontaktpunkt FALKE“, „Zuflucht 762“) und einen rätselhaften Hinweis – das Radar ist das wichtigste Werkzeug. Bei S-Bahn-Fahrten gibt es nur Richtung und Stationszahl als kleines Rätsel („die S7, deren Endstation ein Raubtier im Namen trägt“ = Wolfratshausen, „an der zweiten Station aussteigen“). Den echten Namen gibt es bei Ankunft. Notfall: **„🔍 Ziel aufdecken“** zeigt den Namen sofort (−20 Punkte, gilt für das ganze Team; Papa sieht es im Verlauf).
+
 ## Beweisfotos
 
 An jeder Station verlangt der Silberfuchs ein **Gruppenfoto in einer bestimmten Pose** (`photo` je Station: Fahndungsfoto am Bahnhofsschild, erschrockene Gesichter an der Endstation, Flößerrennen, Mönchs-Pose im Kloster, Burgwächter, Siegerfoto mit Tresor …). „Weiter“ geht erst, wenn ein Handy das Foto gemacht hat (+20 Punkte, je zur Hälfte für beide Trupps) – gleichzeitig ein Beweis, dass alle zusammen sind. Papa sieht „📸 Beweisfoto Station x“ im Verlauf.
