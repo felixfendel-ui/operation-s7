@@ -46,22 +46,27 @@ async function warmBlobs() {
   } catch (e) {}
 }
 const offlineReady = () => { const st = lsGet('sj7_offline'); return !!(st && st.v === AUDIO_V); };
+const OFFLINE_DONE = '📥 Offline-Paket geladen ✓ – Funksprüche laufen auch ohne Netz.';
 function offlineCardHtml() {
-  return `<div class="offlinebox" id="offlineBox">${offlineReady()
-    ? '📥 Offline-Paket geladen ✓ – Funksprüche laufen auch ohne Netz.'
-    : '<b>📥 Offline-Paket</b><br><span class="small">Lädt alle Funksprüche aufs Handy (ca. 7 MB, am besten im WLAN). Dann laufen sie auch im Funkloch.</span><button class="btn sec small" id="offlineBtn">Jetzt laden</button>'}</div>`;
+  return `<div class="offlinebox">${offlineReady() ? OFFLINE_DONE
+    : '<b>📥 Offline-Paket</b><br><span class="small">Lädt alle Funksprüche aufs Handy (ca. 7 MB, am besten im WLAN). Dann laufen sie auch im Funkloch.</span><button type="button" class="btn sec small" data-offline="1">Jetzt laden</button>'}</div>`;
 }
-function bindOffline() {
-  const b = $('#offlineBtn');
-  if (!b) return;
-  b.onclick = async () => {
-    b.disabled = true;
-    try {
-      await loadOfflinePack((i, n) => { b.textContent = `Lade … ${i}/${n}`; });
-      const box = $('#offlineBox'); if (box) box.innerHTML = '📥 Offline-Paket geladen ✓ – Funksprüche laufen auch ohne Netz.';
-    } catch (e) { b.disabled = false; b.textContent = '⚠️ Fehlgeschlagen – nochmal versuchen'; }
-  };
-}
+/* Der Knopf kann mehrfach auf der Seite stehen (Startseite + Technik-Check darüber) – daher per Klick-Delegation */
+let offlineLoading = false;
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-offline]');
+  if (!b || offlineLoading) return;
+  offlineLoading = true;
+  const all = () => document.querySelectorAll('[data-offline]');
+  all().forEach(x => { x.disabled = true; });
+  try {
+    await loadOfflinePack((i, n) => all().forEach(x => { x.textContent = `Lade … ${i}/${n}`; }));
+    document.querySelectorAll('.offlinebox').forEach(box => { box.innerHTML = OFFLINE_DONE; });
+  } catch (err) {
+    all().forEach(x => { x.disabled = false; x.textContent = '⚠️ Fehlgeschlagen – nochmal versuchen'; });
+  } finally { offlineLoading = false; }
+});
+function bindOffline() { /* nicht mehr nötig (Klick-Delegation), bleibt für bestehende Aufrufe */ }
 warmBlobs();
 
 /* =========================================================================
