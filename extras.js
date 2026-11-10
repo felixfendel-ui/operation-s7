@@ -149,6 +149,9 @@ function showTask(k) {
     ${radioBtnHtml('task')}
     ${t.secs && !done ? `<div class="tasktimer" id="taskT">${t.secs}</div><button class="btn warn" id="taskGo">▶ Countdown starten</button>` : ''}
     ${done ? '<p class="feedback good">✅ Erledigt</p><button class="btn" id="exOk">OK</button>'
+      : t.duel && teamOn() ? `<div class="label">⚔️ Wer hat gewonnen? (+${t.pts || 40} für den Sieger)</div>
+        <div class="row"><button class="btn" data-win="A">🟥 Trupp A</button><button class="btn" data-win="B">🟦 Trupp B</button></div>
+        <button class="btn sec small" data-win="X">🤝 Unentschieden (beide je die Hälfte)</button><button class="btn sec small" id="exOk">Später</button>`
       : `<button class="btn" id="taskDone">✅ Auftrag erledigt (+${t.pts || 30})</button><button class="btn sec small" id="exOk">Später</button>`}
   </div>`);
   const go = $('#taskGo');
@@ -163,17 +166,26 @@ function showTask(k) {
   bindRadio({ task: 'Spezialauftrag! ' + t.text });
   const dn = $('#taskDone');
   if (dn) dn.onclick = () => { clearInterval(taskTimer); closeExModal(); requestTaskDone(k); };
+  document.querySelectorAll('#exmodal [data-win]').forEach(b => { b.onclick = () => {
+    const w = b.dataset.win, lbl = w === 'X' ? 'Unentschieden' : TRUPP[w];
+    if (!confirm(`Ergebnis: ${lbl}?`)) return;
+    clearInterval(taskTimer); closeExModal(); requestTaskDone(k, w);
+  }; });
 }
-function requestTaskDone(k) {
-  if (isMember()) { teamAct('task', { x: k }); P.tasks[k] = 'done'; fx('good'); return; }
-  completeTask(k, P.name);
+function requestTaskDone(k, w) {
+  if (isMember()) { teamAct('task', { x: k, w: w || '' }); P.tasks[k] = 'done'; fx('good'); return; }
+  completeTask(k, P.name, w);
 }
-function completeTask(k, by) {
+function completeTask(k, by, w) {
   exInit();
   const st = D.stations[k];
   if (!st || !st.task || P.tasks[k] === 'done') return;
-  P.tasks[k] = 'done'; awardBoth(st.task.pts || 30); save(); fx('good');
-  liveEvent('task', `Spezialauftrag erledigt (Station ${k + 1})${by ? ' – ' + by : ''}`, `+${st.task.pts || 30} Punkte · gesamt ${P.pts}`, 2);
+  const pts = st.task.pts || 30, win = st.task.duel && teamOn() && (w === 'A' || w === 'B') ? w : '';
+  P.tasks[k] = 'done';
+  if (win) { P.pts += pts; P.tp[win] = (P.tp[win] || 0) + pts; flashBonus(`⚔️ ${TRUPP[win]} gewinnt das Duell! +${pts}`); }
+  else awardBoth(pts);
+  save(); fx('good');
+  liveEvent('task', `Spezialauftrag erledigt (Station ${k + 1})${by ? ' – ' + by : ''}`, `${win ? `⚔️ Duell: ${TRUPP[win]} gewinnt · ` : ''}+${pts} Punkte · gesamt ${P.pts}`, 2);
   if (P.status === 'travel') renderTravel();
 }
 
@@ -250,7 +262,7 @@ function rankingHtml() {
 function exHostApply(a) {
   if (a.k === 'depot') { const dp = depotById(a.d); if (dp && (cur().depots || []).some(x => x.id === a.d)) collectDepot(a.d, a.n, a.id); return true; }
   if (a.k === 'photo') { const k = Number(a.x); if (Number.isInteger(k) && D.stations[k] && D.stations[k].photo) markPhoto(k, a.n, !!a.skip); return true; }
-  if (a.k === 'task') { if (P.tasks && P.tasks[a.x] === 'open') completeTask(a.x, a.n); return true; }
+  if (a.k === 'task') { if (P.tasks && P.tasks[a.x] === 'open') completeTask(a.x, a.n, a.w === 'A' || a.w === 'B' ? a.w : ''); return true; }
   return false;
 }
 function exStateFields() { exInit(); return { pts: P.pts, dp: P.depots, tk: P.tasks, tp: P.tp, mp: P.mp, ph: P.photos || {} }; }
