@@ -255,3 +255,4 @@ a{color:var(--accent)}
 .slideshow .hint{position:absolute;top:12px;right:16px;color:#aaa;font-size:12px}
 @keyframes kb{from{transform:scale(1.08)}to{transform:scale(1)}}
 #pRemote select{font-size:15px}
+.wayhint{margin:8px 0;padding:10px 12px;border-radius:10px;background:rgba(255,197,61,.1);border:1px dashed var(--accent2);font-size:15px}

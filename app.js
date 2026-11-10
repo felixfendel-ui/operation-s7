@@ -234,9 +234,10 @@ function renderTravel() {
   app.innerHTML = `${teamRoleHtml()}${moleHtml()}${akkuHtml()}
   <div class="card pop">
     <div class="label">Station ${P.idx + 1} von ${stations().length} · Nächstes Ziel</div>
-    <h2>${isRevealed(P.idx) || !st.codename ? esc(st.targetName || st.title) : '🎯 ' + esc(st.codename)}</h2>
+    <h2>${revealLevel(P.idx) >= 2 || !st.codename ? esc(st.targetName || st.title) : '🎯 ' + esc(st.codename)}</h2>
     <p>${rich(st.mission)}</p>
-    ${!isRevealed(P.idx) && st.codename && P.idx > 0 ? '<button type="button" class="linkbtn" id="revealBtn">🔍 Ihr findet das Ziel nicht? Ziel aufdecken (−20 Punkte)</button>' : ''}
+    ${st.wayHint && revealLevel(P.idx) >= 1 ? `<div class="wayhint">💡 ${rich(st.wayHint)}</div>` : ''}
+    ${st.codename && P.idx > 0 && revealLevel(P.idx) < 2 ? `<button type="button" class="linkbtn" id="revealBtn">${revealLevel(P.idx) < 1 && st.wayHint ? '💡 Ihr kommt nicht weiter? Hinweis zum Ziel (−10 Punkte)' : '🔍 Immer noch nicht? Ziel aufdecken (−20 Punkte)'}</button>` : ''}
     ${radioBtnHtml('mission')}
     ${safetyHtml(st)}
     ${far ? '<p class="small">🚆 Weite Strecke – nimm die S-Bahn wie im Auftrag beschrieben.</p>' : ''}

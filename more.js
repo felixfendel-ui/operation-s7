@@ -188,30 +188,35 @@ function completeBonus(id, by) {
   liveEvent('task', `🎁 Bonusauftrag erledigt${by ? ' – ' + by : ''}`, `+30 Punkte · gesamt ${P.pts}`, 2);
 }
 /* ---------- Geheimes Ziel aufdecken (kostet Punkte) ---------- */
-const isRevealed = k => !!(P && P.revealed && P.revealed[k]);
+/* Stufe 1 = Hinweis (−10), Stufe 2 = Zielname (−20) */
+const revealLevel = k => (P && P.revealed && Number(P.revealed[k])) || 0;
+const isRevealed = k => revealLevel(k) >= 2;
 function requestReveal() {
-  if (!confirm('Ziel aufdecken? Dann seht ihr den echten Namen des Ziels – das kostet 20 Agentenpunkte.')) return;
-  if (isMember()) { teamAct('reveal'); P.revealed = Object.assign({}, P.revealed, { [P.idx]: 1 }); render(); return; }
-  doReveal(P.idx, P.name);
+  const st = cur(), lv = revealLevel(P.idx) < 1 && st.wayHint ? 1 : 2, cost = lv === 1 ? 10 : 20;
+  if (!confirm(lv === 1 ? `Einen Hinweis zum Ziel anfordern? Das kostet ${cost} Agentenpunkte.` : `Ziel aufdecken? Dann seht ihr den echten Namen – das kostet ${cost} Agentenpunkte.`)) return;
+  if (isMember()) { teamAct('reveal', { lv }); P.revealed = Object.assign({}, P.revealed, { [P.idx]: lv }); render(); return; }
+  doReveal(P.idx, P.name, lv);
 }
-function doReveal(k, by) {
+function doReveal(k, by, lv) {
+  lv = lv === 1 ? 1 : 2;
   P.revealed = P.revealed || {};
-  if (P.revealed[k] || k !== P.idx) return;
-  P.revealed[k] = 1;
-  P.pts = Math.max(0, (P.pts || 0) - 20);
-  if (teamOn()) { P.tp.A = Math.max(0, (P.tp.A || 0) - 10); P.tp.B = Math.max(0, (P.tp.B || 0) - 10); }
+  if (k !== P.idx || revealLevel(k) >= lv) return;
+  P.revealed[k] = lv;
+  const cost = lv === 1 ? 10 : 20;
+  P.pts = Math.max(0, (P.pts || 0) - cost);
+  if (teamOn()) { P.tp.A = Math.max(0, (P.tp.A || 0) - cost / 2); P.tp.B = Math.max(0, (P.tp.B || 0) - cost / 2); }
   save(); render();
-  liveEvent('hint', `Station ${k + 1}: Ziel aufgedeckt${by ? ' – ' + by : ''}`, D.stations[k].targetName || '', 2);
+  liveEvent('hint', `Station ${k + 1}: ${lv === 1 ? 'Hinweis zum Ziel' : 'Ziel aufgedeckt'}${by ? ' – ' + by : ''}`, lv === 1 ? String(D.stations[k].wayHint || '').replace(/\*\*/g, '') : D.stations[k].targetName || '', 2);
 }
 function moreHostApply(a) {
-  if (a.k === 'reveal') { doReveal(Number(a.i), a.n); return true; }
+  if (a.k === 'reveal') { doReveal(Number(a.i), a.n, Number(a.lv) === 1 ? 1 : 2); return true; }
   if (a.k === 'bonus') { completeBonus(String(a.e || ''), a.n); return true; }
   return false;
 }
 function moreStateFields() { return { rv: P.revealed || {}, ev: P.ev || null, sab: P.sab || null, bd: P.bonusDone || {}, mo: P.moleOffset || 0, hid: myId(), lp: liveOn() ? LIVE.topic : '' }; }
 function moreApplyState(s) {
   P.moleOffset = Number(s.mo) || 0;
-  P.revealed = {}; if (s.rv && typeof s.rv === 'object') Object.keys(s.rv).forEach(k => { if (D.stations[+k]) P.revealed[+k] = 1; });
+  P.revealed = {}; if (s.rv && typeof s.rv === 'object') Object.entries(s.rv).forEach(([k, v]) => { if (D.stations[+k]) P.revealed[+k] = Number(v) === 1 ? 1 : 2; });
   P.bonusDone = s.bd && typeof s.bd === 'object' ? s.bd : {};
   TEAM.lp = typeof s.lp === 'string' ? s.lp.slice(0, 64) : '';
   const ev = s.ev && typeof s.ev === 'object' ? { id: String(s.ev.id || '').slice(0, 20), type: 'bonus', text: String(s.ev.text || '').slice(0, 300) } : null;

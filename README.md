@@ -43,7 +43,8 @@ Link für Jaspers Handy: `https://felixfendel-ui.github.io/operation-s7/#studio`
 
 ## Geheime Ziele
 
-Unterwegs sehen die Kinder nicht den Ortsnamen, sondern einen **Codenamen** (z. B. „🎯 Kontaktpunkt FALKE“, „Zuflucht 762“) und einen rätselhaften Hinweis – das Radar ist das wichtigste Werkzeug. Bei S-Bahn-Fahrten gibt es nur Richtung und Stationszahl als kleines Rätsel („die S7, deren Endstation ein Raubtier im Namen trägt“ = Wolfratshausen, „an der zweiten Station aussteigen“). Den echten Namen gibt es bei Ankunft. Notfall: **„🔍 Ziel aufdecken“** zeigt den Namen sofort (−20 Punkte, gilt für das ganze Team; Papa sieht es im Verlauf).
+Unterwegs sehen die Kinder nur einen **Codenamen** („🎯 Kontaktpunkt FALKE“) und „Folgt dem Radar“. Bei S-Bahn-Fahrten: „Nehmt die S7 in die Richtung, in die der Radar-Pfeil zeigt. Hält die S-Bahn und das Radar zeigt weniger als 300 m: alle zusammen aussteigen!“
+Hilfe gibt es nur auf Anforderung: **💡 Hinweis** (−10 Punkte, z. B. „Die Endstation trägt ein Raubtier im Namen – 3 Stationen“, Feld `wayHint`) und danach **🔍 Ziel aufdecken** (−20 Punkte). Gilt fürs ganze Team, Papa sieht es im Verlauf. Den echten Namen gibt es sonst erst bei Ankunft.
 
 ## Beweisfotos
 

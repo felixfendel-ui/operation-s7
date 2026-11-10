@@ -214,7 +214,7 @@ function applyState(s) {
   s.s = ['travel', 'arrived', 'solved'].includes(s.s) ? s.s : 'travel'; s.pts = Number(s.pts) || 0;
   s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
   if (s.v < (TEAM.v || 0)) return;
-  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {}), JSON.stringify(P.tp || {}), JSON.stringify(P.photos || {}), P.ev ? P.ev.id : '', P.sab ? P.sab.id : '', P.moleOffset || 0, Object.keys(P.revealed || {}).join()]);
+  const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {}), JSON.stringify(P.tp || {}), JSON.stringify(P.photos || {}), P.ev ? P.ev.id : '', P.sab ? P.sab.id : '', P.moleOffset || 0, JSON.stringify(P.revealed || {})]);
   const before = key();
   const wasStatus = P.status, wasIdx = P.idx, wasFin = P.finishedAt;
   TEAM.v = s.v; TEAM.members = s.m || []; TEAM.hostName = s.n; TEAM.started = !!s.st; saveTeam();
