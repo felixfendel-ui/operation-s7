@@ -77,7 +77,7 @@ function radioStatus(msg) {
 /* ---------- Aufgenommene Funksprüche (audio/<hash>.m4a, erzeugt mit tools/voices.py) ----------
    Laufen wie Sprachnachrichten – auch auf dem iPhone mit Stummschalter. Vorlesestimme nur als Rückfall. */
 let AUDIO_INDEX = null;
-const AUDIO_V = '8'; // bei neuer Aufnahme erhöhen, damit Handys keine alten Dateien aus dem Cache spielen
+const AUDIO_V = '9'; // bei neuer Aufnahme erhöhen, damit Handys keine alten Dateien aus dem Cache spielen
 fetch('audio/index.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : [])).then(j => { AUDIO_INDEX = new Set(j); }).catch(() => {});
 function fnvHash(s) { // FNV-1a über UTF-16-Codeeinheiten – identisch zu tools/voices.py
   let h = 0x811c9dc5;
