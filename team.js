@@ -69,12 +69,15 @@ function openStream(key, topic, sinceFn, onMsg) {
   if (old) { clearTimeout(old.retry); if (old.es) old.es.close(); }
   if (!topic || typeof EventSource === 'undefined') return;
   const es = new EventSource(`${NTFY}/${topic}/sse?since=${sinceFn()}`);
-  const s = STREAMS[key] = { topic, es, sinceFn, onMsg, ok: false, retry: null, delay: (old && old.delay) || 4000 };
-  es.onopen = () => { s.ok = true; s.delay = 4000; netUi(); };
+  const s = STREAMS[key] = { topic, es, sinceFn, onMsg, ok: false, retry: null, delay: (old && old.delay) || 4000, act: Date.now() };
+  es.onopen = () => { s.ok = true; s.delay = 4000; s.act = Date.now(); netUi(); };
   es.onmessage = e => {
+    s.act = Date.now();
     let m; try { m = JSON.parse(e.data); } catch (x) { return; }
     if (m.event === 'message') onMsg(m);
   };
+  es.addEventListener('keepalive', () => { s.act = Date.now(); }); // ntfy sendet ca. alle 45 s ein Lebenszeichen
+  es.addEventListener('open', () => { s.act = Date.now(); });
   es.onerror = () => {
     // Neu verbinden mit wachsendem Abstand (4 s … 60 s), damit viele Handys im selben WLAN ntfy nicht überlasten
     s.ok = false; es.close(); netUi();
@@ -82,6 +85,27 @@ function openStream(key, topic, sinceFn, onMsg) {
     s.delay = Math.min(s.delay * 2, 60000);
   };
 }
+/* Wächter: Mobilfunk/iOS lassen Verbindungen manchmal stumm sterben (kein Fehler, aber auch keine Nachrichten).
+   Kommt 75 s lang nichts – nicht mal das ntfy-Lebenszeichen –, wird neu verbunden. Zusätzlich holt das Team-Handy
+   alle 20 s verpasste Team-Nachrichten per Abfrage nach (doppelte werden über TEAM.seen ignoriert). */
+setInterval(() => {
+  if (document.hidden) return;
+  const now = Date.now();
+  Object.entries(STREAMS).forEach(([k, s]) => { if (s.es && now - (s.act || 0) > 75000) { s.act = now; openStream(k, s.topic, s.sinceFn, s.onMsg); } });
+}, 15000);
+let teamPolling = false, lastTeamPoll = 0;
+async function teamPoll() {
+  if (Date.now() - lastTeamPoll < 10000) return; // höchstens alle 10 s (ntfy-Anfragelimit)
+  if (teamPolling || document.hidden || !TEAM.topic || !(isHost() || isMember()) || !teamOn()) return;
+  if (!P || !P.name || P.finishedAt) return;
+  teamPolling = true; lastTeamPoll = Date.now();
+  try {
+    const since = TEAM.since ? Math.max(0, TEAM.since - 30) : Math.floor(Date.now() / 1000) - 600;
+    const r = await fetch(`${NTFY}/${TEAM.topic}/json?poll=1&since=${since}`, { cache: 'no-store' });
+    if (r.ok) (await r.text()).split('\n').forEach(line => { if (!line.trim()) return; try { const m = JSON.parse(line); if (m.event === 'message') handleTeamMsg(m); } catch (e) {} });
+  } catch (e) {} finally { teamPolling = false; }
+}
+setInterval(teamPoll, 20000);
 function streamsRestart() { Object.entries(STREAMS).forEach(([k, s]) => openStream(k, s.topic, s.sinceFn, s.onMsg)); }
 function streamStart() {
   if (TEAM.topic && !STREAMS.team) openStream('team', TEAM.topic, () => (TEAM.since ? TEAM.since : (isMember() ? 'all' : Math.floor(Date.now() / 1000) - 60)), handleTeamMsg);
@@ -98,7 +122,7 @@ function netUi() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
-  streamsRestart(); flush(); keepAwake();
+  streamsRestart(); flush(); keepAwake(); setTimeout(teamPoll, 1500);
 });
 
 /* Bildschirm wach halten, solange das Spiel läuft (sonst pausiert der Browser GPS und Funk). */
@@ -353,7 +377,7 @@ function updateHere() {
   };
 }
 function requestUnlock(forced) {
-  if (!isMember()) return teamOn() ? markHere(myId(), P.name, forced) : unlock(forced);
+  if (!isMember()) { if (teamOn()) { markHere(myId(), P.name, forced); if (P.status === 'travel') teamPoll(); return; } return unlock(forced); }
   const k = P.idx, now = Date.now();
   if (unlockSent[k] && now - unlockSent[k] < 90000) return; // Meldung alle 90 s erneuern (gilt 5 Min.)
   unlockSent[k] = now;
