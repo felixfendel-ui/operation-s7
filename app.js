@@ -302,7 +302,7 @@ function updateLive() {
     };
   } else if (!near && fb.dataset.on) { fb.dataset.on = ''; fb.innerHTML = ''; }
   exUpdateLive();
-  if (teamOn() && !$('#teamHere').innerHTML) updateHere();
+  if (teamOn()) updateHere();
 }
 
 function renderRiddle() {

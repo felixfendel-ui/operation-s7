@@ -335,8 +335,11 @@ function hereHtml() {
   if (!teamOn() || P.status !== 'travel') return '';
   const ids = isHost() ? hereIds() : (TEAM.hereList || []);
   if (!ids.length) return `<div class="herebox">👥 Die Station öffnet sich erst, wenn <b>alle ${TEAM.members.length} Agenten</b> am Ziel sind.</div>`;
-  const missing = TEAM.members.filter(m => !ids.includes(m.id));
-  return `<div class="herebox on">👥 Am Ziel: <b>${ids.length}/${TEAM.members.length}</b>${missing.length ? ` · Es fehlen: ${missing.map(m => esc(m.alias || m.name)).join(', ')}` : ''}
+  const missing = TEAM.members.filter(m => !ids.includes(m.id)), me = myId();
+  const meMissing = missing.some(m => m.id === me);
+  const p = typeof here === 'function' ? here() : null, st = cur();
+  const why = meMissing && p && st ? ` Dein GPS sagt: noch <b>${Math.round(dist(p, st))} m</b> (±${Math.round(p.acc || 0)} m) – geh näher ran oder tippe „📍 Ich bin da“.` : '';
+  return `<div class="herebox on">👥 Am Ziel: <b>${ids.length}/${TEAM.members.length}</b>${missing.length ? ` · Es fehlen: ${missing.map(m => m.id === me ? '<b>DU (dieses Handy)</b>' : esc(m.alias || m.name)).join(', ')}` : ''}${meMissing ? `<div class="small">⚠️ Dieses Handy hat sich noch nicht am Ziel gemeldet.${why}</div>` : ''}
     ${isHost() && missing.length ? '<button class="btn sec small" id="hereOverride">Alle da, aber ein Handy meldet sich nicht? Station öffnen</button>' : ''}</div>`;
 }
 function updateHere() {
