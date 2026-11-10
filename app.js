@@ -63,7 +63,13 @@ function fmtTime(ms) {
   return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 }
 const stations = () => D.stations;
-const cur = () => D.stations[Math.min(P.idx, D.stations.length - 1)];
+/* Testmodus (nur dieses Gerät, nie im Repo): alle Ziele liegen am gespeicherten Testpunkt, z. B. zu Hause.
+   So lässt sich der ganze Ablauf mit mehreren Handys testen, ohne zum Bahnhof zu fahren. */
+const testPoint = () => { const t = lsGet('sj7_testpt'); return t && isFinite(t.lat) && isFinite(t.lon) ? t : null; };
+const cur = () => {
+  const st = D.stations[Math.min(P.idx, D.stations.length - 1)], t = testPoint();
+  return t && st ? Object.assign({}, st, { lat: t.lat, lon: t.lon, radius: Math.max(Number(st.radius) || 0, 40) }) : st;
+};
 const here = () => sim || pos;
 const fragStations = () => D.stations.map((s, i) => ({ s, i })).filter(o => o.s.fragment);
 function save() { lsSet(KEY_P, P); teamAfterSave(); }
@@ -182,6 +188,9 @@ function fragsHtml() {
 
 function render() {
   renderHeader();
+  let tb = document.getElementById('testBanner');
+  if (testPoint() && !tb) { tb = document.createElement('div'); tb.id = 'testBanner'; tb.textContent = '🧪 TESTMODUS – alle Ziele am Testpunkt (Admin → Testmodus aus)'; tb.style.cssText = 'background:#b45309;color:#fff;font-weight:700;text-align:center;padding:6px;font-size:13px'; document.getElementById('top').after(tb); }
+  else if (!testPoint() && tb) tb.remove();
   liveUi(); teamUi(); sosUi();
   if (typeof needAwake === 'function') { if (needAwake()) keepAwake(); else releaseAwake(); }
   if (isMember() && !memberReady()) return renderLobby();
@@ -472,6 +481,10 @@ function renderAdmin() {
       <div class="row"><button class="btn sec small" data-act="sim300">🧪 300 m vor Ziel</button>
       <button class="btn sec small" data-act="simOff">${sim ? '🛑 Simulation aus' : 'Simulation aus'}</button></div>
       <button class="btn danger small" data-act="reset">↺ Fortschritt zurücksetzen</button></div>
+    <div class="card"><h3>🧪 TESTMODUS (nur dieses Handy)</h3>
+      <p class="small">${testPoint() ? `<b>AN</b> – alle Ziele liegen am Testpunkt ${testPoint().lat.toFixed(5)}, ${testPoint().lon.toFixed(5)}.` : 'Aus. Stell dich z. B. zu Hause hin und tippe unten: Dann liegen <b>alle Ziele</b> genau dort – ideal, um Team, Ankunft und Rätsel ohne Fahrt zu testen. Auf <b>jedem</b> Testhandy einschalten.'}</p>
+      ${testPoint() ? '<button class="btn danger small" data-act="testOff">Testmodus aus</button>' : '<button class="btn warn small" data-act="testHere">📍 Testmodus an: alle Ziele = meine Position</button>'}
+      <p class="small">Vor dem Geburtstag unbedingt ausschalten – das orange Band oben erinnert daran.</p></div>
     <div class="card"><h3>STATIONEN (${stations().length})</h3>${list}</div>
     ${isMember() ? '' : liveAdminHtml()}
     ${teamAdminHtml()}
@@ -630,6 +643,12 @@ function adminAct(act, i) {
     case 'simTarget': { const st = cur(); sim = { lat: st.lat, lon: st.lon, acc: 5 }; onPos(); return renderAdmin(); }
     case 'sim300': { const st = cur(); sim = { lat: st.lat + 0.0027, lon: st.lon, acc: 8 }; onPos(); return renderAdmin(); }
     case 'simOff': sim = null; onPos(); return renderAdmin();
+    case 'testHere': {
+      const p = here();
+      if (!p) return alert('Noch kein GPS-Signal – kurz warten und nochmal tippen.');
+      lsSet('sj7_testpt', { lat: p.lat, lon: p.lon, t: Date.now() }); onPos(); render(); return renderAdmin();
+    }
+    case 'testOff': lsDel('sj7_testpt'); onPos(); render(); return renderAdmin();
     case 'reset':
       if (!confirm('Gesamten Spielfortschritt löschen? (Stationen bleiben erhalten.)')) return;
       P = newProgress(); save(); sim = null; liveReset(); return closeAdmin();
