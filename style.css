@@ -169,7 +169,7 @@ a{color:var(--accent)}
 @media (max-width:360px){.invgrid{grid-template-columns:1fr}}
 
 /* Unterwegs: Depots & Spezialaufträge */
-#exmodal{z-index:14;display:flex;align-items:center}
+#exmodal{z-index:14;display:flex;align-items:safe center}
 #exmodal[hidden]{display:none}
 #exmodal .wrap{width:100%}
 .exmodal{border-color:var(--accent2)}

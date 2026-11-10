@@ -93,6 +93,7 @@ function stopPlayer() {
   playerBtn = null;
 }
 function playFile(src, btn, onFail) {
+  initAudio(); // im Tipp entsperren (iOS)
   const same = btn && btn === playerBtn;
   stopPlayer(); if (radioOn) stopRadio();
   if (same) return;

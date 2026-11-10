@@ -37,8 +37,9 @@ async function warmBlobs() {
   try {
     const st = lsGet('sj7_offline');
     if (!st || st.v !== AUDIO_V || !('caches' in window)) return;
-    const c = await caches.open(OFFLINE_CACHE());
-    for (const req of await c.keys()) {
+    const c = await caches.open(OFFLINE_CACHE()), keys = await c.keys();
+    if (!keys.length) { lsDel('sj7_offline'); return; } // Cache wurde gelöscht → Paket neu laden lassen
+    for (const req of keys) {
       const u = new URL(req.url), key = u.pathname.split('/').slice(-2).join('/') + u.search;
       if (AUDIO_BLOBS[key]) continue;
       const r = await c.match(req); if (r) AUDIO_BLOBS[key] = URL.createObjectURL(await r.blob());
@@ -264,8 +265,9 @@ function akkuHtml() {
 /* =========================================================================
    7) Zentrale übernehmen, wenn Jaspers Handy ausfällt
    ========================================================================= */
-let takeoverWait = null, stateSeenAt = 0;
+let takeoverWait = null, stateSeenAt = 0, helloEchoAt = 0;
 function noteStateSeen() { stateSeenAt = Date.now(); }
+function noteHelloEcho() { helloEchoAt = Date.now(); }
 function takeoverHtml() { return isMember() && memberReady() ? '<button class="btn sec small" id="takeoverBtn">📡 Jaspers Handy (Zentrale) antwortet nicht?</button><div class="small" id="takeoverFb"></div>' : ''; }
 function bindTakeover() {
   const b = $('#takeoverBtn');
@@ -277,6 +279,7 @@ function bindTakeover() {
     clearTimeout(takeoverWait);
     takeoverWait = setTimeout(() => {
       if (stateSeenAt > t0) { fb.textContent = '✅ Die Zentrale hat geantwortet – alles in Ordnung.'; b.disabled = false; return; }
+      if (helloEchoAt <= t0) { fb.textContent = '📵 Dein Handy hat gerade selbst kein Netz – darum kommt keine Antwort. Probiert es gleich nochmal, wenn ihr Empfang habt.'; b.disabled = false; return; }
       fb.textContent = '❌ Keine Antwort von der Zentrale.';
       if (confirm('Jaspers Handy antwortet nicht. Soll DIESES Handy die Zentrale übernehmen?\n\nNur EIN Handy im Team darf das tun – sprecht euch ab!')) takeover();
       else b.disabled = false;
@@ -285,10 +288,10 @@ function bindTakeover() {
 }
 function takeover() {
   TEAM.role = 'host';
-  TEAM.v = (TEAM.v || 0) + 1000;            // neuer Stand gewinnt gegenüber allem Bisherigen
+  TEAM.v = (TEAM.v || 0) + 1000 + Math.floor(Math.random() * 999); // neuer Stand gewinnt; Zufall verhindert Gleichstand bei zwei Übernahmen
   P.name = TEAM.name;
   Object.keys(P.frags || {}).forEach(k => { const st = D.stations[+k]; if (st && st.fragment) P.frags[k] = st.fragment; }); // echte Fragmente wiederherstellen
-  if (TEAM.lp) { LIVE = { enabled: true, topic: TEAM.lp, server: NTFY }; saveLive(); }
+  if (TEAM.lp) { LIVE = { enabled: true, topic: TEAM.lp, server: NTFY, papaSince: Math.floor(Date.now() / 1000), cmdSeen: [] }; saveLive(); } // alte Papa-Befehle nicht nochmal ausführen
   saveTeam(); lsSet(KEY_P, P);
   closeExModal();
   lastBcast = ''; broadcast(); streamStart();
@@ -298,7 +301,12 @@ function takeover() {
 }
 /* Altes Zentralen-Handy meldet sich wieder: es wird zum Mitspieler */
 function maybeDemote(a) {
-  if (!isHost() || a.k !== 'state' || !a.hid || a.hid === myId() || (Number(a.v) || 0) <= (TEAM.v || 0)) return false;
+  if (!isHost() || a.k !== 'state' || !a.hid || a.hid === myId()) return false;
+  const av = Number(a.v) || 0;
+  if (av < (TEAM.v || 0) || (av === TEAM.v && String(a.hid) < String(myId()))) return false;
+  // Der andere ist im Spiel ZURÜCK (z. B. Übernahme im Funkloch)? Dann bleibt dieses Handy Zentrale und setzt sich durch.
+  const rank = s => (s.fin ? 1e6 : 0) + (Number(s.i) || 0) * 10 + (['travel', 'arrived', 'solved'].indexOf(s.s) + 1);
+  if (rank(a) < rank({ fin: P.finishedAt, i: P.idx, s: P.status })) { TEAM.v = av + 1; saveTeam(); lastBcast = ''; broadcast(); return true; }
   TEAM.role = 'member'; TEAM.name = P.name || TEAM.name || 'Jasper'; TEAM.alias = myAlias();
   saveTeam();
   applyState(a);

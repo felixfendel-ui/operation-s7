@@ -60,8 +60,18 @@ function copyText(t, done) {
 /* ---------- Senden (mit Warteschlange für Funklöcher) ---------- */
 async function publish(m) {
   const { _k, ...body } = m; // _k = interner Schlüssel: nur die neueste Nachricht dieser Art behalten
-  const r = await fetch((LIVE.server || NTFY) + '/', { method: 'POST', body: JSON.stringify(body) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const ac = typeof AbortController === 'function' ? new AbortController() : null, to = ac && setTimeout(() => ac.abort(), 15000);
+  try {
+    const r = await fetch((LIVE.server || NTFY) + '/', { method: 'POST', body: JSON.stringify(body), signal: ac ? ac.signal : undefined });
+    if (r.status === 429) { QUOTA_LEFT = 0; dropLowPrio(); } // Kontingent/Ratenlimit: Papa-Kleinkram verwerfen, Team-Stand hat Vorrang
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+  } finally { if (to) clearTimeout(to); }
+}
+/* Papa-Verlauf/Positionen sind verzichtbar – der Team-Stand nie. */
+function dropLowPrio() {
+  const n = OUTBOX.length;
+  OUTBOX = OUTBOX.filter(x => !/-(log|pos)$/.test(x.topic) || (x.tags || []).some(t => t === 'ev-help' || t === 'ev-finished'));
+  if (OUTBOX.length !== n) lsSet(KEY_OUT, OUTBOX);
 }
 function enqueue(m) {
   if (m.topic.endsWith('-pos')) OUTBOX = OUTBOX.filter(x => x.topic !== m.topic); // nur die neueste Position
@@ -77,7 +87,7 @@ async function flush() {
   flushing = true;
   try {
     while (OUTBOX.length) {
-      const m = OUTBOX[0];
+      const m = OUTBOX.find(x => x._k === 'state') || OUTBOX.find(x => !/-(log|pos)$/.test(x.topic)) || OUTBOX[0]; // Team zuerst
       await publish(m);
       OUTBOX = OUTBOX.filter(x => x !== m); // per Identität entfernen – die Liste kann sich währenddessen ändern
       lsSet(KEY_OUT, OUTBOX);
@@ -100,12 +110,13 @@ function liveEvent(type, title, message, priority = 3) {
   // Unwichtiges zuerst weglassen, wenn das Tageskontingent knapp wird
   if (type === 'wrong') { wrongSent[P.idx] = (wrongSent[P.idx] || 0) + 1; if (wrongSent[P.idx] > 3 || (QUOTA_LEFT !== null && QUOTA_LEFT < 60)) return; }
   if ((type === 'join' || type === 'task') && QUOTA_LEFT !== null && QUOTA_LEFT < 40) return;
+  if (QUOTA_LEFT !== null && QUOTA_LEFT < 25 && !['help', 'finished', 'start'].includes(type)) return; // Rest fürs Team aufheben
   const tags = [EV_TAG[type] || 'spy', 'ev-' + type, 'i' + P.idx, 'pts-' + (Number(P.pts) || 0)];
   if (type === 'depot' && arguments[4]) tags.push('dp-' + arguments[4]);
   if (type === 'rsvp' && arguments[4]) tags.push(String(arguments[4]).slice(0, 30));
   enqueue({ topic: tp('log'), title, message: message || title, tags, priority });
   // Bei wichtigen Momenten den Stand für die Papa-Zentrale mitschicken (höchstens alle 45 s, Start/Ende immer)
-  if (type === 'start' || type === 'finished' || (['arrived', 'forced', 'solved'].includes(type) && Date.now() - lastSnap > 45000)) liveSnapshot(true);
+  if (type === 'start' || type === 'finished' || (['forced', 'solved'].includes(type) && Date.now() - lastSnap > 3 * 60000)) liveSnapshot(true);
 }
 function liveSnapshot(force) {
   if (!liveOn() || !P || !P.name || PAPA || isMember()) return;
@@ -115,6 +126,8 @@ function liveSnapshot(force) {
   let every = moved ? POS_EVERY : 10 * 60000;
   if (QUOTA_LEFT !== null && QUOTA_LEFT < 80) every = Math.max(every, 6 * 60000);
   if (QUOTA_LEFT !== null && QUOTA_LEFT < 30) every = 20 * 60000;
+  if (QUOTA_LEFT !== null && QUOTA_LEFT < 15) return; // dann nur noch Team-Funk
+  if (typeof teamOn === 'function' && teamOn() && moved) every = Math.max(every, 5 * 60000); // im Team: Position alle 5 Min. (spart Kontingent)
   if (!force && now - lastSnap < every) return;
   lastSnap = now; if (p) lastSnapPos = { lat: p.lat, lon: p.lon };
   const s = { n: P.name, i: P.idx, s: P.status, f: Object.keys(P.frags).length, st: P.startedAt, fin: P.finishedAt, t: now };
@@ -202,7 +215,7 @@ function liveAdminHtml() {
   const t = LIVE.topic;
   return `<div class="card"><h3>LIVE-VERBINDUNG ZU PAPA</h3>
     <p class="small">Status: <b>${liveOn() ? 'aktiv' : 'aus'}</b>${t ? ` · Kanal <code>${esc(t)}</code>` : ''}${OUTBOX.length ? ` · ${OUTBOX.length} Nachricht(en) warten auf Netz` : ''}${lastSendError ? ` · letzter Fehler: ${esc(lastSendError)}` : ''}</p>
-    <p class="small">ntfy-Kontingent heute (pro Internet-Anschluss): <b id="quotaLeft">${QUOTA_LEFT === null ? '…' : QUOTA_LEFT}</b> von 250 Nachrichten übrig. Eine Jagd braucht etwa 150–200 – am Vortag nicht mehr viel testen.</p>
+    <p class="small">ntfy-Kontingent heute (pro Internet-Anschluss): <b id="quotaLeft">${QUOTA_LEFT === null ? '…' : QUOTA_LEFT}</b> von 250 Nachrichten übrig. Im Team-Modus haben Team-Funk Vorrang; Papa-Verlauf und Position werden bei knappem Kontingent automatisch gedrosselt. Am Vortag nicht mehr viel testen.</p>
     ${t ? `<p class="small">1. Papa-Link auf Papas Handy/PC öffnen (Karte, Verlauf, Lösungen, Chat).<br>
       2. Für Push: ntfy-App installieren, Server ntfy.sh, Kanal <code>${esc(t)}-log</code> abonnieren.<br>
       Wer den Kanalnamen kennt, kann mitlesen – Link nur an Papa geben.</p>

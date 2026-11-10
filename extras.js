@@ -88,8 +88,8 @@ function exTaskCheck() {
     return;
   }
   const ls = P.legStart[k];
-  const half = p && ls.d >= 500 && dist(p, st) <= ls.d * 0.5;
-  const late = ls.d >= 500 && Date.now() - ls.t >= TASK_AFTER_MS;
+  const half = p && ls.d >= 300 && dist(p, st) <= ls.d * 0.5;
+  const late = Date.now() - ls.t >= TASK_AFTER_MS;
   if (half || late) {
     P.tasks[k] = 'open'; save();
     showTask(k);

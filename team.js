@@ -94,18 +94,20 @@ setInterval(() => {
   Object.entries(STREAMS).forEach(([k, s]) => { if (s.es && now - (s.act || 0) > 75000) { s.act = now; openStream(k, s.topic, s.sinceFn, s.onMsg); } });
 }, 15000);
 let teamPolling = false, lastTeamPoll = 0;
-async function teamPoll() {
+async function teamPoll(force) {
   if (Date.now() - lastTeamPoll < 10000) return; // höchstens alle 10 s (ntfy-Anfragelimit)
   if (teamPolling || document.hidden || !TEAM.topic || !(isHost() || isMember()) || !teamOn()) return;
+  const ts = STREAMS.team; if (!force && ts && ts.ok && Date.now() - (ts.act || 0) < 60000) return; // Stream lebt → nicht abfragen (Ratenlimit im Heim-WLAN)
   if (!P || !P.name || P.finishedAt) return;
   teamPolling = true; lastTeamPoll = Date.now();
   try {
     const since = TEAM.since ? Math.max(0, TEAM.since - 30) : Math.floor(Date.now() / 1000) - 600;
-    const r = await fetch(`${NTFY}/${TEAM.topic}/json?poll=1&since=${since}`, { cache: 'no-store' });
+    const ac = typeof AbortController === 'function' ? new AbortController() : null; if (ac) setTimeout(() => ac.abort(), 15000);
+    const r = await fetch(`${NTFY}/${TEAM.topic}/json?poll=1&since=${since}`, { cache: 'no-store', signal: ac ? ac.signal : undefined });
     if (r.ok) (await r.text()).split('\n').forEach(line => { if (!line.trim()) return; try { const m = JSON.parse(line); if (m.event === 'message') handleTeamMsg(m); } catch (e) {} });
   } catch (e) {} finally { teamPolling = false; }
 }
-setInterval(teamPoll, 20000);
+setInterval(() => teamPoll(), 20000);
 function streamsRestart() { Object.entries(STREAMS).forEach(([k, s]) => openStream(k, s.topic, s.sinceFn, s.onMsg)); }
 function streamStart() {
   if (TEAM.topic && !STREAMS.team) openStream('team', TEAM.topic, () => (TEAM.since ? TEAM.since : (isMember() ? 'all' : Math.floor(Date.now() / 1000) - 60)), handleTeamMsg);
@@ -122,7 +124,7 @@ function netUi() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
-  streamsRestart(); flush(); keepAwake(); setTimeout(teamPoll, 1500);
+  streamsRestart(); flush(); keepAwake(); setTimeout(() => teamPoll(true), 1500);
 });
 
 /* Bildschirm wach halten, solange das Spiel läuft (sonst pausiert der Browser GPS und Funk). */
@@ -170,6 +172,7 @@ function handleTeamMsg(m) {
   TEAM.seen.push(m.id); saveTeam();
   let a; try { a = JSON.parse(m.message); } catch (e) { return; }
   if (a.k === 'state') noteStateSeen();
+  if (a.k === 'hello' && a.id === TEAM.id) noteHelloEcho(); // eigener Ruf kam zurück → mein Netz funktioniert
   if (maybeDemote(a)) return;
   if (isHost() && a.k !== 'state') hostApply(a);
   else if (isMember() && a.k === 'state') applyState(a);
@@ -332,7 +335,7 @@ function answerBlockedHtml() {
 /* ---------- Zusammen am Ziel ----------
    Im Team öffnet sich eine Station erst, wenn ALLE Handys am Ziel gemeldet sind (nur „bin da“, keine Koordinaten).
    Meldungen gelten 5 Minuten. Fällt ein Handy aus, kann Jasper die Station nach Rückfrage trotzdem öffnen. */
-const HERE_VALID = 5 * 60000;
+const HERE_VALID = 20 * 60000; // Handys stecken unterwegs in der Tasche – Meldung gilt lange
 function hereIds() {
   const h = (P.here && P.here[P.idx]) || {}, now = Date.now();
   return Object.keys(h).filter(id => now - h[id].t < HERE_VALID && (TEAM.members || []).some(m => m.id === id));
@@ -344,7 +347,7 @@ function markHere(id, name, forced) {
   const isNew = !h[id];
   h[id] = { t: Date.now(), f: !!forced, first: isNew && !Object.keys(h).some(k => k !== id) };
   save();
-  if (isNew) liveEvent('arrived', `${name || '?'} ist am Ziel (${hereIds().length}/${TEAM.members.length})`, cur().title, 2);
+  // Kontingent sparen: nur die erste Ankunft an Papa melden (die Freischaltung meldet sich ohnehin)
   checkAllHere();
   if (P.status === 'travel') updateHere();
 }
@@ -377,7 +380,7 @@ function updateHere() {
   };
 }
 function requestUnlock(forced) {
-  if (!isMember()) { if (teamOn()) { markHere(myId(), P.name, forced); if (P.status === 'travel') teamPoll(); return; } return unlock(forced); }
+  if (!isMember()) { if (teamOn()) { markHere(myId(), P.name, forced); if (P.status === 'travel') teamPoll(true); return; } return unlock(forced); }
   const k = P.idx, now = Date.now();
   if (unlockSent[k] && now - unlockSent[k] < 90000) return; // Meldung alle 90 s erneuern (gilt 5 Min.)
   unlockSent[k] = now;
@@ -510,7 +513,7 @@ function renderTeamPanel() {
       ${TEAM.members.map((x, i) => `<div class="memb trupp-${x.trupp}">
         <button class="trupp-btn" data-tt="${i}">${x.trupp === 'A' ? '🟥 A' : '🟦 B'}</button>
         <span>${memberLabel(x)}${x.id === 'host' ? ' ⭐ Einsatzleiter' : ''}</span>
-        ${x.id !== 'host' ? `<button class="rm" data-rm="${i}" aria-label="Entfernen">✕</button>` : ''}</div>`).join('')}
+        ${x.id !== myId() ? `<button class="rm" data-rm="${i}" aria-label="Entfernen">✕</button>` : ''}</div>`).join('')}
       ${TEAM.members.length < 2 ? '<p class="small">Noch niemand beigetreten. Die anderen scannen den QR-Code mit der Handy-Kamera.</p>' : ''}
       ${r ? `<p class="small">Station ${P.idx + 1}: 🧭 A ${esc((r.nav.A || {}).name || '–')} · 🧭 B ${esc((r.nav.B || {}).name || '–')} · 🔐 ${esc(r.code.name)}</p>` : ''}
     </div></div>`;

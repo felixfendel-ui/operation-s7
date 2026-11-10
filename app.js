@@ -29,6 +29,8 @@ function rich(t) {
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/\n/g, '<br>');
 }
+/* Füllwörter weg, damit „der Biber“, „12 Jahre“ oder „Rot, Gelb, Grün und Blau“ auch zählen */
+const ansNorm = s => norm(String(s || '').toLowerCase().replace(/\b(der|die|das|den|dem|und|ist|es|jahre?|mal|nummer|nr)\b/g, ' '));
 function norm(s) {
   return String(s || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
     .replace(/ß/g, 'ss').normalize('NFD').replace(/[^a-z0-9]/g, '');
@@ -65,7 +67,7 @@ function fmtTime(ms) {
 const stations = () => D.stations;
 /* Testmodus (nur dieses Gerät, nie im Repo): alle Ziele liegen am gespeicherten Testpunkt, z. B. zu Hause.
    So lässt sich der ganze Ablauf mit mehreren Handys testen, ohne zum Bahnhof zu fahren. */
-const testPoint = () => { const t = lsGet('sj7_testpt'); return t && isFinite(t.lat) && isFinite(t.lon) ? t : null; };
+const testPoint = () => { const t = lsGet('sj7_testpt'); return t && isFinite(t.lat) && isFinite(t.lon) && Date.now() - (Number(t.t) || 0) < 12 * 3600000 ? t : null; }; // verfällt nach 12 Std. – kann am Spieltag nicht versehentlich aktiv sein
 const cur = () => {
   const st = D.stations[Math.min(P.idx, D.stations.length - 1)], t = testPoint();
   return t && st ? Object.assign({}, st, { lat: t.lat, lon: t.lon, radius: Math.max(Number(st.radius) || 0, 40) }) : st;
@@ -121,6 +123,12 @@ function startGeo() {
     geoErr = e; updateLive();
     if (e.code === 1) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+}
+let noFixSince = 0;
+const forceBtnHtml = () => '<button class="btn sec small" id="forceBtn">📍 Ich bin da – aber nichts passiert</button>';
+function bindForceBtn() {
+  const b = $('#forceBtn');
+  if (b) b.onclick = () => { if (confirm('Seid ihr wirklich am Ziel? GPS ist im Isartal manchmal ungenau. Station jetzt freischalten?')) requestUnlock(true); };
 }
 function onPos() { exOnPos(); checkUnlock(); updateLive(); updateAdminGps(); liveSnapshot(false); }
 function checkUnlock() {
@@ -285,8 +293,12 @@ function updateLive() {
       ? 'Standort ist blockiert. Bitte in den Einstellungen für Safari/Chrome den Standortzugriff erlauben und die Seite neu laden.'
       : (geoErr.message || 'Kein GPS-Signal.')) + (geoErr.code === 1 ? '' : ' Warte kurz unter freiem Himmel.');
     else gi.textContent = 'Warte auf GPS-Signal …';
+    if (!noFixSince) noFixSince = Date.now();
+    const fb0 = $('#forcebox');
+    if (fb0 && !fb0.dataset.on && (geoErr || Date.now() - noFixSince > 60000)) { fb0.dataset.on = '1'; fb0.innerHTML = forceBtnHtml(); bindForceBtn(); }
     return;
   }
+  noFixSince = 0;
   const d = dist(p, st), b = bearing(p, st), [hl, hc] = heat(d);
   dEl.textContent = fmtDist(d);
   const h = $('#heat'); h.textContent = hl; h.className = hc;
@@ -301,14 +313,11 @@ function updateLive() {
     ? 'Der Pfeil zeigt zum Ziel. Halte das Handy flach vor dich.'
     : `Ziel liegt im <b>${dirName(b)}</b>. <span class="small">(Pfeil: Norden = oben)</span>`;
   gi.textContent = (sim ? '🧪 SIMULATION · ' : '') + 'GPS-Genauigkeit: ±' + Math.round(p.acc || 0) + ' m';
+  if ((p.acc || 0) > 300) gi.innerHTML = `⚠️ GPS sehr ungenau (±${Math.round(p.acc)} m). iPhone: Einstellungen → Datenschutz → Ortungsdienste → Safari → <b>„Genauer Standort“ einschalten</b>.`;
   const fb = $('#forcebox');
   const near = d <= Math.max(st.radius * 3, st.radius + (p.acc || 0) * 1.5);
-  if (near && !fb.dataset.on) {
-    fb.dataset.on = '1';
-    fb.innerHTML = `<button class="btn sec small" id="forceBtn">📍 Ich bin da – aber nichts passiert</button>`;
-    $('#forceBtn').onclick = () => {
-      if (confirm('Seid ihr wirklich am Ziel? GPS ist im Isartal manchmal ungenau. Station jetzt freischalten?')) requestUnlock(true);
-    };
+  if ((near || (p.acc || 0) > 300) && !fb.dataset.on) {
+    fb.dataset.on = '1'; fb.innerHTML = forceBtnHtml(); bindForceBtn();
   } else if (!near && fb.dataset.on) { fb.dataset.on = ''; fb.innerHTML = ''; }
   exUpdateLive();
   if (teamOn()) updateHere();
@@ -337,7 +346,7 @@ function renderRiddle() {
     const v = $('#ans').value;
     if (!norm(v)) return;
     initAudio();
-    if ((st.answers || []).some(a => norm(a) === norm(v))) return requestSolve();
+    if ((st.answers || []).some(a => norm(a) === norm(v) || (ansNorm(a) && ansNorm(a) === ansNorm(v)))) return requestSolve();
     P.tries[id] = (P.tries[id] || 0) + 1; save(); requestWrong(v);
     liveEvent('wrong', `Station ${P.idx + 1}: falsche Antwort`, `„${v.trim().slice(0, 80)}“ (Versuch ${P.tries[id]})`, 2);
     fx('bad');
@@ -434,7 +443,7 @@ function renderVictory() {
 function openAdmin() { adminView = 'main'; $('#admin').hidden = false; document.body.style.overflow = 'hidden'; renderAdmin(); }
 function closeAdmin() { $('#admin').hidden = true; document.body.style.overflow = ''; render(); }
 function saveData() { lsSet(KEY_D, D); }
-const adminPin = () => String(lsGet('sj7_pin') || D.adminPin || '1212');
+const adminPin = () => String(lsGet('sj7_pin') || D.adminPin || '2958');
 function isOverridden() { return !!lsGet(KEY_D); }
 
 function renderAdmin() {
@@ -715,6 +724,10 @@ async function loadStations() {
 }
 async function init() {
   BASE = await loadStations();
+  // Lokale Admin-Änderungen gelten nur, solange sich die veröffentlichten Daten nicht geändert haben
+  const ov = lsGet(KEY_D), sig = BASE ? String(JSON.stringify(BASE).length) + ':' + BASE.stations.length : '';
+  if (ov && BASE && lsGet('sj7_data_base') !== sig) { lsDel(KEY_D); lsSet('sj7_data_base', sig); }
+  else if (BASE) lsSet('sj7_data_base', sig);
   D = lsGet(KEY_D) || (BASE && JSON.parse(JSON.stringify(BASE)));
   if (!D || !Array.isArray(D.stations) || !D.stations.length) {
     app.innerHTML = '<div class="card"><h2>Fehler</h2><p>Die Missionsdaten konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.</p></div>';
