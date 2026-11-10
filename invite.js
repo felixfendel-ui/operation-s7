@@ -58,7 +58,7 @@ function inviteCardHtml(inv, who) {
     <p class="label">An: Agent ${esc(who || '???')}</p>
     <h1>Operation Silberfuchs</h1>
     <p>Du wurdest von <b>Agent ${host}</b> für eine Spezialmission der <b>Einheit ISAR</b> ausgewählt. Anlass: ${host}s <b>12. Geburtstag</b>! 🎂</p>
-    <p>Ein legendärer Agent hat entlang der S-Bahn an der Isar ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
+    <p>Ein legendärer Agent hat irgendwo im Isartal ein verschlüsseltes Codewort versteckt. Nur ein Team aus mutigen, schlauen Agenten kann es knacken – bevor der Maulwurf es tut.</p>
     <p>🍕 Nach erfolgreichem Einsatz wartet im Hauptquartier eine streng geheime Belohnung – Codename <b>„Operation Margherita“</b>. Mehr verraten die Akten nicht.</p>
     ${inv.msg ? `<div class="msgbox"><span class="label">Funkspruch von Agent ${esc(inv.al || inv.host || 'Jasper')}</span><p>${esc(inv.msg).replace(/\n/g, '<br>')}</p></div>` : ''}
     <div class="invgrid">
