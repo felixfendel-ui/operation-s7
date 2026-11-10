@@ -97,11 +97,11 @@ Gäste tragen sich in der Einladung ein und tippen **„✅ Ich bin dabei“** o
 - Jasper sieht in der Einsatzleiter-Zentrale: wer dabei ist, wer abgesagt hat, wer noch nicht geantwortet hat.
 - Papa bekommt jede Antwort als Push (ntfy-App, falls die Live-Verbindung eingerichtet ist) und sieht sie in der Papa-Zentrale.
 - ntfy hält Nachrichten ca. 12 Stunden: Jasper sollte seine App in den Tagen bis zur Feier ab und zu öffnen. Unbestätigte Zusagen schickt die Gast-App beim nächsten Öffnen automatisch erneut.
-- Wer absagt, wird am Einsatztag nicht ins Team aufgenommen. Zusätzlich gibt es weiterhin den WhatsApp-Knopf (eingeklappt).
+- Wer absagt, wird am Einsatztag nicht ins Team aufgenommen. Zusätzlich gibt es weiterhin einen Knopf für SMS/iMessage (eingeklappt).
 
 ## Decknamen
 
-Jeder Agent bekommt automatisch einen Decknamen – englisch im Gamer-Stil (z. B. „ShadowHawk“, „NeonViper“, „GhostRaven“) oder deutsch („Sturmbär“, „Mondskorpion“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der WhatsApp-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).
+Jeder Agent bekommt automatisch einen Decknamen – englisch im Gamer-Stil (z. B. „ShadowHawk“, „NeonViper“, „GhostRaven“) oder deutsch („Sturmbär“, „Mondskorpion“), den er beliebig neu würfeln kann. Er erscheint in der Einladung („An: Agent …“), in der SMS-Zusage, in der Rollenkarte, in Team-Listen, in der Kopfzeile und in der Geschichte („Willkommen, Agent …“).
 
 ## Rätseldaten
 
@@ -151,9 +151,9 @@ Ein Team, zwei Trupps (🟥 A und 🟦 B), gemeinsamer Spielstand in Echtzeit.
 
 ## Einladung vorab per Link
 
-Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhrzeit, Ende, Treffpunkt, Telefonnummer für Zusagen, „Antwort bis“, Ausrüstung und Eltern-Infos eintragen → „Speichern & Link erzeugen“ → „🔗 Einladung teilen“ (z. B. in die WhatsApp-Gruppe).
+Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhrzeit, Ende, Treffpunkt, Telefonnummer für Zusagen, „Antwort bis“, Ausrüstung und Eltern-Infos eintragen → „Speichern & Link erzeugen“ → „🔗 Einladung teilen“ (z. B. per Nachrichten/iMessage).
 
-- Die Kinder sehen eine geheime „Einberufung“ mit Countdown, tragen ihren Agentennamen ein und sagen per WhatsApp (oder SMS) zu. Eltern finden unten „Infos für Eltern“.
+- Die Kinder sehen eine geheime „Einberufung“ mit Countdown, tragen ihren Agentennamen ein und sagen in der App zu (zusätzlich per SMS/iMessage möglich). Eltern finden unten „Infos für Eltern“.
 - Das Spiel bleibt versiegelt. Am Einsatztag öffnen die Kinder **denselben Link** wieder, melden sich automatisch im Team an und starten, sobald Jasper die Mission startet.
 - Testläufe auf Jaspers Handy vor dem Einsatztag landen nicht bei den Gästen. Danach trotzdem „Fortschritt zurücksetzen“.
 - Der Einladungslink ist zugleich der Team-Link. Im Admin-Modus deshalb **nicht** „Team-Modus beenden“, sonst funktioniert die verschickte Einladung am Tag nicht mehr.

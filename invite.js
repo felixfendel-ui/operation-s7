@@ -76,9 +76,10 @@ function rsvpHtml(inv, name) {
   const n = waNumber(inv.tel), who = name ? `Agent ${TEAM.alias ? TEAM.alias + ' (' + name + ')' : name}` : 'Ich';
   const yes = `${who} meldet sich zum Dienst – ich komme zur Operation Silberfuchs! 🕵️`;
   const no = `${who} hier – ich kann leider nicht zur Operation Silberfuchs kommen. 😕`;
-  return `<div class="row"><a class="btn" href="https://wa.me/${n}?text=${encodeURIComponent(yes)}" target="_blank" rel="noopener">✅ Ich bin dabei</a>
-    <a class="btn sec" href="https://wa.me/${n}?text=${encodeURIComponent(no)}" target="_blank" rel="noopener">❌ Kann nicht</a></div>
-    <p class="small center">Antwort per WhatsApp · <a href="sms:+${n}?&body=${encodeURIComponent(yes)}">lieber per SMS zusagen</a></p>`;
+  const sms = t => `sms:+${n}${/Android/i.test(navigator.userAgent) ? '?' : '&'}body=${encodeURIComponent(t)}`;
+  return `<div class="row"><a class="btn" href="${sms(yes)}">✅ Ich bin dabei</a>
+    <a class="btn sec" href="${sms(no)}">❌ Kann nicht</a></div>
+    <p class="small center">Öffnet die Nachrichten-App (iMessage/SMS) – nur noch auf „Senden“ tippen.</p>`;
 }
 /* Zusage in der App: geht über den Team-Kanal an Jaspers Handy (Zentrale), das sie bestätigt.
    Die Zentrale muss dafür innerhalb von ~12 Std. einmal geöffnet sein; sonst schickt die App die Zusage beim nächsten Öffnen erneut. */
@@ -99,7 +100,7 @@ function rsvpCardHtml(inv) {
     </div>
     ${status}
     ${yes.length ? `<div class="label" style="margin-top:12px">Schon im Einsatzteam (${yes.length})</div>` + yes.map(([id, x]) => `<div class="memb">🕵️ ${memberLabel({ name: x.n, alias: x.al })}${id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
-    ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per WhatsApp Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
+    ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per Nachricht (SMS/iMessage) Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
   </div>`;
 }
 const fixNote = n => (!n || /Begleitung durch Erwachsene|Fahrkarten organisieren wir/.test(n) ? INV_DEFAULT.note : n); // ältere Einladungen
@@ -191,7 +192,7 @@ function renderInviteEditor() {
       ${f('msg', 'Persönlicher Funkspruch an deine Agenten (optional)', 'ta')}
       <div class="row">${f('d', 'Datum', 'date')}${f('t', 'Beginn', 'time')}${f('end', 'Ende ca.', 'time')}</div>
       ${f('ort', 'Treffpunkt', 'text', 'z. B. bei uns zu Hause, Musterstraße 1')}
-      ${f('tel', 'Telefon für Zusagen (WhatsApp)', 'tel', 'z. B. 0170 1234567')}
+      ${f('tel', 'Handynummer für Zusagen (SMS/iMessage)', 'tel', 'z. B. 0170 1234567')}
       ${f('bis', 'Antwort bis', 'text', 'z. B. 15. November')}
       ${f('mit', 'Ausrüstung', 'ta')}
       ${f('note', 'Infos für Eltern', 'ta')}
@@ -207,7 +208,7 @@ function renderInviteOut() {
       <div class="qr">${qrSvg(link)}</div>
       <div class="row"><button class="btn small" data-act="teamInviteShare">🔗 Einladung teilen</button><button class="btn sec small" data-act="teamInviteCopy">📋 Kopieren</button></div>
       <div class="feedback good" id="invFb"></div>
-      <p class="small">Jasper schickt diesen Link an seine Freunde (z. B. in die WhatsApp-Gruppe). Wird die Einladung geändert, einfach den neuen Link nochmal schicken.</p>
+      <p class="small">Jasper schickt diesen Link an seine Freunde (z. B. per Nachrichten/iMessage oder SMS). Wird die Einladung geändert, einfach den neuen Link nochmal schicken.</p>
     </div>
     <div class="label" style="margin:16px 0 0">Vorschau</div>${inviteCardHtml(TEAM.inviteDraft, 'Max')}${parentsHtml(TEAM.inviteDraft)}`;
 }
