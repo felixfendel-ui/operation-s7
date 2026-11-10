@@ -734,6 +734,7 @@ async function init() {
     return;
   }
   document.title = D.title.split('–')[0].trim() || 'Operation Silberfuchs';
+  if (location.hash.startsWith('#eltern=')) return renderParentsPage(location.hash.slice(8)); // reine Info-Seite, kein Spiel
   if (location.hash.startsWith('#papa=')) {
     P = newProgress(); renderHeader();
     setInterval(tick, 1000);

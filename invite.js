@@ -48,7 +48,12 @@ function waNumber(tel) {
   if (n.startsWith('+')) n = n.slice(1); else if (n.startsWith('00')) n = n.slice(2); else if (n.startsWith('0')) n = '49' + n.slice(1);
   return n;
 }
-function inviteLink(inv) { return location.origin + location.pathname + '#team=' + encodeURIComponent(TEAM.topic) + '&inv=' + b64urlEncode(inv); }
+const kidInv = inv => { const k = Object.assign({}, inv); delete k.note; return k; }; // Eltern-Infos (Route!) NIE in den Kinder-Link
+function inviteLink(inv) { return location.origin + location.pathname + '#team=' + encodeURIComponent(TEAM.topic) + '&inv=' + b64urlEncode(kidInv(inv)); }
+function parentsLink(inv) {
+  const e = { host: inv.host, d: inv.d, t: inv.t, end: inv.end, ort: inv.ort, tel: inv.tel, mit: inv.mit, note: fixNote(inv.note) };
+  return location.origin + location.pathname + '#eltern=' + b64urlEncode(e);
+}
 
 /* ---------- Einladungskarte (für Gäste und als Vorschau) ---------- */
 function inviteCardHtml(inv, who) {
@@ -72,8 +77,8 @@ function inviteCardHtml(inv, who) {
   </div>`;
 }
 function rsvpHtml(inv, name) {
-  if (!inv.tel) return `<p class="small">Sag ${esc(inv.host || 'Jasper')} Bescheid, ob du dabei bist!</p>`;
-  const n = waNumber(inv.tel), who = name ? `Agent ${TEAM.alias ? TEAM.alias + ' (' + name + ')' : name}` : 'Ich';
+  if (!inv.tel && !inv.zt) return `<p class="small">Sag ${esc(inv.host || 'Jasper')} Bescheid, ob du dabei bist!</p>`;
+  const n = waNumber(inv.zt || inv.tel), who = name ? `Agent ${TEAM.alias ? TEAM.alias + ' (' + name + ')' : name}` : 'Ich';
   const yes = `${who} meldet sich zum Dienst – ich komme zur Operation Silberfuchs! 🕵️`;
   const no = `${who} hier – ich kann leider nicht zur Operation Silberfuchs kommen. 😕`;
   const sms = t => `sms:+${n}${/Android/i.test(navigator.userAgent) ? '?' : '&'}body=${encodeURIComponent(t)}`;
@@ -93,26 +98,45 @@ function rsvpCardHtml(inv) {
   const yes = Object.entries(TEAM.rsvpList || {}).filter(([, x]) => x.v === 'yes');
   return `<div class="card"><div class="label">Bist du dabei?</div>
     <label class="chk consent"><input type="checkbox" id="parentsOk" ${TEAM.parentsOk ? 'checked' : ''}>
-      <span>Meine Eltern haben die <b>Infos für Eltern</b> (unten) gelesen und sind einverstanden, dass ich ohne Erwachsene mit der Gruppe unterwegs bin.</span></label>
+      <span>Meine Eltern haben die <b>Eltern-Infos</b> von ${esc(inv.host || 'Jasper')}s Eltern bekommen und sind einverstanden, dass ich ohne Erwachsene mit der Gruppe unterwegs bin.</span></label>
     <div class="row">
       <button class="btn ${v === 'yes' ? '' : 'sec'}" data-rsvp="yes" ${TEAM.parentsOk ? '' : 'disabled'}>✅ Ich bin dabei</button>
       <button class="btn ${v === 'no' ? 'danger' : 'sec'}" data-rsvp="no">❌ Kann leider nicht</button>
     </div>
     ${status}
     ${yes.length ? `<div class="label" style="margin-top:12px">Schon im Einsatzteam (${yes.length})</div>` + yes.map(([id, x]) => `<div class="memb">🕵️ ${memberLabel({ name: x.n, alias: x.al })}${id === TEAM.id ? ' (du)' : ''}</div>`).join('') : ''}
-    ${inv.tel ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per Nachricht (SMS/iMessage) Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
+    ${inv.tel || inv.zt ? `<details class="small" style="margin-top:10px"><summary>Zusätzlich per Nachricht (SMS/iMessage) Bescheid sagen</summary>${rsvpHtml(inv, TEAM.name)}</details>` : ''}
   </div>`;
 }
 const fixNote = n => (!n || /Begleitung durch Erwachsene|Fahrkarten organisieren wir/.test(n) ? INV_DEFAULT.note : n); // ältere Einladungen
 const fixMit = m => (m && !/MVV/.test(m) ? m.replace(/(\n|$)/, '\n🎫 Deine MVV-Karte (Schulweg-Ticket bzw. Deutschlandticket)$1') : m);
-function parentsHtml(inv) {
-  return `<details class="card parents"><summary>ℹ️ Infos für Eltern</summary>
-    <p>${esc(fixNote(inv.note))}</p>
+function parentsInfoHtml(inv) {
+  return `<p>${esc(fixNote(inv.note))}</p>
     <p><b>Sicherheit in der App:</b> Jedes Handy hat oben einen 🆘-Knopf (ruft direkt Papa an, mit Standortanzeige). An jeder Station zählt das Team durch, bevor es weitergeht, und an Bahnsteig, Steilhang und Isar-Hochufer erscheinen Sicherheitshinweise.</p>
     <p><b>Gruppenfotos:</b> An jeder Station macht das Team ein „Beweisfoto“. Die Fotos werden nur auf dem Handy gespeichert, mit dem sie aufgenommen wurden – sie werden nicht hochgeladen oder verschickt.</p>
     <p>Das Spiel ist eine Web-App im Browser – nichts installieren. Für das Rätsel-Radar fragt die App am Einsatztag nach dem Standort; <b>der Standort der Gäste wird nicht verschickt</b>, er wird nur auf dem eigenen Handy verwendet. Übertragen werden nur der Vorname und Spielaktionen (z. B. „Rätsel gelöst“).</p>
-    ${inv.tel ? `<p>Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}
-  </details>`;
+    ${inv.tel ? `<p>Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}`;
+}
+/* In der Kinder-Einladung steht KEIN Ablauf – die Route ist Teil der Überraschung. */
+function parentsHtml(inv) {
+  return `<div class="card parents"><div class="label">👪 Für Eltern</div>
+    <p class="small">Alle Infos zu Ablauf, Sicherheit und Abholung schicken ${esc(inv.host || 'Jasper')}s Eltern euren Eltern direkt. Bitte gebt deinen Eltern Bescheid, dass du eingeladen bist.</p>
+    ${inv.tel ? `<p class="small">Fragen? <a href="tel:+${waNumber(inv.tel)}">${esc(inv.tel)}</a></p>` : ''}</div>`;
+}
+/* Eigene Seite nur für Eltern: Link …#eltern=… (verschickt Papa direkt an die Eltern). Speichert nichts, tritt keinem Team bei. */
+function renderParentsPage(code) {
+  const inv = b64urlDecode(code);
+  if (!inv) { app.innerHTML = '<div class="card"><h2>Link ungültig</h2><p>Bitte den Eltern-Link nochmal vollständig öffnen.</p></div>'; return; }
+  const host = esc(inv.host || 'Jasper');
+  app.innerHTML = `<div class="card">
+      <div class="stamp">NUR FÜR ELTERN</div>
+      <h1>Operation Silberfuchs</h1>
+      <p>Infos zu ${host}s <b>12. Geburtstag</b> – eine GPS-Agenten-Schnitzeljagd. <b>Bitte nicht den Kindern zeigen</b>: Die Route ist Teil der Überraschung.</p>
+      <p>📅 <b>${fmtPartyDate(inv)}</b><br>🕚 ${esc(inv.t || '')}${inv.end ? ' – ca. ' + esc(inv.end) : ''} Uhr${inv.ort ? `<br>📍 Treffpunkt &amp; Abholung: ${esc(inv.ort)}` : ''}</p>
+    </div>
+    <div class="card parents"><div class="label">Ablauf &amp; Sicherheit</div>${parentsInfoHtml(inv)}</div>
+    ${inv.mit ? `<div class="card"><div class="label">Bitte mitgeben</div><p style="white-space:pre-line">${esc(fixMit(inv.mit))}</p></div>` : ''}
+    <div class="card"><p class="small">Zusagen bitte direkt über die Einladung Ihres Kindes (Knopf „Ich bin dabei“) – vorher bestätigt Ihr Kind dort, dass Sie einverstanden sind.</p></div>`;
 }
 
 /* ---------- Gäste-Ansicht vor und am Einsatztag ---------- */
@@ -192,10 +216,11 @@ function renderInviteEditor() {
       ${f('msg', 'Persönlicher Funkspruch an deine Agenten (optional)', 'ta')}
       <div class="row">${f('d', 'Datum', 'date')}${f('t', 'Beginn', 'time')}${f('end', 'Ende ca.', 'time')}</div>
       ${f('ort', 'Treffpunkt', 'text', 'z. B. bei uns zu Hause, Musterstraße 1')}
-      ${f('tel', 'Handynummer für Zusagen (SMS/iMessage)', 'tel', 'z. B. 0170 1234567')}
+      ${f('zt', 'Handynummer für Zusagen der Freunde (SMS/iMessage)', 'tel', 'z. B. Jaspers Handy')}
+      ${f('tel', 'Papas Handynummer (🆘-Notruf am Einsatztag & Fragen der Eltern)', 'tel', 'z. B. 0170 1234567')}
       ${f('bis', 'Antwort bis', 'text', 'z. B. 15. November')}
       ${f('mit', 'Ausrüstung', 'ta')}
-      ${f('note', 'Infos für Eltern', 'ta')}
+      ${adminAuthed ? f('note', 'Infos für Eltern (nur im Eltern-Link, nie in der Kinder-Einladung)', 'ta') : ''}
       <button class="btn" data-act="teamInviteSave">💾 Speichern & Link erzeugen</button>
     </div>
     <div id="invOut"></div></div>`;
@@ -210,7 +235,10 @@ function renderInviteOut() {
       <div class="feedback good" id="invFb"></div>
       <p class="small">Jasper schickt diesen Link an seine Freunde (z. B. per Nachrichten/iMessage oder SMS). Wird die Einladung geändert, einfach den neuen Link nochmal schicken.</p>
     </div>
-    <div class="label" style="margin:16px 0 0">Vorschau</div>${inviteCardHtml(TEAM.inviteDraft, 'Max')}${parentsHtml(TEAM.inviteDraft)}`;
+    ${adminAuthed ? `<div class="card center"><div class="label">👪 Eltern-Link (nur an die Eltern schicken!)</div>
+      <p class="small">Enthält Ablauf, Route und Sicherheitsinfos. Nicht in die Kinder-Einladung – die Kinder sollen die Route nicht kennen.</p>
+      <div class="row"><button class="btn small" data-act="teamInviteParents">🔗 Eltern-Link teilen</button><button class="btn sec small" data-act="teamInviteParentsCopy">📋 Kopieren</button></div></div>` : ''}
+    <div class="label" style="margin:16px 0 0">Vorschau (so sehen es die Kinder)</div>${inviteCardHtml(TEAM.inviteDraft, 'Max')}${parentsHtml(TEAM.inviteDraft)}`;
 }
 function inviteAdminAct(act) {
   const msg = t => { const e = $('#invFb'); if (e) e.textContent = t; };
@@ -223,12 +251,22 @@ function inviteAdminAct(act) {
       adminView = 'invite'; return renderInviteEditor();
     case 'teamInviteSave': {
       const v = k => $('#i_' + k).value.trim();
-      TEAM.inviteDraft = { host: v('host') || 'Jasper', al: myAlias(), msg: v('msg'), d: v('d'), t: v('t'), end: v('end'), ort: v('ort'), tel: v('tel'), bis: v('bis'), mit: v('mit'), note: v('note') };
+      const note = $('#i_note') ? v('note') : fixNote((TEAM.inviteDraft || {}).note);
+      TEAM.inviteDraft = { host: v('host') || 'Jasper', al: myAlias(), msg: v('msg'), d: v('d'), t: v('t'), end: v('end'), ort: v('ort'), zt: v('zt'), tel: v('tel'), bis: v('bis'), mit: v('mit'), note };
       saveTeam(); renderInviteOut(); msg('Gespeichert ✓');
       $('#invOut').scrollIntoView({ behavior: 'smooth' });
       return;
     }
     case 'teamInviteCopy': return copyText(inviteLink(TEAM.inviteDraft), msg);
+    case 'teamInviteParentsCopy': case 'teamInviteParents': if (!adminAuthed) return; // nur Papa (PIN), nie im Studio
+  }
+  switch (act) {
+    case 'teamInviteParentsCopy': return copyText(parentsLink(TEAM.inviteDraft), msg);
+    case 'teamInviteParents': {
+      const link = parentsLink(TEAM.inviteDraft), text = `Infos für Eltern zu ${TEAM.inviteDraft.host || 'Jasper'}s Geburtstag (bitte nicht den Kindern zeigen – Überraschung!)`;
+      if (navigator.share) return void navigator.share({ title: 'Eltern-Infos', text, url: link }).catch(() => {});
+      return copyText(text + '\n' + link, msg);
+    }
     case 'teamInviteShare': {
       const link = inviteLink(TEAM.inviteDraft);
       const text = `🕵️ STRENG GEHEIM: Deine Einberufung zur Operation Silberfuchs – nur für deine Augen!`;

@@ -153,7 +153,7 @@ Ein Team, zwei Trupps (🟥 A und 🟦 B), gemeinsamer Spielstand in Echtzeit.
 
 Admin-Modus auf **Jaspers Handy** → „💌 Einladung erstellen“: Datum, Uhrzeit, Ende, Treffpunkt, Telefonnummer für Zusagen, „Antwort bis“, Ausrüstung und Eltern-Infos eintragen → „Speichern & Link erzeugen“ → „🔗 Einladung teilen“ (z. B. per Nachrichten/iMessage).
 
-- Die Kinder sehen eine geheime „Einberufung“ mit Countdown, tragen ihren Agentennamen ein und sagen in der App zu (zusätzlich per SMS/iMessage möglich). Eltern finden unten „Infos für Eltern“.
+- Die Kinder sehen eine geheime „Einberufung“ mit Countdown, tragen ihren Agentennamen ein und sagen in der App zu (zusätzlich per SMS/iMessage möglich). Die Eltern-Infos (Ablauf, Route, Sicherheit) stehen NICHT in der Kinder-Einladung, sondern in einem eigenen Eltern-Link (#eltern=…), den Papa im Admin-Modus unter „💌 Einladung“ erzeugt und direkt an die Eltern schickt.
 - Das Spiel bleibt versiegelt. Am Einsatztag öffnen die Kinder **denselben Link** wieder, melden sich automatisch im Team an und starten, sobald Jasper die Mission startet.
 - Testläufe auf Jaspers Handy vor dem Einsatztag landen nicht bei den Gästen. Danach trotzdem „Fortschritt zurücksetzen“.
 - Der Einladungslink ist zugleich der Team-Link. Im Admin-Modus deshalb **nicht** „Team-Modus beenden“, sonst funktioniert die verschickte Einladung am Tag nicht mehr.
