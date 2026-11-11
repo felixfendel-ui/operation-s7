@@ -101,7 +101,7 @@ async function flush() {
     retryDelay = Math.min(retryDelay * 2, 30000);
   } finally { flushing = false; }
 }
-window.addEventListener('online', () => { retryDelay = 2000; flush(); });
+window.addEventListener('online', () => { retryDelay = 2000; flush(); if (typeof streamsRestart === 'function') streamsRestart(); if (typeof teamPoll === 'function') setTimeout(() => teamPoll(true), 1500); });
 
 /* ---------- Jasper-Seite: Ereignisse & Position ---------- */
 function liveEvent(type, title, message, priority = 3) {

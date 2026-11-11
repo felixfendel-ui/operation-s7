@@ -68,7 +68,7 @@ document.addEventListener('click', async e => {
   } finally { offlineLoading = false; }
 });
 function bindOffline() { /* nicht mehr nötig (Klick-Delegation), bleibt für bestehende Aufrufe */ }
-warmBlobs();
+// warmBlobs() wird in init() (app.js) aufgerufen – hier sind die Speicher-Helfer noch nicht geladen
 
 /* =========================================================================
    2) Papas eigene Sprachnachrichten (audio/papa-start|halbzeit|finale.m4a)
@@ -274,8 +274,10 @@ function bindTakeover() {
   if (!b) return;
   b.onclick = () => {
     const fb = $('#takeoverFb'), t0 = Date.now();
-    b.disabled = true; fb.textContent = '📡 Rufe die Zentrale … (bis zu 30 Sekunden)';
+    b.disabled = true; fb.textContent = '📡 Rufe die Zentrale … (bis zu 1 Minute)';
     teamPublish({ k: 'hello', id: TEAM.id, n: TEAM.name });
+    [12000, 30000, 50000].forEach(ms => setTimeout(() => { if (stateSeenAt <= t0) teamPoll(true); }, ms));
+    setTimeout(() => { if (stateSeenAt <= t0 && helloEchoAt <= t0) teamPublish({ k: 'hello', id: TEAM.id, n: TEAM.name }); }, 25000);
     clearTimeout(takeoverWait);
     takeoverWait = setTimeout(() => {
       if (stateSeenAt > t0) { fb.textContent = '✅ Die Zentrale hat geantwortet – alles in Ordnung.'; b.disabled = false; return; }
@@ -283,7 +285,7 @@ function bindTakeover() {
       fb.textContent = '❌ Keine Antwort von der Zentrale.';
       if (confirm('Jaspers Handy antwortet nicht. Soll DIESES Handy die Zentrale übernehmen?\n\nNur EIN Handy im Team darf das tun – sprecht euch ab!')) takeover();
       else b.disabled = false;
-    }, 30000);
+    }, 60000);
   };
 }
 function takeover() {

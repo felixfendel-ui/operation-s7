@@ -60,7 +60,7 @@ function bindAliasBox() {
   const b = $('#aliasRoll');
   if (b) b.onclick = () => { const n = rerollMyAlias(); const el = $('#aliasName'); if (el) { el.textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } };
 }
-const joinLink = () => location.origin + location.pathname + '#team=' + encodeURIComponent(TEAM.topic);
+const joinLink = () => location.origin + location.pathname + '#team=' + encodeURIComponent(TEAM.topic) + (papaTel() ? '&tel=' + papaTel() : ''); // Notruf-Nummer reist im Link mit (wird nie an einen Server geschickt)
 const TRUPP = { A: '🟥 Trupp A', B: '🟦 Trupp B' };
 
 /* ---------- Echtzeit-Stream (Server-Sent Events von ntfy) ---------- */
@@ -96,9 +96,10 @@ setInterval(() => {
 let teamPolling = false, lastTeamPoll = 0;
 async function teamPoll(force) {
   if (Date.now() - lastTeamPoll < 10000) return; // höchstens alle 10 s (ntfy-Anfragelimit)
-  if (teamPolling || document.hidden || !TEAM.topic || !(isHost() || isMember()) || !teamOn()) return;
+  if (teamPolling || document.hidden || !TEAM.topic || !(isHost() || isMember())) return;
+  if (isHost() ? (!teamOn() || !P || !P.name) : !TEAM.name) return; // Mitspieler auch in der Lobby (Stream kann still hängen)
   const ts = STREAMS.team; if (!force && ts && ts.ok && Date.now() - (ts.act || 0) < 60000) return; // Stream lebt → nicht abfragen (Ratenlimit im Heim-WLAN)
-  if (!P || !P.name || P.finishedAt) return;
+  if (!P || P.finishedAt) return;
   teamPolling = true; lastTeamPoll = Date.now();
   try {
     const since = TEAM.since ? Math.max(0, TEAM.since - 30) : Math.floor(Date.now() / 1000) - 600;
@@ -177,7 +178,22 @@ function handleTeamMsg(m) {
   if (isHost() && a.k !== 'state') hostApply(a);
   else if (isMember() && a.k === 'state') applyState(a);
 }
+/* Dasselbe Kind mit neuer Geräte-ID (Link in anderem Browser geöffnet, Speicher gelöscht …): alten Eintrag übernehmen,
+   sonst bleibt ein „Geist“ im Team, der an jeder Station als fehlend gilt. Nur wenn der alte Eintrag gerade still ist. */
+function mergeGhost(id, n) {
+  if (!id || !n || TEAM.members.some(x => x.id === id)) return;
+  const h = TEAM.heard || {}, key = norm(String(n));
+  const g = TEAM.members.find(x => x.id !== 'host' && x.id !== myId() && norm(x.name) === key && Date.now() - (h[x.id] || 0) > 600000);
+  if (g) { if (P.here) Object.values(P.here).forEach(o => { delete o[g.id]; }); g.id = id; }
+}
+function removeMember(id) {
+  const i = TEAM.members.findIndex(x => x.id === id);
+  if (i < 0 || id === myId()) return;
+  TEAM.kicked = (TEAM.kicked || []).concat(id); // verhindert automatisches Wieder-Beitreten
+  TEAM.members.splice(i, 1); saveTeam(); lastBcast = ''; broadcast(); teamUi();
+}
 function hostApply(a) {
+  if (a.id) { TEAM.heard = TEAM.heard || {}; TEAM.heard[a.id] = Date.now(); }
   if (exHostApply(a) || moreHostApply(a)) return;
   const st = cur(), sid = st.id || P.idx, who = a.n ? ` (${a.n})` : '';
   switch (a.k) {
@@ -187,6 +203,7 @@ function hostApply(a) {
         if (!a.manual) return; // automatische Wiederholungen eines entfernten Handys ignorieren
         TEAM.kicked = TEAM.kicked.filter(x => x !== a.id); // bewusst „Erneut beitreten“ gedrückt
       }
+      mergeGhost(a.id, a.n);
       const ex = TEAM.members.find(x => x.id === a.id), al = a.al ? String(a.al).slice(0, 24) : '';
       if (ex) { ex.name = String(a.n).slice(0, 24); ex.alias = al; }
       else {
@@ -218,6 +235,7 @@ function hostApply(a) {
       const name = String(a.n).slice(0, 24), al = a.al ? String(a.al).slice(0, 24) : '';
       const prev = (TEAM.rsvps || {})[a.id];
       TEAM.rsvps = Object.assign({}, TEAM.rsvps, { [a.id]: { n: name, al, v: a.v, po: !!a.po, t: Date.now() } });
+      if (a.v === 'yes') mergeGhost(a.id, name);
       const ex = TEAM.members.find(x => x.id === a.id);
       if (a.v === 'no' && ex) TEAM.members = TEAM.members.filter(x => x.id !== a.id); // Absage: nicht im Team
       if (a.v === 'yes' && !ex && !(TEAM.kicked || []).includes(a.id)) {
@@ -268,6 +286,7 @@ function applyState(s) {
   else if (P.status === 'solved' && wasStatus !== 'solved') fx('good');
   if (memberReady()) { startGeo(); keepAwake(); }
   render();
+  if (memberReady() && P.status === 'travel') checkUnlock(); // steht das Handy schon am Ziel, nicht erst auf die nächste GPS-Meldung warten
   if (wasIdx !== P.idx || wasStatus !== P.status) window.scrollTo(0, 0);
 }
 // Gäste mit Einladung kommen erst am Einsatztag ins Spiel – Testläufe auf Jaspers Handy vorher bleiben unsichtbar
@@ -353,7 +372,13 @@ function markHere(id, name, forced) {
 }
 function checkAllHere() {
   if (!isHost() || !teamOn() || !P.name || P.finishedAt || P.status !== 'travel') return;
-  const ids = hereIds();
+  let ids = hereIds();
+  if (ids.length < TEAM.members.length) { // Doppelgänger: gleicher Name ist schon da, der alte Eintrag schweigt seit 10 Min. → Geister-Eintrag (altes Gerät/alter Browser) entfernen
+    const hd = TEAM.heard || {}, n0 = TEAM.members.length;
+    TEAM.members = TEAM.members.filter(m => ids.includes(m.id) || m.id === myId() || Date.now() - (hd[m.id] || 0) < 600000
+      || !TEAM.members.some(o => o.id !== m.id && ids.includes(o.id) && norm(o.name) === norm(m.name)));
+    if (TEAM.members.length !== n0) { saveTeam(); lastBcast = ''; broadcast(); teamUi(); ids = hereIds(); }
+  }
   if (ids.length < TEAM.members.length) return;
   const h = P.here[P.idx], firstId = Object.keys(h).sort((a, b) => h[a].t - h[b].t)[0], first = memberById(firstId);
   unlock(Object.values(h).every(x => x.f), first ? first.name : '', firstId);
@@ -367,12 +392,18 @@ function hereHtml() {
   const p = typeof here === 'function' ? here() : null, st = cur();
   const why = meMissing && p && st ? ` Dein GPS sagt: noch <b>${Math.round(dist(p, st))} m</b> (±${Math.round(p.acc || 0)} m) – geh näher ran oder tippe „📍 Ich bin da“.` : '';
   return `<div class="herebox on">👥 Am Ziel: <b>${ids.length}/${TEAM.members.length}</b>${missing.length ? ` · Es fehlen: ${missing.map(m => m.id === me ? '<b>DU (dieses Handy)</b>' : esc(m.alias || m.name)).join(', ')}` : ''}${meMissing ? `<div class="small">⚠️ Dieses Handy hat sich noch nicht am Ziel gemeldet.${why}</div>` : ''}
-    ${isHost() && missing.length ? '<button class="btn sec small" id="hereOverride">Alle da, aber ein Handy meldet sich nicht? Station öffnen</button>' : ''}</div>`;
+    ${isHost() && missing.length ? '<button class="btn sec small" id="hereOverride">Alle da, aber ein Handy meldet sich nicht? Station öffnen</button>' : ''}
+    ${isHost() ? missing.filter(m => m.id !== me && Date.now() - ((TEAM.heard || {})[m.id] || 0) > 30 * 60000).map(m => `<button class="btn sec small" data-gone="${esc(m.id)}">✕ ${esc(m.name)} ist heute nicht dabei (Handy seit Langem still)</button>`).join('') : ''}</div>`;
 }
 function updateHere() {
   const el = $('#teamHere');
   if (!el) return;
-  el.innerHTML = hereHtml();
+  const html = hereHtml();
+  if (el.dataset.h === html) return; // nicht bei jeder Kompass-Bewegung neu aufbauen (Akku, Tipp auf Knopf geht sonst verloren)
+  el.dataset.h = html; el.innerHTML = html;
+  el.querySelectorAll('[data-gone]').forEach(g => {
+    g.onclick = () => { const m = memberById(g.dataset.gone); if (m && confirm(`${m.name} aus dem Team nehmen? Dann wartet die Station nicht mehr auf dieses Handy. (Kommt ${m.name} doch, kann er/sie einfach wieder beitreten.)`)) { removeMember(m.id); checkAllHere(); updateHere(); } };
+  });
   const b = $('#hereOverride');
   if (b) b.onclick = () => {
     const missing = TEAM.members.filter(m => !hereIds().includes(m.id)).map(m => m.alias || m.name);
@@ -413,11 +444,12 @@ function teamJoinFromHash() {
   // Link-Anhang bleibt in der Adresse, damit ein Lesezeichen/Home-Bildschirm-Symbol ihn behält
   const q = new URLSearchParams(location.hash.slice(1));
   const topic = q.get('team') || '', inv = q.get('inv') ? b64urlDecode(q.get('inv')) : null;
+  const ptel = (q.get('tel') || '').replace(/\D/g, '').slice(0, 16);
   if (!topic) return;
   if (isHost() && TEAM.topic === topic) return; // eigener Link auf Jaspers Handy
-  if (isMember() && TEAM.topic === topic) { if (inv) { TEAM.invite = inv; saveTeam(); } return; }
+  if (isMember() && TEAM.topic === topic) { if (inv) TEAM.invite = inv; if (ptel) TEAM.ptel = ptel; if (inv || ptel) saveTeam(); return; }
   const a = 'abcdefghijkmnpqrstuvwxyz23456789', b = new Uint8Array(10); crypto.getRandomValues(b);
-  TEAM = { topic, role: 'member', id: 'm' + Array.from(b, x => a[x % a.length]).join(''), name: '', since: 0, v: 0, members: [], seen: [], invite: inv };
+  TEAM = { topic, role: 'member', id: 'm' + Array.from(b, x => a[x % a.length]).join(''), name: '', since: 0, v: 0, members: [], seen: [], invite: inv, ptel };
   saveTeam();
   lsSet(KEY_P, newProgress()); P = newProgress();
 }
@@ -449,7 +481,7 @@ function renderLobbyInner() {
     <label class="label" for="joinName">Dein Agentenname</label>
     <input id="joinName" maxlength="24" autocomplete="off" placeholder="z. B. Max" style="margin-top:8px">
     <button class="btn" id="joinBtn">🤝 Team beitreten</button>
-    <p class="small">Die App fragt nach deinem Standort (für dein Radar – er wird nicht verschickt) und auf dem iPhone nach dem Kompass. Bitte erlauben.</p>
+    <p class="small">Die App fragt nach deinem Standort (für dein Radar – er wird nicht verschickt) und – je nach Handy – nach dem Kompass. Bitte erlauben.</p>
   </div>` : `<div class="card"><div class="label">Team</div>
     ${TEAM.members.length ? TEAM.members.map(x => `<div class="memb trupp-${x.trupp}">${x.trupp === 'A' ? '🟥' : '🟦'} ${memberLabel(x)}${x.id === 'host' ? ' ⭐' : ''}${x.id === TEAM.id ? ' (du)' : ''}</div>`).join('') : '<p class="small">Warte auf Antwort der Zentrale. Jaspers App muss geöffnet sein.</p>'}
     <p class="small" style="margin-top:12px">${joined ? (P.startedAt ? 'Los geht’s …' : '⏳ Warte, bis Einsatzleiter Jasper die Mission startet.') : ''}</p>

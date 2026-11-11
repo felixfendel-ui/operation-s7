@@ -3,8 +3,8 @@
    Wird vor app.js geladen. */
 'use strict';
 
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
+const IS_IOS = !IS_ANDROID && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 const CK = { gps: null, compass: null, sound: null, net: null };
 let ckWatch = null, ckOrient = null, ckHeadings = [];
 
@@ -14,10 +14,10 @@ const HELP = {
     : IS_ANDROID
       ? 'Android: Oben in der Adresszeile auf das <b>Schloss-Symbol</b> → <b>Berechtigungen → Standort → Zulassen</b>. Außerdem in den Android-Einstellungen <b>Standort</b> einschalten und „Standortgenauigkeit“ aktivieren. Dann neu laden.'
       : 'Im Browser den Standortzugriff für diese Seite erlauben (Symbol links in der Adresszeile) und neu laden.',
-  gpsWeak: 'Drinnen ist GPS oft ungenau. Bitte <b>draußen</b> unter freiem Himmel nochmal testen – dann sollten es unter 30 m sein. Auf dem iPhone muss „Genauer Standort“ für Safari-Websites an sein.',
+  gpsWeak: 'Drinnen ist GPS oft ungenau. Bitte <b>draußen</b> unter freiem Himmel nochmal testen – dann sollten es unter 30 m sein. ' + (IS_ANDROID ? 'Auf Android muss in den Einstellungen unter Standort die „Standortgenauigkeit“ an sein.' : 'Auf dem iPhone muss „Genauer Standort“ für Safari-Websites an sein.'),
   compassDenied: IS_IOS
     ? 'iPhone: Die Frage „Zugriff auf Bewegung & Ausrichtung“ muss mit <b>Erlauben</b> beantwortet werden. Wurde sie abgelehnt: diesen Safari-Tab <b>schließen</b>, den Link neu öffnen und erneut testen – Safari fragt dann nochmal.'
-    : 'Der Browser liefert keine Kompassdaten. Chrome verwenden und die Seite neu laden.',
+    : 'Der Browser liefert keine Kompassdaten. Am besten den Link in <b>Chrome</b> öffnen (nicht im Nachrichten-Fenster) und neu laden. Das Spiel geht auch ohne Kompass.',
   compassNone: 'Kein Kompass gefunden. Das Spiel geht trotzdem: Der Pfeil zeigt dann mit <b>Norden nach oben</b>, und unten steht die Himmelsrichtung. Mit Kompass ist es aber deutlich leichter.',
   compassCalib: 'Tipp: Wenn der Pfeil springt, das Handy einmal langsam in Form einer <b>liegenden Acht</b> schwenken (Kompass kalibrieren).',
   sound: IS_IOS ? 'Lautstärke hochdrehen. Die Funksprüche laufen auch bei Stummschalter, Lautstärke 0 hört man aber nicht.' : 'Medien-Lautstärke hochdrehen.',

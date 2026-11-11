@@ -79,7 +79,8 @@ function bindPhoto(k, after) {
     const fb = $('#photoFb'); if (fb) { fb.className = 'feedback'; fb.textContent = 'Speichere Foto …'; }
     try {
       const blob = await compressImage(f);
-      await putPhoto(k, blob);
+      // Speichern darf den Fortschritt nie blockieren (privater Modus, voller Speicher): nach 10 s geht es trotzdem weiter
+      await Promise.race([putPhoto(k, blob), new Promise(r => setTimeout(r, 10000))]).catch(() => {});
       fx('good'); flashBonus(`📸 Beweisfoto gesichert${teamOn() ? ` – beide Trupps +${PHOTO_PTS / 2}` : ''}`);
       requestPhoto(k, false);
       if (after) after();

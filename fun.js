@@ -101,9 +101,11 @@ function playFile(src, btn, onFail) {
   if (btn) { if (!btn.dataset.label) btn.dataset.label = btn.textContent; btn.classList.add('on'); btn.textContent = '⏹ Stoppen'; }
   player.src = (window.AUDIO_BLOBS && AUDIO_BLOBS[src]) || src; // Offline-Paket bevorzugen
   player.onended = () => stopPlayer();
-  player.onerror = () => { stopPlayer(); if (onFail) onFail(); };
+  let failed = false; // Ladefehler meldet sich doppelt (onerror + play()) – Rückfall nur einmal starten, sonst stoppt er sich selbst
+  const fail = () => { if (failed) return; failed = true; stopPlayer(); if (onFail) onFail(); };
+  player.onerror = fail;
   const pr = player.play(); // direkt im Tippen starten (iPhone)
-  if (pr && pr.catch) pr.catch(err => { if (err && err.name === 'AbortError') return; stopPlayer(); if (onFail) onFail(); });
+  if (pr && pr.catch) pr.catch(err => { if (err && err.name === 'AbortError') return; fail(); });
 }
 function playRadio(text, btn) {
   const pv = papaVoiceFor(text); // Papas eigene Aufnahme (Start, Halbzeit, Finale)
@@ -130,11 +132,11 @@ function speakRadio(text, btn) {
       radioNoVoice = true; if (speechSynthesis.speaking || speechSynthesis.pending) { try { speechSynthesis.cancel(); } catch (e) {} }
       radioQueue = speechChunks(text); radioOn = true; speakNext();
       radioWatch = setTimeout(() => {
-        if (radioOn && !radioStarted) { radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter (Schalter links am Gerät) aus, Lautstärke hoch, dann nochmal tippen.'); stopRadio(); }
+        if (radioOn && !radioStarted) { radioStatus('⚠️ Die Vorlesestimme startet nicht. Lautstärke (Medien) hochdrehen, auf dem iPhone den Stummschalter aus – dann nochmal tippen. Der Text steht auch oben zum Lesen.'); stopRadio(); }
       }, 3000);
       return;
     }
-    radioStatus('⚠️ Die Vorlesestimme startet nicht. iPhone: Stummschalter (Schalter links am Gerät) aus, Lautstärke hoch, dann nochmal tippen.');
+    radioStatus('⚠️ Die Vorlesestimme startet nicht. Lautstärke (Medien) hochdrehen, auf dem iPhone den Stummschalter aus – dann nochmal tippen. Der Text steht auch oben zum Lesen.');
     stopRadio();
   }, 3000);
 }
@@ -175,8 +177,8 @@ function radioDiagnose() {
 
 /* ---------- Sicherheit (Gruppe ist ohne Erwachsene unterwegs) ---------- */
 function papaTel() {
-  const inv = isMember() ? TEAM.invite : TEAM.inviteDraft;
-  return inv && inv.tel ? waNumber(inv.tel) : '';
+  const t = (TEAM.invite && TEAM.invite.tel) || (TEAM.inviteDraft && TEAM.inviteDraft.tel) || TEAM.ptel || ''; // auch nach Zentralen-Wechsel und bei QR-Beitritt
+  return t ? waNumber(t) : '';
 }
 function sosUi() {
   const b = $('#sosBtn');
@@ -191,7 +193,7 @@ function openSos() {
     <p style="text-align:left">Kein Spiel mehr – das hier ist echt. Bleibt zusammen und ruft Papa an.</p>
     ${tel ? `<a class="btn" href="tel:+${tel}">📞 Papa (Zentrale) anrufen</a>` : '<p class="small">Papas Nummer fehlt in der Einladung.</p>'}
     <div class="sospos">${p ? `📍 Euer Standort zum Vorlesen:<br><b>${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</b> (±${Math.round(p.acc || 0)} m)<br>
-      <a href="https://maps.apple.com/?ll=${p.lat},${p.lon}&q=Hier%20sind%20wir" target="_blank" rel="noopener">In Karten öffnen</a>` : '📍 Standort wird gesucht …'}</div>
+      <a href="${typeof IS_IOS !== 'undefined' && IS_IOS ? `https://maps.apple.com/?ll=${p.lat},${p.lon}&q=Hier%20sind%20wir` : `https://www.google.com/maps?q=${p.lat},${p.lon}`}" target="_blank" rel="noopener">In Karten öffnen</a>` : '📍 Standort wird gesucht …'}</div>
     <p class="small" style="text-align:left">Jemand fehlt? Bleibt an der Stelle, an der ihr ihn zuletzt gesehen habt, und ruft Papa an. Wer verloren ist: zum letzten Bahnhof zurück und dort warten.</p>
     ${takeoverHtml()}
     <button class="btn sec small" id="exOk">Zurück zur Mission</button></div>`);

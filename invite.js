@@ -160,7 +160,9 @@ function renderInviteLobby() {
       ${TEAM.name ? aliasBoxHtml() : ''}
       <p class="small" style="margin-top:12px">${joined ? '⏳ Warte, bis Einsatzleiter ' + esc(inv.host || 'Jasper') + ' die Mission startet.' : ''}</p>${offlineCardHtml()}</div>`;
   }
-  app.innerHTML = inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv)
+  const inApp = /; wv\)|FBAN|FBAV|Instagram|MicroMessenger|Snapchat|TikTok|Line\//.test(navigator.userAgent); // Link im Fenster einer anderen App geöffnet
+  const inAppHtml = inApp ? '<div class="card" style="border-color:var(--warn,#ffb020)"><b>⚠️ Bitte im richtigen Browser öffnen</b><p class="small">Du hast den Link in einer anderen App geöffnet. Dort funktionieren Standort und Kompass oft nicht. Tippe oben auf ⋮ bzw. das Teilen-Symbol → <b>„Im Browser öffnen“</b> (Chrome oder Safari).</p></div>' : '';
+  app.innerHTML = inAppHtml + inviteCardHtml(inv, TEAM.name ? (TEAM.alias || TEAM.name) : '') + status + rsvpCardHtml(inv)
     + `<div class="card"><div class="label">Vorbereitung</div><p class="small">Teste dein Handy schon vor dem Einsatztag – am besten draußen und zusammen mit deinen Eltern.</p>${checkBtnHtml()}</div>`
     + rulesHtml() + parentsHtml(inv);
   const po = $('#parentsOk');

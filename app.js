@@ -124,6 +124,16 @@ function startGeo() {
     if (e.code === 1) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
 }
+/* Nach Bildschirmsperre/App-Wechsel liefern manche Browser keine Positionen mehr → Ortung neu starten */
+function restartGeo() {
+  if (!P || !P.name || P.finishedAt || !navigator.geolocation) return;
+  if (watchId !== null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
+  startGeo();
+}
+setInterval(() => { // Ortung hängt (seit 90 s nichts Neues, Seite sichtbar) → neu starten
+  if (document.hidden || sim || !P || !P.name || P.finishedAt || P.status !== 'travel' || watchId === null) return;
+  if (pos && Date.now() - pos.t > 90000) { restartGeo(); updateLive(); }
+}, 30000);
 let noFixSince = 0;
 const forceBtnHtml = () => '<button class="btn sec small" id="forceBtn">📍 Ich bin da – aber nichts passiert</button>';
 function bindForceBtn() {
@@ -157,6 +167,7 @@ async function enableCompass() {
       window.addEventListener('deviceorientation', onOrient, true);
     } else if ('ondeviceorientationabsolute' in window) {
       window.addEventListener('deviceorientationabsolute', onOrient, true);
+      window.addEventListener('deviceorientation', onOrient, true); // manche Android-Browser liefern nur hier (onOrient nimmt nur absolute Werte)
     } else {
       window.addEventListener('deviceorientation', onOrient, true);
     }
@@ -228,7 +239,7 @@ function renderIntro() {
     ${checkBtnHtml()}
     ${offlineCardHtml()}
     <button class="btn" id="startBtn">🔓 Mission starten</button>
-    <p class="small">Die App fragt nach deinem Standort (für das Radar) und auf dem iPhone nach dem Kompass. Bitte jeweils erlauben.</p>
+    <p class="small">Die App fragt nach deinem Standort (für das Radar) und – je nach Handy – nach dem Kompass. Bitte jeweils erlauben.</p>
     ${isHost() ? `<p class="small">👥 Team-Modus: ${TEAM.members.length - 1} Mitspieler beigetreten. QR-Code über den Team-Knopf unten links.</p>` : ''}
   </div>`;
   const go = () => {
@@ -290,7 +301,7 @@ function updateLive() {
   if (!p) {
     dEl.textContent = '…';
     if (geoErr) gi.innerHTML = '⚠️ ' + esc(geoErr.code === 1
-      ? 'Standort ist blockiert. Bitte in den Einstellungen für Safari/Chrome den Standortzugriff erlauben und die Seite neu laden.'
+      ? 'Standort ist blockiert. ' + (typeof IS_IOS !== 'undefined' && IS_IOS ? 'iPhone: Einstellungen → Datenschutz → Ortungsdienste → Safari-Websites → „Beim Verwenden“.' : typeof IS_ANDROID !== 'undefined' && IS_ANDROID ? 'Android: Schloss-Symbol in der Adresszeile → Berechtigungen → Standort zulassen.' : 'Im Browser den Standortzugriff für diese Seite erlauben.') + ' Dann die Seite neu laden.'
       : (geoErr.message || 'Kein GPS-Signal.')) + (geoErr.code === 1 ? '' : ' Warte kurz unter freiem Himmel.');
     else gi.textContent = 'Warte auf GPS-Signal …';
     if (!noFixSince) noFixSince = Date.now();
@@ -312,8 +323,9 @@ function updateLive() {
     : compassOn && heading !== null
     ? 'Der Pfeil zeigt zum Ziel. Halte das Handy flach vor dich.'
     : `Ziel liegt im <b>${dirName(b)}</b>. <span class="small">(Pfeil: Norden = oben)</span>`;
-  gi.textContent = (sim ? '🧪 SIMULATION · ' : '') + 'GPS-Genauigkeit: ±' + Math.round(p.acc || 0) + ' m';
-  if ((p.acc || 0) > 300) gi.innerHTML = `⚠️ GPS sehr ungenau (±${Math.round(p.acc)} m). iPhone: Einstellungen → Datenschutz → Ortungsdienste → Safari → <b>„Genauer Standort“ einschalten</b>.`;
+  const age = sim ? 0 : Date.now() - (p.t || 0);
+  gi.textContent = (sim ? '🧪 SIMULATION · ' : '') + 'GPS-Genauigkeit: ±' + Math.round(p.acc || 0) + ' m' + (age > 60000 ? ' · ⏳ Standort ist ' + Math.round(age / 60000) + ' Min. alt – suche neu …' : '');
+  if ((p.acc || 0) > 300) gi.innerHTML = `⚠️ GPS sehr ungenau (±${Math.round(p.acc)} m). ${typeof IS_ANDROID !== 'undefined' && IS_ANDROID ? 'Android: Einstellungen → Standort → <b>„Standortgenauigkeit“ einschalten</b> und im Browser „Genauer Standort“ erlauben' : 'iPhone: Einstellungen → Datenschutz → Ortungsdienste → Safari → <b>„Genauer Standort“ einschalten</b>'}.`;
   const fb = $('#forcebox');
   const near = d <= Math.max(st.radius * 3, st.radius + (p.acc || 0) * 1.5);
   if ((near || (p.acc || 0) > 300) && !fb.dataset.on) {
@@ -561,7 +573,7 @@ function renderRadioList() {
   add('fin', 'Finale', D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : ''));
   $('#admin').innerHTML = `<div class="wrap">
     <div class="adm-head"><h2>📻 Funksprüche</h2><button class="btn sec small" style="width:auto;margin:0" data-act="back">← Zurück</button></div>
-    <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Auf dem iPhone den Stummschalter ausschalten und die Lautstärke hochdrehen.</p>
+    <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Lautstärke (Medien) hochdrehen; auf dem iPhone zusätzlich den Stummschalter ausschalten.</p>
     <div class="row"><button class="btn sec small" id="admBeep">🔊 Ton-Test</button><button class="btn sec small" id="admSay">🗣 Sprach-Test</button></div><div class="small radiostat"></div>
     <p class="small" id="admDiag">${radioDiagnose()}</p>
     ${stations().some(s => s.morse) ? '<button class="btn warn small" id="admMorse">▶ Morse-Signal (S-Bahnhof Pullach) abspielen</button>' : ''}
@@ -743,6 +755,7 @@ async function init() {
   P = Object.assign(newProgress(), lsGet(KEY_P) || {});
   if (P.idx >= D.stations.length) P.idx = D.stations.length - 1;
   exInit();
+  warmBlobs(); // Offline-Funksprüche aus dem Cache bereitstellen
   studioFromHash();
   teamInit();
   setInterval(exTaskCheck, 15000);
@@ -752,7 +765,8 @@ async function init() {
   setInterval(tick, 1000);
   $('#funk').onclick = openChat;
   $('#sosBtn').onclick = openSos;
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) kidPoll(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { kidPoll(); restartGeo(); } });
+  window.addEventListener('hashchange', () => { if (/^#(team|eltern|papa|studio)/.test(location.hash)) location.reload(); }); // neuer Link im offenen Tab
   if (new URLSearchParams(location.search).has('admin')) openAdmin();
   if (location.hash === '#check') openCheck();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
