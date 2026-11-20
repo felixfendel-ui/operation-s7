@@ -141,7 +141,7 @@ def morse(word):
 
 d = json.load(open('stations.json', encoding='utf-8'))
 texts = {d['intro']: 'intro', 'Hier spricht der Silberfuchs. Wenn du mich hörst, funktioniert der Funk.': 'test'}
-lock = ('Der Code lautet: ' + ' '.join(str(d['lockCode']))) if d.get('lockCode') else ''
+lock = ' '.join(str(d['lockCode'])) if d.get('lockCode') else ''  # muss zu app.js passen (Finale-Text + Ziffern)
 texts[d['finale'] + ' ' + lock] = 'finale'
 for st in d['stations']:
     if st.get('mission'): texts[st['mission']] = 'mission'

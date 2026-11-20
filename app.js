@@ -448,7 +448,7 @@ function renderVictory() {
   bindPhoto(stations().length - 1, () => render());
   albumHtmlInto($('#album'));
   $('#againBtn').onclick = () => { fx('win'); confetti(); };
-  bindRadio({ finale: D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : '') });
+  bindRadio({ finale: D.finale + ' ' + (D.lockCode ? String(D.lockCode).split('').join(' ') : '') });
 }
 
 /* ---------- Admin-Modus ---------- */
@@ -570,7 +570,7 @@ function renderRadioList() {
     add('s' + i, `${n} – Ankunft & Rätsel`, st.story + '. ' + (st.morse ? (st.teamQ || '') : st.riddle));
     if (st.solved) add('l' + i, `${n} – Nach dem Lösen`, st.solved);
   });
-  add('fin', 'Finale', D.finale + ' ' + (D.lockCode ? 'Der Code lautet: ' + String(D.lockCode).split('').join(' ') : ''));
+  add('fin', 'Finale', D.finale + ' ' + (D.lockCode ? String(D.lockCode).split('').join(' ') : ''));
   $('#admin').innerHTML = `<div class="wrap">
     <div class="adm-head"><h2>📻 Funksprüche</h2><button class="btn sec small" style="width:auto;margin:0" data-act="back">← Zurück</button></div>
     <div class="card"><p class="small">Tippe auf einen Knopf zum Abspielen, nochmal tippen stoppt. Lautstärke (Medien) hochdrehen; auf dem iPhone zusätzlich den Stummschalter ausschalten.</p>
