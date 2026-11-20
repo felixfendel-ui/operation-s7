@@ -18,6 +18,9 @@ const isMember = () => TEAM.role === 'member' && !!TEAM.topic;
 const myId = () => (isMember() ? TEAM.id : (TEAM.id || 'host')); // nach einer Übernahme behält die neue Zentrale ihre eigene ID
 const myMember = () => (TEAM.members || []).find(m => m.id === myId());
 const teamOn = () => !!TEAM.topic && (TEAM.members || []).length >= 2;
+/* Agenten ohne Handy (np): laufen im Trupp mit, zählen beim Durchzählen und auf der Urkunde,
+   aber das Stations-Tor wartet nicht auf sie und sie bekommen keine Handy-Rollen (Navigator/Codeknacker). */
+const phoneMembers = () => (TEAM.members || []).filter(m => !m.np);
 const teamNames = () => (teamOn() ? TEAM.members.map(m => m.name + (m.alias ? ` (${m.alias})` : '')) : undefined);
 
 /* ---------- Decknamen ---------- */
@@ -183,7 +186,7 @@ function handleTeamMsg(m) {
 function mergeGhost(id, n) {
   if (!id || !n || TEAM.members.some(x => x.id === id)) return;
   const h = TEAM.heard || {}, key = norm(String(n));
-  const g = TEAM.members.find(x => x.id !== 'host' && x.id !== myId() && norm(x.name) === key && Date.now() - (h[x.id] || 0) > 600000);
+  const g = TEAM.members.find(x => !x.np && x.id !== 'host' && x.id !== myId() && norm(x.name) === key && Date.now() - (h[x.id] || 0) > 600000);
   if (g) { if (P.here) Object.values(P.here).forEach(o => { delete o[g.id]; }); g.id = id; }
 }
 function removeMember(id) {
@@ -257,7 +260,7 @@ function applyState(s) {
   // Daten aus dem Netz absichern (jeder mit dem Kanalnamen könnte etwas senden)
   s.v = Number(s.v) || 0; s.i = Math.max(0, Math.min(Number(s.i) || 0, D.stations.length - 1));
   s.s = ['travel', 'arrived', 'solved'].includes(s.s) ? s.s : 'travel'; s.pts = Number(s.pts) || 0;
-  s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A' }));
+  s.m = (Array.isArray(s.m) ? s.m : []).filter(x => x && x.id).map(x => ({ id: String(x.id).slice(0, 20), name: String(x.name || '?').slice(0, 24), alias: String(x.alias || '').slice(0, 24), trupp: x.trupp === 'B' ? 'B' : 'A', ...(x.np ? { np: 1 } : {}) }));
   if (s.v < (TEAM.v || 0)) return;
   const key = () => JSON.stringify([P.idx, P.status, P.finishedAt, Object.keys(P.hints).length, rolesKey(), memberReady(), TEAM.members.map(x => x.name + x.trupp).join(), P.pts, Object.keys(P.depots || {}).length, JSON.stringify(P.tasks || {}), JSON.stringify(TEAM.rsvpList || {}), JSON.stringify(P.tp || {}), JSON.stringify(P.photos || {}), P.ev ? P.ev.id : '', P.sab ? P.sab.id : '', P.moleOffset || 0, JSON.stringify(P.revealed || {})]);
   const before = key();
@@ -294,7 +297,7 @@ const memberReady = () => isMember() && !!TEAM.name && TEAM.members.some(x => x.
 
 /* ---------- Rollen & geteilte Hinweise ---------- */
 function teamRoles(idx) {
-  const m = TEAM.members || [];
+  const m = phoneMembers();
   if (m.length < 2) return null;
   const st = D.stations[idx] || {};
   const code = st.final ? m[0] : m[idx % m.length];
@@ -338,7 +341,7 @@ function teamRoleHtml() {
 function teamRiddleHtml(st) {
   if (!teamOn() || !st.clueA) return null;
   const me = myMember(), t = me ? me.trupp : 'A', other = t === 'A' ? 'B' : 'A';
-  const otherHas = TEAM.members.some(x => x.trupp === other);
+  const otherHas = phoneMembers().some(x => x.trupp === other); // ein Trupp nur mit handylosen Agenten bekommt seine Akte über die anderen
   const show = otherHas ? [t] : [t, other];
   return show.map(x => `<div class="clue trupp-${x}"><div class="label">Geheimakte ${TRUPP[x]}</div>${rich(st['clue' + x])}</div>`).join('')
     + (otherHas ? `<p class="small">⚠️ Die andere Hälfte der Hinweise hat ${TRUPP[other]}. Nur zusammen könnt ihr das Rätsel knacken – lest euch eure Akten gegenseitig vor!</p>` : '')
@@ -357,7 +360,7 @@ function answerBlockedHtml() {
 const HERE_VALID = 20 * 60000; // Handys stecken unterwegs in der Tasche – Meldung gilt lange
 function hereIds() {
   const h = (P.here && P.here[P.idx]) || {}, now = Date.now();
-  return Object.keys(h).filter(id => now - h[id].t < HERE_VALID && (TEAM.members || []).some(m => m.id === id));
+  return Object.keys(h).filter(id => now - h[id].t < HERE_VALID && phoneMembers().some(m => m.id === id));
 }
 function markHere(id, name, forced) {
   if (!P.name || P.finishedAt || P.status !== 'travel') return;
@@ -373,25 +376,26 @@ function markHere(id, name, forced) {
 function checkAllHere() {
   if (!isHost() || !teamOn() || !P.name || P.finishedAt || P.status !== 'travel') return;
   let ids = hereIds();
-  if (ids.length < TEAM.members.length) { // Doppelgänger: gleicher Name ist schon da, der alte Eintrag schweigt seit 10 Min. → Geister-Eintrag (altes Gerät/alter Browser) entfernen
+  if (ids.length < phoneMembers().length) { // Doppelgänger: gleicher Name ist schon da, der alte Eintrag schweigt seit 10 Min. → Geister-Eintrag (altes Gerät/alter Browser) entfernen
     const hd = TEAM.heard || {}, n0 = TEAM.members.length;
-    TEAM.members = TEAM.members.filter(m => ids.includes(m.id) || m.id === myId() || Date.now() - (hd[m.id] || 0) < 600000
+    TEAM.members = TEAM.members.filter(m => m.np || ids.includes(m.id) || m.id === myId() || Date.now() - (hd[m.id] || 0) < 600000
       || !TEAM.members.some(o => o.id !== m.id && ids.includes(o.id) && norm(o.name) === norm(m.name)));
     if (TEAM.members.length !== n0) { saveTeam(); lastBcast = ''; broadcast(); teamUi(); ids = hereIds(); }
   }
-  if (ids.length < TEAM.members.length) return;
+  if (ids.length < phoneMembers().length) return;
   const h = P.here[P.idx], firstId = Object.keys(h).sort((a, b) => h[a].t - h[b].t)[0], first = memberById(firstId);
   unlock(Object.values(h).every(x => x.f), first ? first.name : '', firstId);
 }
 function hereHtml() {
   if (!teamOn() || P.status !== 'travel') return '';
   const ids = isHost() ? hereIds() : (TEAM.hereList || []);
-  if (!ids.length) return `<div class="herebox">👥 Die Station öffnet sich erst, wenn <b>alle ${TEAM.members.length} Agenten</b> am Ziel sind.</div>`;
-  const missing = TEAM.members.filter(m => !ids.includes(m.id)), me = myId();
+  const pm = phoneMembers(), np = (TEAM.members || []).length - pm.length, npTxt = np ? ` <span class="small">(+ ${np} Agent${np > 1 ? 'en' : ''} ohne Handy – beim Durchzählen mitzählen!)</span>` : '';
+  if (!ids.length) return `<div class="herebox">👥 Die Station öffnet sich erst, wenn <b>alle ${pm.length} Handys</b> am Ziel sind.${npTxt}</div>`;
+  const missing = pm.filter(m => !ids.includes(m.id)), me = myId();
   const meMissing = missing.some(m => m.id === me);
   const p = typeof here === 'function' ? here() : null, st = cur();
   const why = meMissing && p && st ? ` Dein GPS sagt: noch <b>${Math.round(dist(p, st))} m</b> (±${Math.round(p.acc || 0)} m) – geh näher ran oder tippe „📍 Ich bin da“.` : '';
-  return `<div class="herebox on">👥 Am Ziel: <b>${ids.length}/${TEAM.members.length}</b>${missing.length ? ` · Es fehlen: ${missing.map(m => m.id === me ? '<b>DU (dieses Handy)</b>' : esc(m.alias || m.name)).join(', ')}` : ''}${meMissing ? `<div class="small">⚠️ Dieses Handy hat sich noch nicht am Ziel gemeldet.${why}</div>` : ''}
+  return `<div class="herebox on">👥 Handys am Ziel: <b>${ids.length}/${pm.length}</b>${npTxt}${missing.length ? ` · Es fehlen: ${missing.map(m => m.id === me ? '<b>DU (dieses Handy)</b>' : esc(m.alias || m.name)).join(', ')}` : ''}${meMissing ? `<div class="small">⚠️ Dieses Handy hat sich noch nicht am Ziel gemeldet.${why}</div>` : ''}
     ${isHost() && missing.length ? '<button class="btn sec small" id="hereOverride">Alle da, aber ein Handy meldet sich nicht? Station öffnen</button>' : ''}
     ${isHost() ? missing.filter(m => m.id !== me && Date.now() - ((TEAM.heard || {})[m.id] || 0) > 30 * 60000).map(m => `<button class="btn sec small" data-gone="${esc(m.id)}">✕ ${esc(m.name)} ist heute nicht dabei (Handy seit Langem still)</button>`).join('') : ''}</div>`;
 }
@@ -406,7 +410,7 @@ function updateHere() {
   });
   const b = $('#hereOverride');
   if (b) b.onclick = () => {
-    const missing = TEAM.members.filter(m => !hereIds().includes(m.id)).map(m => m.alias || m.name);
+    const missing = phoneMembers().filter(m => !hereIds().includes(m.id)).map(m => m.alias || m.name);
     if (confirm(`Es fehlen noch Meldungen von: ${missing.join(', ')}.\n\nSind wirklich ALLE Agenten hier zusammen? Dann Station öffnen.`)) unlock(true, P.name, myId());
   };
 }
@@ -541,11 +545,14 @@ function renderTeamPanel() {
       <div class="row"><button class="btn small" id="tpShare">🔗 Link teilen</button><button class="btn sec small" id="tpCopy">📋 Kopieren</button></div>
       <div class="feedback good" id="tpFb"></div>
     </div>
-    <div class="card"><div class="label">Mitglieder (${TEAM.members.length}) – antippen wechselt den Trupp</div>
+    <div class="card"><div class="label">Mitglieder (${TEAM.members.length}) – A/B wechselt den Trupp, 📱/📵 = mit/ohne Handy</div>
       ${TEAM.members.map((x, i) => `<div class="memb trupp-${x.trupp}">
         <button class="trupp-btn" data-tt="${i}">${x.trupp === 'A' ? '🟥 A' : '🟦 B'}</button>
-        <span>${memberLabel(x)}${x.id === 'host' ? ' ⭐ Einsatzleiter' : ''}</span>
+        <span>${memberLabel(x)}${x.id === 'host' ? ' ⭐ Einsatzleiter' : ''}${x.np ? ' <span class="small">· ohne Handy</span>' : ''}</span>
+        ${x.id !== myId() && x.id !== 'host' ? `<button class="trupp-btn" data-np="${i}" aria-label="Handy umschalten">${x.np ? '📵' : '📱'}</button>` : ''}
         ${x.id !== myId() ? `<button class="rm" data-rm="${i}" aria-label="Entfernen">✕</button>` : ''}</div>`).join('')}
+      ${isHost() ? `<div class="row" style="margin-top:10px"><input id="npName" maxlength="24" placeholder="Vorname (Agent ohne Handy)" autocomplete="off"><button class="btn sec small" id="npAdd" style="width:auto">➕ ohne Handy</button></div>
+      <p class="small">Agenten ohne Handy laufen in ihrem Trupp mit. Die Stationen warten nur auf die Handys – zählt die Kinder ohne Handy beim Durchzählen selbst mit.</p>` : ''}
       ${TEAM.members.length < 2 ? '<p class="small">Noch niemand beigetreten. Die anderen scannen den QR-Code mit der Handy-Kamera.</p>' : ''}
       ${r ? `<p class="small">Station ${P.idx + 1}: 🧭 A ${esc((r.nav.A || {}).name || '–')} · 🧭 B ${esc((r.nav.B || {}).name || '–')} · 🔐 ${esc(r.code.name)}</p>` : ''}
     </div></div>`;
@@ -556,6 +563,23 @@ function renderTeamPanel() {
   $('#teampanel').querySelectorAll('[data-tt]').forEach(b => {
     b.onclick = () => { const x = TEAM.members[+b.dataset.tt]; x.trupp = x.trupp === 'A' ? 'B' : 'A'; saveTeam(); broadcast(); renderTeamPanel(); };
   });
+  $('#teampanel').querySelectorAll('[data-np]').forEach(b => {
+    b.onclick = () => {
+      const x = TEAM.members[+b.dataset.np];
+      if (!x.np && !confirm(`${x.name} hat KEIN Handy dabei? Dann warten die Stationen nicht mehr auf ${x.name}s Handy.`)) return;
+      if (x.np) delete x.np; else x.np = 1;
+      saveTeam(); lastBcast = ''; broadcast(); renderTeamPanel(); teamUi(); if (typeof checkAllHere === 'function') checkAllHere();
+    };
+  });
+  const na = $('#npAdd');
+  if (na) na.onclick = () => {
+    const n = $('#npName').value.trim().slice(0, 24);
+    if (!n) return;
+    if (TEAM.members.some(x => norm(x.name) === norm(n))) { alert(`${n} ist schon im Team – dann dort einfach 📱 antippen.`); return; }
+    const cnt = t => TEAM.members.filter(x => x.trupp === t).length, b = new Uint8Array(6); crypto.getRandomValues(b);
+    TEAM.members.push({ id: 'x' + Array.from(b, v => (v % 36).toString(36)).join(''), name: n, alias: makeAlias(takenAliases()), trupp: cnt('A') <= cnt('B') ? 'A' : 'B', np: 1 });
+    saveTeam(); lastBcast = ''; broadcast(); renderTeamPanel(); teamUi();
+  };
   $('#teampanel').querySelectorAll('[data-rm]').forEach(b => {
     b.onclick = () => {
       const x = TEAM.members[+b.dataset.rm];
