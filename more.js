@@ -109,7 +109,7 @@ function handlePapaCmd(m) {
       if (P.status === 'travel') unlock(true, 'Papa', 'papa');
       if (P.status === 'arrived') { P.photos = P.photos || {}; if (st.photo) P.photos[P.idx] = { by: 'Papa', skip: true }; solve('Papa', 'papa'); }
       break;
-    case 'hint': P.hints[sid] = true; save(); render(); liveEvent('hint', `Station ${P.idx + 1}: Tipp von Papa freigeschaltet`, st.title); break;
+    case 'hint': if (!P.hints[sid]) { P.hints[sid] = true; save(); render(); liveEvent('hint', `Station ${P.idx + 1}: Tipp von Papa freigeschaltet (gratis)`, st.title); } break;
     case 'sabotage': setSabotage(); liveEvent('task', '🦡 Maulwurf-Sabotage gestartet', '2 Minuten kein Richtungspfeil', 2); break;
     case 'bonus': setTeamEvent({ type: 'bonus', text: String(c.text || BONUS_TASKS[0]).slice(0, 300) }); liveEvent('task', '🎁 Bonusauftrag gesendet', String(c.text || '').replace(/\*\*/g, '').slice(0, 120), 2); break;
     case 'mole': P.moleOffset = (P.moleOffset || 0) + (Number(c.min) || 0); save(); render(); break;
@@ -214,8 +214,9 @@ function moreHostApply(a) {
   if (a.k === 'bonus') { completeBonus(String(a.e || ''), a.n); return true; }
   return false;
 }
-function moreStateFields() { return { rv: P.revealed || {}, ev: P.ev || null, sab: P.sab || null, bd: P.bonusDone || {}, mo: P.moleOffset || 0, hid: myId(), lp: liveOn() ? LIVE.topic : '' }; }
+function moreStateFields() { return { ...guardStateFields(), rv: P.revealed || {}, ev: P.ev || null, sab: P.sab || null, bd: P.bonusDone || {}, mo: P.moleOffset || 0, hid: myId(), lp: liveOn() ? LIVE.topic : '' }; }
 function moreApplyState(s) {
+  guardApplyState(s);
   P.moleOffset = Number(s.mo) || 0;
   P.revealed = {}; if (s.rv && typeof s.rv === 'object') Object.entries(s.rv).forEach(([k, v]) => { if (D.stations[+k]) P.revealed[+k] = Number(v) === 1 ? 1 : 2; });
   P.bonusDone = s.bd && typeof s.bd === 'object' ? s.bd : {};

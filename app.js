@@ -149,7 +149,7 @@ function checkUnlock() {
   if (dist(p, st) <= st.radius + Math.min(p.acc || 0, 25)) requestUnlock(false);
 }
 function unlock(forced, by, byId) {
-  P.status = 'arrived';
+  P.status = 'arrived'; P.at = { i: P.idx, t: Date.now() };
   if (forced) P.forced++;
   exArrived(forced, byId);
   save(); fx('unlock'); render();
@@ -350,24 +350,30 @@ function renderRiddle() {
     ${st.final ? `<div class="label center" style="margin-top:12px">${isMember() ? 'Die Fragmente hat Einsatzleiter ' + esc(TEAM.hostName || 'Jasper') : 'Deine Fragmente'}</div>` + fragsHtml() : ''}
     ${teamHtml || `<div class="riddle">${rich(st.riddle)}</div>`}
     ${st.morse ? morseHtml(st.morse) : ''}
-    ${answer ? `<input id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Deine Lösung">
-    <button class="btn" id="ansBtn">${st.final ? '🔐 Tresor öffnen' : '✔ Lösung prüfen'}</button>` : answerBlockedHtml()}
+    <div id="ansWrap">${answer ? (lockLeft() ? `<div class="feedback bad" id="lockInfo">📵 Funkstille! Der Maulwurf stört eure Leitung – noch ${lockLeft()} Sek. keine Eingabe.</div>` : '') + `<input id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Deine Lösung" ${lockLeft() ? 'disabled' : ''}>
+    <button class="btn" id="ansBtn" ${lockLeft() ? 'disabled' : ''}>${st.final ? '🔐 Tresor öffnen' : '✔ Lösung prüfen'}</button>` : answerBlockedHtml()}</div>
     <div class="feedback" id="fb"></div>
+    ${wrongCount() ? `<p class="small center">❌ Fehlversuche hier: <b>${wrongCount()}</b>${wrongCount() >= rules().lockAfter ? ' · jeder weitere bringt Funkstille' : ''}</p>` : ''}
     ${st.hint ? (hintUsed
       ? `<div class="hintbox">💡 ${rich(st.hint)}</div>`
-      : `<button class="btn sec small ${tries >= 2 ? 'pulse' : ''}" id="hintBtn">💡 Tipp vom Silberfuchs anfordern</button>`) : ''}
+      : hintState().ok
+        ? `<button class="btn sec small pulse" id="hintBtn">💡 Tipp vom Silberfuchs anfordern (−${rules().hintPts} Punkte)</button>`
+        : `<button class="btn sec small" disabled id="hintLocked">${hintLockedText(hintState())}</button>`) : ''}
   </div>`;
   const submit = () => {
     const v = $('#ans').value;
-    if (!norm(v)) return;
+    if (!norm(v) || lockLeft()) return;
     initAudio();
     if ((st.answers || []).some(a => norm(a) === norm(v) || (ansNorm(a) && ansNorm(a) === ansNorm(v)))) return requestSolve();
-    P.tries[id] = (P.tries[id] || 0) + 1; save(); requestWrong(v);
+    P.tries[id] = (P.tries[id] || 0) + 1;
+    const lockS = registerWrong(!isMember()); // auf Jaspers Handy verbindlich, sonst Vorschau bis zum Team-Stand
+    save(); requestWrong(v);
     liveEvent('wrong', `Station ${P.idx + 1}: falsche Antwort`, `„${v.trim().slice(0, 80)}“ (Versuch ${P.tries[id]})`, 2);
     fx('bad');
-    const fb = $('#fb'); fb.className = 'feedback bad'; fb.textContent = WRONG[P.tries[id] % WRONG.length];
-    const a = $('#ans'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); a.select();
-    const hb = $('#hintBtn'); if (hb && P.tries[id] >= 2) hb.classList.add('pulse');
+    if (lockS) { renderRiddle(); const f = $('#fb'); if (f) { f.className = 'feedback bad'; f.textContent = `${WRONG[P.tries[id] % WRONG.length]} (−${rules().wrongPts} Punkte)`; } return; }
+    renderRiddle();
+    const fb = $('#fb'); fb.className = 'feedback bad'; fb.textContent = `${WRONG[P.tries[id] % WRONG.length]} (−${rules().wrongPts} Punkte)`;
+    const a = $('#ans'); if (a) { a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); a.focus(); }
   };
   if ($('#ans')) {
     $('#ans').value = prevAns;
@@ -380,7 +386,11 @@ function renderRiddle() {
   bindRadio({ story: st.story + '. ' + (st.morse ? (st.teamQ || '') : clue) });
   if (st.morse) bindMorse(st.morse);
   const hb = $('#hintBtn');
-  if (hb) hb.onclick = () => { if (requestHint()) return; P.hints[id] = true; save(); renderRiddle(); liveEvent('hint', `Station ${P.idx + 1}: Tipp genutzt`, st.title); };
+  if (hb) hb.onclick = () => {
+    if (!hintState().ok || !confirm(`Tipp vom Silberfuchs anfordern? Das kostet ${rules().hintPts} Agentenpunkte.`)) return;
+    if (requestHint()) return;
+    grantHint(P.name);
+  };
 }
 
 function solve(by, byId) {
@@ -426,7 +436,7 @@ function doNext() {
 }
 
 function renderVictory() {
-  const hints = Object.keys(P.hints).length, tries = Object.values(P.tries).reduce((a, b) => a + b, 0);
+  const hints = Object.keys(P.hints).length, tries = Object.values(P.wt && Object.keys(P.wt).length ? P.wt : P.tries).reduce((a, b) => a + Number(b || 0), 0);
   app.innerHTML = `
   <div class="card center pop">
     <div class="stamp" style="border-color:var(--accent);color:var(--accent)">MISSION ERFÜLLT</div>

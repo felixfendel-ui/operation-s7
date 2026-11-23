@@ -223,10 +223,10 @@ function hostApply(a) {
       if (a.i === P.idx && P.status === 'arrived') solve(a.n, a.id);
       return;
     case 'wrong':
-      if (a.i === P.idx) liveEvent('wrong', `Station ${P.idx + 1}: falsche Antwort${who}`, `„${String(a.x || '').slice(0, 80)}“`, 2);
+      if (a.i === P.idx && P.status === 'arrived' && !lockLeft()) { registerWrong(true); save(); render(); liveEvent('wrong', `Station ${P.idx + 1}: falsche Antwort${who}`, `„${String(a.x || '').slice(0, 80)}“ (Fehlversuch ${wrongCount()})`, 2); }
       return;
     case 'hint':
-      if (a.i === P.idx && !P.hints[sid]) { P.hints[sid] = true; save(); render(); liveEvent('hint', `Station ${P.idx + 1}: Tipp genutzt${who}`, st.title); }
+      if (a.i === P.idx) grantHint(a.n);
       return;
     case 'next':
       if (a.i === P.idx && P.status === 'solved') doNext();
