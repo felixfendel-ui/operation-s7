@@ -95,6 +95,7 @@ function fx(kind) {
   try {
     if (kind === 'unlock') { [660, 880, 1320].forEach((f, i) => tone(f, i * 0.12, 0.15)); navigator.vibrate && navigator.vibrate([120, 60, 120]); }
     if (kind === 'good') { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.18, 'triangle', 0.08)); navigator.vibrate && navigator.vibrate(80); }
+    if (kind === 'tick') { [880, 1175].forEach((f, i) => tone(f, i * 0.1, 0.12, 'triangle', 0.07)); navigator.vibrate && navigator.vibrate(60); }
     if (kind === 'bad') { tone(140, 0, 0.3, 'sawtooth', 0.05); navigator.vibrate && navigator.vibrate(250); }
     if (kind === 'win') { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.13, 0.25, 'triangle', 0.09)); navigator.vibrate && navigator.vibrate([100, 50, 100, 50, 300]); }
   } catch (e) {}
@@ -140,7 +141,7 @@ function bindForceBtn() {
   const b = $('#forceBtn');
   if (b) b.onclick = () => { if (confirm('Seid ihr wirklich am Ziel? GPS ist im Isartal manchmal ungenau. Station jetzt freischalten?')) requestUnlock(true); };
 }
-function onPos() { exOnPos(); checkUnlock(); updateLive(); updateAdminGps(); liveSnapshot(false); }
+function onPos() { exOnPos(); if (legsOnPos() && P.status === 'travel') render(); checkUnlock(); updateLive(); updateAdminGps(); liveSnapshot(false); }
 function checkUnlock() {
   if (!P.name || P.finishedAt || P.status !== 'travel') return;
   const p = here(), st = cur();
@@ -258,7 +259,7 @@ function renderIntro() {
 }
 
 function renderTravel() {
-  const st = cur(), far = here() && dist(here(), st) > 3000, nav = canNavigate();
+  const st = cur(), far = here() && dist(here(), st) > 3000 && !curLeg(), nav = canNavigate();
   app.innerHTML = `${teamRoleHtml()}${moleHtml()}${akkuHtml()}
   <div class="card pop">
     <div class="label">Station ${P.idx + 1} von ${stations().length} · Nächstes Ziel</div>
@@ -270,6 +271,7 @@ function renderTravel() {
     ${safetyHtml(st)}
     ${far ? '<p class="small">🚆 Weite Strecke – nimm die S-Bahn wie im Auftrag beschrieben.</p>' : ''}
   </div>
+  ${legsHtml()}
   <div class="radar ${nav ? '' : 'noarrow'}" id="radar">
     <div class="sweep"></div><div class="north">N</div>
     <div class="arrow" id="arrow"><svg viewBox="0 0 40 60"><path d="M20 0 L40 44 L20 34 L0 44 Z" fill="#39ff88"/></svg></div>
@@ -284,6 +286,7 @@ function renderTravel() {
   ${exTravelHtml()}
   <div class="card"><div class="label center">Code-Fragmente</div>${fragsHtml()}</div>`;
   exBindTravel();
+  bindLegs();
   bindRadio({ mission: st.mission });
   const rb = $('#revealBtn'); if (rb) rb.onclick = requestReveal;
   const cb = $('#compassBtn'); if (cb) cb.onclick = () => enableCompass().then(render);
@@ -295,7 +298,7 @@ function renderTravel() {
 
 function updateLive() {
   if (!P || !P.name || P.finishedAt || P.status !== 'travel') return;
-  const st = cur(), p = here(), dEl = $('#dist');
+  const st = cur(), np = navPoint(), legNav = np.lat !== st.lat || np.lon !== st.lon, p = here(), dEl = $('#dist');
   if (!dEl) return;
   const gi = $('#gpsinfo');
   if (!p) {
@@ -310,7 +313,7 @@ function updateLive() {
     return;
   }
   noFixSince = 0;
-  const d = dist(p, st), b = bearing(p, st), [hl, hc] = heat(d);
+  const d = dist(p, np), b = bearing(p, np), [hl, hc] = heat(d);
   dEl.textContent = fmtDist(d);
   const h = $('#heat'); h.textContent = hl; h.className = hc;
   const target = compassOn && heading !== null ? b - heading : b;
@@ -321,13 +324,13 @@ function updateLive() {
   $('#dirinfo').innerHTML = sabotageActive() ? `🦡 <b>Störsender aktiv!</b> Noch ${Math.max(0, Math.ceil((P.sab.until - Date.now()) / 1000))} Sek. ohne Pfeil.`
     : !canNavigate() ? `Nur der 🧭 Navigator sieht die Richtung: <b>${esc(r && me && r.nav[me.trupp] ? r.nav[me.trupp].name : '')}</b> – folgt ihm!`
     : compassOn && heading !== null
-    ? 'Der Pfeil zeigt zum Ziel. Halte das Handy flach vor dich.'
+    ? (legNav ? 'Der Pfeil zeigt zum Ziel dieser <b>Etappe</b>. Halte das Handy flach vor dich.' : 'Der Pfeil zeigt zum Ziel. Halte das Handy flach vor dich.')
     : `Ziel liegt im <b>${dirName(b)}</b>. <span class="small">(Pfeil: Norden = oben)</span>`;
   const age = sim ? 0 : Date.now() - (p.t || 0);
   gi.textContent = (sim ? '🧪 SIMULATION · ' : '') + 'GPS-Genauigkeit: ±' + Math.round(p.acc || 0) + ' m' + (age > 60000 ? ' · ⏳ Standort ist ' + Math.round(age / 60000) + ' Min. alt – suche neu …' : '');
   if ((p.acc || 0) > 300) gi.innerHTML = `⚠️ GPS sehr ungenau (±${Math.round(p.acc)} m). ${typeof IS_ANDROID !== 'undefined' && IS_ANDROID ? 'Android: Einstellungen → Standort → <b>„Standortgenauigkeit“ einschalten</b> und im Browser „Genauer Standort“ erlauben' : 'iPhone: Einstellungen → Datenschutz → Ortungsdienste → Safari → <b>„Genauer Standort“ einschalten</b>'}.`;
   const fb = $('#forcebox');
-  const near = d <= Math.max(st.radius * 3, st.radius + (p.acc || 0) * 1.5);
+  const dSt = legNav ? dist(p, st) : d, near = dSt <= Math.max(st.radius * 3, st.radius + (p.acc || 0) * 1.5);
   if ((near || (p.acc || 0) > 300) && !fb.dataset.on) {
     fb.dataset.on = '1'; fb.innerHTML = forceBtnHtml(); bindForceBtn();
   } else if (!near && fb.dataset.on) { fb.dataset.on = ''; fb.innerHTML = ''; }

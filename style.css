@@ -256,3 +256,15 @@ a{color:var(--accent)}
 @keyframes kb{from{transform:scale(1.08)}to{transform:scale(1)}}
 #pRemote select{font-size:15px}
 .wayhint{margin:8px 0;padding:10px 12px;border-radius:10px;background:rgba(255,197,61,.1);border:1px dashed var(--accent2);font-size:15px}
+
+/* Etappen (zu Fuß → Bahn → zu Fuß) */
+.legs .leglist{margin:6px 0 4px;padding-left:22px}
+.legs .leglist li{margin:6px 0;opacity:.55;font-size:15px}
+.legs .leglist li.now{opacity:1;font-size:17px}
+.legs .leglist li.done{opacity:.45;text-decoration:line-through}
+.legdep{margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(90,180,255,.08);border:1px solid rgba(90,180,255,.35)}
+.legdep .deps{list-style:none;margin:4px 0 0;padding:0}
+.legdep .deps li{margin:4px 0;font-size:15px}
+.legdep .depmin{float:right;font-weight:700;color:var(--accent2)}
+.legdep .depmin.soon{color:#ff5a5a}
+.legdep .late{color:#ff5a5a}
